@@ -352,7 +352,7 @@ async function main() {
   });
 
   console.log('✅ Base de datos sembrada con éxito.');
-} // ¡Aquí es donde realmente debe cerrar la función main!
+}
 
 // Solo se llama una vez a main()
 main()
