@@ -8,11 +8,11 @@ export class ContactoEntity {
     public readonly puesto: string | null,
     public readonly fotoUrl: string | null,
     public readonly estado: string | null,
-    
+
     // Campos extra que necesitamos específicamente para pintar las tarjetas en el Frontend
     public readonly rolNombre?: string,
     public readonly areaPrincipal?: string,
-    public readonly iniciales?: string
+    public readonly iniciales?: string,
   ) {}
 
   // Aquí podríamos tener métodos de negocio puros en el futuro.

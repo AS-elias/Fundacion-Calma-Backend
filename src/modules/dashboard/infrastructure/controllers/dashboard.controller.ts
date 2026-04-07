@@ -6,7 +6,7 @@ import { UsuarioActual } from '../../../auth/infrastructure/decorators/current-u
 
 @Controller('dashboard')
 export class DashboardController {
-  constructor(private readonly dashboardService: DashboardService) { }
+  constructor(private readonly dashboardService: DashboardService) {}
 
   @Get('admin')
   @UseGuards(JwtAuthGuard, AdminGuard)

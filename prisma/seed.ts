@@ -1,9 +1,14 @@
 import { PrismaClient } from '@prisma/client';
+import * as bcrypt from 'bcrypt';
 const prisma = new PrismaClient();
 
 async function main() {
   console.log('🌱 Sembrando la base de datos de Fundación Calma...');
-  
+
+  const hashPassword = async (password: string) => {
+    return await bcrypt.hash(password, 12);
+  };
+
   // ===============================
   // 1. LIMPIAR DATA (ORDEN CORRECTO POR FK)
   // ===============================
@@ -47,12 +52,13 @@ async function main() {
   // ===============================
   // 4. USUARIOS
   // ===============================
+  const passwordHash = await hashPassword('password123');
   const admin = await prisma.usuarios.create({
     data: {
       nombre_completo: 'Super',
       apellido_completo: 'Admin',
       email: 'admin@calma.org',
-      password_hash: '$2a$12$fSl2FSe4rFzowY3jW5dj8OWVVpOirw9ybZGvIWxbtX5O/QCvbxO4m', // password123
+      password_hash: passwordHash,
       puesto: 'Administrador del Sistema',
       estado: 'ACTIVO',
       rol_id: rolAdministrador.id,
@@ -64,19 +70,19 @@ async function main() {
       nombre_completo: 'Deivi',
       apellido_completo: 'Flores',
       email: 'dflores@calma.org',
-      password_hash: '$2a$12$fSl2FSe4rFzowY3jW5dj8OWVVpOirw9ybZGvIWxbtX5O/QCvbxO4m',
+      password_hash: passwordHash,
       puesto: 'Director Comercial',
       estado: 'ACTIVO',
       rol_id: rolDirector.id,
     },
   });
-  
+
   const analistaUser = await prisma.usuarios.create({
     data: {
       nombre_completo: 'Lucía',
       apellido_completo: 'Ramírez',
       email: 'lramirez@calma.org',
-      password_hash: '$2a$12$1J5d/nX9A3cbhsXBypaBI.GKlbC909NFDMGNkLeTkE1eKWozejKPa',
+      password_hash: passwordHash,
       puesto: 'Analista Comercial',
       estado: 'ACTIVO',
       rol_id: rolPracticante.id,
@@ -88,7 +94,7 @@ async function main() {
       nombre_completo: 'Usuario',
       apellido_completo: 'Prueba',
       email: 'user@calma.org',
-      password_hash: '$2a$12$fSl2FSe4rFzowY3jW5dj8OWVVpOirw9ybZGvIWxbtX5O/QCvbxO4m', // password123
+      password_hash: passwordHash,
       puesto: 'Practicante',
       estado: 'ACTIVO',
       rol_id: rolPracticante.id,

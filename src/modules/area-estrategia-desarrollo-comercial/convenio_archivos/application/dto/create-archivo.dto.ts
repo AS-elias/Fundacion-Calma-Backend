@@ -1,10 +1,9 @@
 export class CreateArchivoDto {
-    
-  convenioId: number;
+  convenioId!: number;
 
-  subidoPorId: number;
+  subidoPorId!: number;
 
-  nombreArchivo: string;
+  nombreArchivo!: string;
 
-  urlArchivo: string;
+  urlArchivo!: string;
 }

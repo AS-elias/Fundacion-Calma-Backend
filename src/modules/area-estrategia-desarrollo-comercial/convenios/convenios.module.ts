@@ -1,5 +1,5 @@
 import { Module } from '@nestjs/common';
-import { PrismaService } from 'src/infrastructure/prisma/prisma.service';
+import { PrismaService } from '../../../infrastructure/prisma/prisma.service';
 
 import { ConveniosController } from './infrastructure/controllers/convenios.controller';
 
@@ -30,4 +30,4 @@ import { PrismaConvenioRepository } from './infrastructure/repositories/prisma-c
     },
   ],
 })
-export class ConveniosModule {}
+export class ConveniosModule { }

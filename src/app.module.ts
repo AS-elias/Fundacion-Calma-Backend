@@ -13,6 +13,7 @@ import { ComunidadModule } from './modules/Comunidad/comunidad.module';
 import { PermisosService } from './core/services/permisos.service';
 import { AreasService } from './core/services/areas.service';
 import { ContratoCheckService } from './core/services/contrato-check.service';
+import { ComunicacionesModule } from './modules/comunicaciones/comunicaciones.module';
 @Module({
   imports: [
     ConfigModule.forRoot({
@@ -25,9 +26,16 @@ import { ContratoCheckService } from './core/services/contrato-check.service';
     ConvenioComentariosModule,
     ConvenioArchivosModule,
     ComunidadModule,
+    ComunicacionesModule,
   ],
   controllers: [AppController],
-  providers: [AppService, PrismaService, PermisosService, AreasService, ContratoCheckService],
+  providers: [
+    AppService,
+    PrismaService,
+    PermisosService,
+    AreasService,
+    ContratoCheckService,
+  ],
   exports: [PrismaService, PermisosService, AreasService],
 })
-export class AppModule { }
+export class AppModule {}

@@ -6,7 +6,7 @@ generator client {
 datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
-  schemas  = ["comercial", "core"]
+  schemas  = ["public"]
 }
 
 model analisis_tareas {
@@ -21,7 +21,7 @@ model analisis_tareas {
   areas          areas?    @relation(fields: [area_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
   usuarios       usuarios? @relation(fields: [creador_id], references: [id], onUpdate: NoAction)
 
-  @@schema("comercial")
+  @@schema("public")
 }
 
 model convenio_archivos {
@@ -35,7 +35,7 @@ model convenio_archivos {
   usuarios       usuarios?  @relation(fields: [subido_por_id], references: [id], onUpdate: NoAction)
 
   @@index([convenio_id], map: "idx_archivos_convenio")
-  @@schema("comercial")
+  @@schema("public")
 }
 
 model convenio_comentarios {
@@ -48,7 +48,7 @@ model convenio_comentarios {
   usuarios       usuarios?  @relation(fields: [usuario_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
 
   @@index([convenio_id], map: "idx_comentarios_convenio")
-  @@schema("comercial")
+  @@schema("public")
 }
 
 model convenios {
@@ -71,7 +71,7 @@ model convenios {
 
   @@index([area_id], map: "idx_convenio_area")
   @@index([estado], map: "idx_convenios_estado")
-  @@schema("comercial")
+  @@schema("public")
 }
 
 model estrategia_tareas {
@@ -90,7 +90,7 @@ model estrategia_tareas {
   usuarios_estrategia_tareas_creador_idTousuarios    usuarios? @relation("estrategia_tareas_creador_idTousuarios", fields: [creador_id], references: [id], onUpdate: NoAction)
 
   @@index([estado], map: "idx_tareas_estrategia_estado")
-  @@schema("comercial")
+  @@schema("public")
 }
 
 model areas {
@@ -113,7 +113,7 @@ model areas {
   repositorio_bloques repositorio_bloques[]
 
   @@index([padre_id], map: "idx_areas_padre")
-  @@schema("core")
+  @@schema("public")
 }
 
 model canales {
@@ -121,12 +121,14 @@ model canales {
   nombre              String?               @db.VarChar(100)
   area_id             Int?
   es_grupo            Boolean?              @default(true)
+  descripcion         String?               @db.VarChar(255)
+  avatar_url          String?
   fecha_creacion      DateTime?             @default(now()) @db.Timestamp(6)
   areas               areas?                @relation(fields: [area_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
   mensajes            mensajes[]
   participantes_canal participantes_canal[]
 
-  @@schema("core")
+  @@schema("public")
 }
 
 model mensajes {
@@ -134,15 +136,31 @@ model mensajes {
   canal_id    Int?
   emisor_id   Int?
   contenido   String
+  tipo        String?   @db.VarChar(20)
   archivo_url String?
   leido       Boolean?  @default(false)
   creado_at   DateTime? @default(now()) @db.Timestamp(6)
   canales     canales?  @relation(fields: [canal_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
   usuarios    usuarios? @relation(fields: [emisor_id], references: [id], onUpdate: NoAction)
+  reacciones_mensaje reacciones_mensaje[]
 
   @@index([canal_id], map: "idx_mensaje_canal")
   @@index([creado_at], map: "idx_mensajes_fecha")
-  @@schema("core")
+  @@schema("public")
+}
+
+model reacciones_mensaje {
+  id          Int      @id @default(autoincrement())
+  mensaje_id  Int
+  usuario_id  Int
+  emoji       String   @db.VarChar(10)
+  creado_at   DateTime @default(now()) @db.Timestamp(6)
+  mensajes    mensajes @relation(fields: [mensaje_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  usuarios    usuarios @relation(fields: [usuario_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@index([mensaje_id], map: "idx_reacciones_mensaje_mensaje")
+  @@index([usuario_id], map: "idx_reacciones_mensaje_usuario")
+  @@schema("public")
 }
 
 model notificaciones {
@@ -156,7 +174,7 @@ model notificaciones {
   usuarios   usuarios? @relation(fields: [usuario_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
 
   @@index([usuario_id], map: "idx_notificaciones_usuario")
-  @@schema("core")
+  @@schema("public")
 }
 
 model participantes_canal {
@@ -166,7 +184,7 @@ model participantes_canal {
   usuarios   usuarios @relation(fields: [usuario_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
 
   @@id([canal_id, usuario_id])
-  @@schema("core")
+  @@schema("public")
 }
 
 model permisos_area {
@@ -182,7 +200,7 @@ model permisos_area {
   @@unique([usuario_id, area_id])
   @@index([area_id], map: "idx_permiso_area")
   @@index([usuario_id], map: "idx_permiso_usuario")
-  @@schema("core")
+  @@schema("public")
 }
 
 model proyectos {
@@ -198,7 +216,7 @@ model proyectos {
   areas          areas?    @relation(fields: [area_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
   usuarios       usuarios? @relation(fields: [responsable_id], references: [id], onUpdate: NoAction)
 
-  @@schema("core")
+  @@schema("public")
 }
 
 model publicaciones {
@@ -212,7 +230,7 @@ model publicaciones {
   areas             areas?    @relation(fields: [area_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
   usuarios          usuarios? @relation(fields: [autor_id], references: [id], onUpdate: NoAction)
 
-  @@schema("core")
+  @@schema("public")
 }
 
 model recursos_area {
@@ -225,7 +243,7 @@ model recursos_area {
   areas          areas?  @relation(fields: [area_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
 
   @@index([area_id], map: "idx_recursos_area")
-  @@schema("core")
+  @@schema("public")
 }
 
 model repositorio_bloques {
@@ -242,7 +260,7 @@ model repositorio_bloques {
   repositorio_enlaces repositorio_enlaces[]
 
   @@index([area_id], map: "idx_repositorio_area")
-  @@schema("core")
+  @@schema("public")
 }
 
 model repositorio_enlaces {
@@ -254,7 +272,7 @@ model repositorio_enlaces {
   repositorio_bloques repositorio_bloques? @relation(fields: [bloque_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
 
   @@index([bloque_id], map: "idx_enlaces_bloque")
-  @@schema("core")
+  @@schema("public")
 }
 
 model roles {
@@ -262,7 +280,7 @@ model roles {
   nombre   String     @unique @db.VarChar(20)
   usuarios usuarios[]
 
-  @@schema("core")
+  @@schema("public")
 }
 
 /// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
@@ -291,17 +309,18 @@ model usuarios {
   proyectos                                                   proyectos[]
   publicaciones                                               publicaciones[]
   repositorio_bloques                                         repositorio_bloques[]
+  reacciones_mensaje                                         reacciones_mensaje[]
   roles                                                       roles?                 @relation(fields: [rol_id], references: [id], onUpdate: NoAction)
 
   @@index([email], map: "idx_usuario_email")
   @@index([rol_id], map: "idx_usuarios_rol")
-  @@schema("core")
+  @@schema("public")
 }
 
 enum UserEstado {
   ACTIVO
   INACTIVO
 
-  @@schema("core")
+  @@schema("public")
 }
 

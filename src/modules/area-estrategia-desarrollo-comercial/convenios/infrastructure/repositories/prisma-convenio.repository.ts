@@ -124,4 +124,4 @@ export class PrismaConvenioRepository {
       where: { id },
     });
   }
-};
+}

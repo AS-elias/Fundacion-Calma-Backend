@@ -6,7 +6,7 @@ import { IUsuarioRepository } from '../../domain/repositories/usuario.repository
 
 @Injectable()
 export class UsuarioRepositoryImpl implements IUsuarioRepository {
-  constructor(private readonly prisma: PrismaService) { }
+  constructor(private readonly prisma: PrismaService) {}
 
   private mapUsuario(usuario: any): UsuarioEntity {
     return new UsuarioEntity({
@@ -31,7 +31,9 @@ export class UsuarioRepositoryImpl implements IUsuarioRepository {
     return usuario ? this.mapUsuario(usuario) : null;
   }
 
-  async findRoleByName(nombre: string): Promise<{ id: number; nombre: string } | null> {
+  async findRoleByName(
+    nombre: string,
+  ): Promise<{ id: number; nombre: string } | null> {
     const rol = await this.prisma.roles.findFirst({
       where: { nombre: { equals: nombre, mode: 'insensitive' } },
       select: { id: true, nombre: true },
@@ -47,7 +49,9 @@ export class UsuarioRepositoryImpl implements IUsuarioRepository {
 
     // 🔥 PREVENCIÓN: Convertimos la fecha si viene en la creación
     if ((createData as any).fecha_fin_contrato) {
-      (createData as any).fecha_fin_contrato = new Date((createData as any).fecha_fin_contrato);
+      (createData as any).fecha_fin_contrato = new Date(
+        (createData as any).fecha_fin_contrato,
+      );
     } else {
       (createData as any).fecha_fin_contrato = null;
     }
@@ -59,7 +63,10 @@ export class UsuarioRepositoryImpl implements IUsuarioRepository {
     return this.mapUsuario(newUsuario);
   }
 
-  async update(id: number, usuario: Partial<UsuarioEntity>): Promise<UsuarioEntity> {
+  async update(
+    id: number,
+    usuario: Partial<UsuarioEntity>,
+  ): Promise<UsuarioEntity> {
     const updateData: Prisma.usuariosUpdateInput = {
       ...usuario,
     } as any;
@@ -68,7 +75,9 @@ export class UsuarioRepositoryImpl implements IUsuarioRepository {
     // 🔥 SOLUCIÓN DEL ERROR 500 🔥
     // Si viene una fecha como texto, la transformamos a objeto Date (ISO-8601)
     if ((updateData as any).fecha_fin_contrato) {
-      (updateData as any).fecha_fin_contrato = new Date((updateData as any).fecha_fin_contrato);
+      (updateData as any).fecha_fin_contrato = new Date(
+        (updateData as any).fecha_fin_contrato,
+      );
     } else {
       // Si el campo viene vacío o no viene, aseguramos que sea null para Prisma
       (updateData as any).fecha_fin_contrato = null;

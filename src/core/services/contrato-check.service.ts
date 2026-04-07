@@ -26,7 +26,9 @@ export class ContratoCheckService {
     });
 
     if (result.count) {
-      this.logger.log(`Desactivados ${result.count} usuarios con contrato vencido`);
+      this.logger.log(
+        `Desactivados ${result.count} usuarios con contrato vencido`,
+      );
     } else {
       this.logger.log('No se encontraron usuarios con contrato vencido');
     }
