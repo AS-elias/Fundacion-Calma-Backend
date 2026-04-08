@@ -8,6 +8,7 @@ import { COMUNIDAD_REPOSITORY } from './domain/repositories/comunidad.repository
 import { PrismaService } from '../../infrastructure/prisma/prisma.service';
 import { AreasService } from '../../core/services/areas.service';
 import { PermisosService } from '../../core/services/permisos.service';
+import { PresenceService } from '../../core/services/presence.service';
 import { USUARIO_REPOSITORY } from '../auth/domain/repositories/usuario.repository';
 import { UsuarioRepositoryImpl } from '../auth/infrastructure/repositories/usuario.repository.impl';
 
@@ -23,6 +24,7 @@ import { UsuarioRepositoryImpl } from '../auth/infrastructure/repositories/usuar
     PrismaService,
     AreasService,
     PermisosService,
+    PresenceService,
 
     // 3. Inyección de dependencias (Arquitectura Hexagonal)
     {
@@ -36,4 +38,4 @@ import { UsuarioRepositoryImpl } from '../auth/infrastructure/repositories/usuar
   ],
   exports: [],
 })
-export class ComunidadModule {}
+export class ComunidadModule { }

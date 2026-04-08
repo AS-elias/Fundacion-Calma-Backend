@@ -8,6 +8,7 @@ import {
   Request,
   Query,
   ParseIntPipe, // 🔥 1. IMPORTAMOS ParseIntPipe AQUÍ
+  DefaultValuePipe,
 } from '@nestjs/common';
 import { JwtAuthGuard } from '../../../auth/infrastructure/guards/jwt-auth.guard';
 import { PermisosGuard } from '../../../../core/guards/permisos.guard';
@@ -28,7 +29,7 @@ export class ComunidadController {
     private readonly addContactoUseCase: AddContactoUseCase,
     private readonly getContactosUseCase: GetContactosUseCase,
     private readonly areasService: AreasService,
-  ) {}
+  ) { }
 
   @Get('contactos')
   @RequierePermiso(Acciones.VER_CONTACTOS)
@@ -39,7 +40,7 @@ export class ComunidadController {
 
   @Get('contactos/buscar')
   @RequierePermiso(Acciones.VER_CONTACTOS)
-  async searchContactos(@Query('q') query: string, @Request() req: any) {
+  async searchContactos(@Query('q', new DefaultValuePipe('')) query: string, @Request() req: any) {
     const usuarioId = req.user.id;
     return this.searchContactosUseCase.execute(query, usuarioId);
   }

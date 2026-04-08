@@ -14,7 +14,7 @@ export class ComunicacionesService {
     private readonly jwtService: JwtService,
     @Inject(COMUNICACIONES_REPOSITORY)
     private readonly repo: ComunicacionesRepository,
-  ) {}
+  ) { }
 
   verifyToken(token: string) {
     if (!token) throw new UnauthorizedException('Token no enviado');
@@ -85,5 +85,9 @@ export class ComunicacionesService {
 
   async getReactions(mensajeId: number) {
     return this.repo.getReactions(mensajeId);
+  }
+
+  async deleteChannel(canalId: number) {
+    return this.repo.deleteChannel(canalId);
   }
 }

@@ -7,13 +7,17 @@ import {
   ArrayNotEmpty,
   ArrayUnique,
   Min,
+  IsNotEmpty,
 } from 'class-validator';
+import { Type } from 'class-transformer';
 
 export class CreateChannelDto {
   @IsString()
+  @IsNotEmpty()
   nombre!: string;
 
   @IsOptional()
+  @Type(() => Number)
   @IsInt()
   @Min(1)
   areaId?: number;
@@ -25,6 +29,7 @@ export class CreateChannelDto {
   @IsArray()
   @ArrayNotEmpty()
   @ArrayUnique()
+  @Type(() => Number)
   participanteIds!: number[];
 
   @IsInt()

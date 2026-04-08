@@ -12,30 +12,63 @@ export class PrismaComunicacionesRepository implements ComunicacionesRepository 
     constructor(private readonly prisma: PrismaService) { }
 
     async createChannel(data: CanalData) {
-        const canal = await this.prisma.canales.create({
-            data: {
-                nombre: data.nombre,
-                area_id: data.areaId ?? null,
-                es_grupo: data.esGrupo ?? true,
-                descripcion: data.descripcion,
-                avatar_url: data.avatarUrl,
-            },
-        });
-
         const participantes = Array.from(
             new Set([...data.participanteIds, data.creadorId]),
         );
-        if (participantes.length > 0) {
-            await this.prisma.participantes_canal.createMany({
-                data: participantes.map((usuarioId) => ({
-                    canal_id: canal.id,
-                    usuario_id: usuarioId,
-                })),
-                skipDuplicates: true,
+        const esChatDirecto = participantes.length === 2 && data.esGrupo !== true;
+
+        if (esChatDirecto) {
+            const candidates = await this.prisma.canales.findMany({
+                where: {
+                    es_grupo: false,
+                    participantes_canal: {
+                        some: {
+                            usuario_id: { in: participantes },
+                        },
+                    },
+                },
+                include: { participantes_canal: true },
             });
+
+            const sortedParticipants = participantes.slice().sort((a, b) => a - b);
+            const existing = candidates.find((canal) => {
+                const channelUsers = canal.participantes_canal
+                    .map((p) => p.usuario_id)
+                    .sort((a, b) => a - b);
+                return (
+                    channelUsers.length === sortedParticipants.length &&
+                    channelUsers.every((id, index) => id === sortedParticipants[index])
+                );
+            });
+
+            if (existing) {
+                return existing;
+            }
         }
 
-        return canal;
+        return this.prisma.$transaction(async (tx) => {
+            const canal = await tx.canales.create({
+                data: {
+                    nombre: data.nombre,
+                    area_id: data.areaId ?? null,
+                    es_grupo: esChatDirecto ? false : data.esGrupo ?? true,
+                    descripcion: data.descripcion,
+                    avatar_url: data.avatarUrl,
+                },
+            });
+
+            if (participantes.length > 0) {
+                await tx.participantes_canal.createMany({
+                    data: participantes.map((usuarioId) => ({
+                        canal_id: canal.id,
+                        usuario_id: usuarioId,
+                    })),
+                    skipDuplicates: true,
+                });
+            }
+
+            return canal;
+        });
     }
 
     async updateChannel(canalId: number, data: Partial<CanalData>) {
@@ -140,6 +173,12 @@ export class PrismaComunicacionesRepository implements ComunicacionesRepository 
     async deleteMessage(mensajeId: number, remitenteId: number) {
         return this.prisma.mensajes.deleteMany({
             where: { id: mensajeId, emisor_id: remitenteId },
+        });
+    }
+
+    async deleteChannel(canalId: number) {
+        return this.prisma.canales.delete({
+            where: { id: canalId },
         });
     }
 

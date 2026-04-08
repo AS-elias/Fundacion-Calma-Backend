@@ -2,10 +2,11 @@ import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../../../../infrastructure/prisma/prisma.service';
 import { IComunidadRepository } from '../../domain/repositories/comunidad.repository';
 import { ContactoEntity } from '../../domain/entities/contacto.entity';
+import { PresenceService } from '../../../../core/services/presence.service';
 
 @Injectable()
 export class PrismaComunidadRepository implements IComunidadRepository {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(private readonly prisma: PrismaService, private readonly presenceService: PresenceService) { }
 
   async obtenerContactos(usuarioId: number): Promise<ContactoEntity[]> {
     // Obtener contactos del usuario (usuarios que ha agregado)
@@ -18,20 +19,25 @@ export class PrismaComunidadRepository implements IComunidadRepository {
     query: string,
     usuarioId: number,
   ): Promise<ContactoEntity[]> {
+    const whereCondition: any = {
+      estado: 'ACTIVO',
+      id: { not: usuarioId },
+    };
+
+    if (query && query.trim()) {
+      whereCondition.AND = [
+        {
+          OR: [
+            { nombre_completo: { contains: query.trim(), mode: 'insensitive' } },
+            { apellido_completo: { contains: query.trim(), mode: 'insensitive' } },
+            { email: { contains: query.trim(), mode: 'insensitive' } },
+          ],
+        },
+      ];
+    }
+
     const usuariosDb = await this.prisma.usuarios.findMany({
-      where: {
-        estado: 'ACTIVO',
-        AND: [
-          {
-            OR: [
-              { nombre_completo: { contains: query, mode: 'insensitive' } },
-              { apellido_completo: { contains: query, mode: 'insensitive' } },
-              { email: { contains: query, mode: 'insensitive' } },
-            ],
-          },
-          { id: { not: usuarioId } }, // Excluir al propio usuario
-        ],
-      },
+      where: whereCondition,
       include: {
         roles: true,
         permisos_area: {
@@ -65,6 +71,7 @@ export class PrismaComunidadRepository implements IComunidadRepository {
         rolNombre,
         areaNombre,
         iniciales,
+        this.presenceService.isUserOnline(user.id),
       );
     });
   }
@@ -128,6 +135,7 @@ export class PrismaComunidadRepository implements IComunidadRepository {
         rolNombre,
         areaNombre,
         iniciales,
+        this.presenceService.isUserOnline(user.id),
       );
     });
   }

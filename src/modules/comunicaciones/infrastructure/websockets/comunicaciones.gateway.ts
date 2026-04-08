@@ -20,6 +20,7 @@ import { ReactionDto } from '../../application/dto/reaction.dto';
 import { ReadReceiptDto } from '../../application/dto/read-receipt.dto';
 import { EditDeleteDto } from '../../application/dto/edit-delete.dto';
 import { GetRecentMessagesDto } from '../../application/dto/get-recent-messages.dto';
+import { PresenceService } from '../../../../core/services/presence.service';
 
 @WebSocketGateway({
   namespace: '/comunicaciones',
@@ -35,7 +36,7 @@ export class ComunicacionesGateway
 
   private readonly logger = new Logger(ComunicacionesGateway.name);
 
-  constructor(private readonly comunicacionesService: ComunicacionesService) { }
+  constructor(private readonly comunicacionesService: ComunicacionesService, private readonly presenceService: PresenceService) { }
 
   async handleConnection(socket: Socket) {
     try {
@@ -49,6 +50,8 @@ export class ComunicacionesGateway
 
       const payload = this.comunicacionesService.verifyToken(String(token));
       socket.data.user = payload;
+      this.presenceService.addUser(payload.sub);
+      this.server.emit('userOnline', { usuarioId: payload.sub });
       this.logger.log(
         `Socket conectado: ${socket.id}, usuario: ${payload.sub}`,
       );
@@ -60,6 +63,10 @@ export class ComunicacionesGateway
   }
 
   handleDisconnect(socket: Socket) {
+    if (socket.data.user) {
+      this.presenceService.removeUser(socket.data.user.sub);
+      this.server.emit('userOffline', { usuarioId: socket.data.user.sub });
+    }
     this.logger.log(`Conexión WebSocket finalizada: ${socket.id}`);
   }
 
@@ -84,7 +91,6 @@ export class ComunicacionesGateway
   @SubscribeMessage('createChannel')
   async createChannel(
     @MessageBody() payload: CreateChannelDto,
-    @ConnectedSocket() socket: Socket,
   ) {
     try {
       this.logger.log('createChannel - iniciando');
@@ -97,20 +103,20 @@ export class ComunicacionesGateway
         esGrupo: canal.es_grupo,
       });
 
-      socket.emit('createChannelResponse', {
+      return {
         success: true,
         data: {
           canalId: canal.id,
           nombre: canal.nombre,
           esGrupo: canal.es_grupo,
         },
-      });
+      };
     } catch (error: any) {
       this.logger.error('createChannel error:', error.message);
-      socket.emit('createChannelResponse', {
+      return {
         success: false,
         error: error.message || 'Error creating channel',
-      });
+      };
     }
   }
 
@@ -228,6 +234,30 @@ export class ComunicacionesGateway
       socket.emit('leaveChannelResponse', {
         success: false,
         error: error.message || 'Error leaving channel',
+      });
+    }
+  }
+
+  @SubscribeMessage('deleteChannel')
+  async deleteChannel(
+    @MessageBody() payload: JoinChannelDto,
+    @ConnectedSocket() socket: Socket,
+  ) {
+    try {
+      const dto = await this.validatePayload(payload, JoinChannelDto);
+      await this.comunicacionesService.deleteChannel(dto.canalId);
+      const room = `canal_${dto.canalId}`;
+      socket.leave(room);
+      this.server.to(room).emit('channelDeleted', { canalId: dto.canalId });
+      socket.emit('deleteChannelResponse', {
+        success: true,
+        data: { canalId: dto.canalId },
+      });
+    } catch (error: any) {
+      this.logger.error('deleteChannel error:', error.message);
+      socket.emit('deleteChannelResponse', {
+        success: false,
+        error: error.message || 'Error deleting channel',
       });
     }
   }
@@ -577,5 +607,10 @@ export class ComunicacionesGateway
         error: error.message || 'Error deleting message',
       });
     }
+  }
+
+  @SubscribeMessage('getConnectedUsers')
+  getConnectedUsers() {
+    return { connectedUsers: this.presenceService.getConnectedUsers() };
   }
 }

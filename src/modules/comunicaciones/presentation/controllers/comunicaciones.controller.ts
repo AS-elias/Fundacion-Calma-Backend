@@ -3,6 +3,7 @@ import {
   Post,
   Get,
   Patch,
+  Delete,
   Param,
   UploadedFile,
   UseInterceptors,
@@ -15,6 +16,7 @@ import { FileInterceptor } from '@nestjs/platform-express';
 import { diskStorage } from 'multer';
 import { ComunicacionesService } from '../../application/services/comunicaciones.service';
 import { JwtAuthGuard } from '../../../auth/infrastructure/guards/jwt-auth.guard';
+import { CreateChannelDto } from '../../application/dto/create-channel.dto';
 import { UpdateChannelDto } from '../../application/dto/update-channel.dto';
 import { ReactionDto } from '../../application/dto/reaction.dto';
 
@@ -22,6 +24,11 @@ import { ReactionDto } from '../../application/dto/reaction.dto';
 @UseGuards(JwtAuthGuard)
 export class ComunicacionesController {
   constructor(private readonly comunicacionesService: ComunicacionesService) { }
+
+  @Post('channels')
+  async createChannel(@Body() dto: CreateChannelDto) {
+    return this.comunicacionesService.createChannel(dto);
+  }
 
   @Get('channels/:id/info')
   async getChannelInfo(@Param('id') id: string) {
@@ -39,6 +46,15 @@ export class ComunicacionesController {
       throw new BadRequestException('canalId inválido');
     }
     return this.comunicacionesService.updateChannel(canalId, dto);
+  }
+
+  @Delete('channels/:id')
+  async deleteChannel(@Param('id') id: string) {
+    const canalId = Number(id);
+    if (Number.isNaN(canalId) || canalId < 1) {
+      throw new BadRequestException('canalId inválido');
+    }
+    return this.comunicacionesService.deleteChannel(canalId);
   }
 
   @Post('channels/:id/files')

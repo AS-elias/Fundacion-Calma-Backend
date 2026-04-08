@@ -6,6 +6,7 @@ import { ComunicacionesService } from './application/services/comunicaciones.ser
 import { COMUNICACIONES_REPOSITORY } from './domain/repositories/comunicaciones.repository';
 import { PrismaComunicacionesRepository } from './infrastructure/repositories/prisma-comunicaciones.repository';
 import { ComunicacionesController } from './presentation/controllers/comunicaciones.controller';
+import { PresenceService } from '../../core/services/presence.service';
 
 @Module({
   imports: [
@@ -19,6 +20,7 @@ import { ComunicacionesController } from './presentation/controllers/comunicacio
     PrismaService,
     ComunicacionesService,
     ComunicacionesGateway,
+    PresenceService,
     {
       provide: COMUNICACIONES_REPOSITORY,
       useClass: PrismaComunicacionesRepository,

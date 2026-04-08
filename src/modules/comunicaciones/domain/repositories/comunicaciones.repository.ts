@@ -41,6 +41,7 @@ export interface ComunicacionesRepository {
         contenido: string,
     ): Promise<any>;
     deleteMessage(mensajeId: number, remitenteId: number): Promise<any>;
+    deleteChannel(canalId: number): Promise<any>;
     addReaction(reaction: ReactionData): Promise<any>;
     removeReaction(
         mensajeId: number,
