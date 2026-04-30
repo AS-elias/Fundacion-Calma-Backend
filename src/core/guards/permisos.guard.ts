@@ -1,4 +1,9 @@
-import { Injectable, CanActivate, ExecutionContext, ForbiddenException } from '@nestjs/common';
+import {
+  Injectable,
+  CanActivate,
+  ExecutionContext,
+  ForbiddenException,
+} from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { PermisosService, Acciones } from '../services/permisos.service';
 // 👇 IMPORTAMOS EL ENUM DE ROLES (ajusta la ruta si es necesario)
@@ -17,10 +22,13 @@ export class PermisosGuard implements CanActivate {
   constructor(
     private reflector: Reflector,
     private permisosService: PermisosService,
-  ) { }
+  ) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
-    const permiso = this.reflector.get<PermisoMetadata>(PERMISO_KEY, context.getHandler());
+    const permiso = this.reflector.get<PermisoMetadata>(
+      PERMISO_KEY,
+      context.getHandler(),
+    );
     if (!permiso) {
       return true; // Si no hay metadata de permiso, permitir acceso
     }
@@ -35,7 +43,10 @@ export class PermisosGuard implements CanActivate {
 
     // 🔥 LA REGLA DE ORO: EL ADMINISTRADOR TIENE PASE LIBRE 🔥
     // Si el usuario es Administrador, lo dejamos pasar sin verificar en la base de datos
-    if (usuario.rol === RolesFundacion.ADMIN || usuario.rol === RolesFundacion.ADMINISTRADOR) {
+    if (
+      usuario.rol === RolesFundacion.ADMIN ||
+      usuario.rol === RolesFundacion.ADMINISTRADOR
+    ) {
       return true;
     }
 
@@ -43,7 +54,8 @@ export class PermisosGuard implements CanActivate {
     let areaId = permiso.areaId;
     if (!areaId) {
       // Intentar obtener de params, body, o query
-      areaId = request.params?.areaId || request.body?.areaId || request.query?.areaId;
+      areaId =
+        request.params?.areaId || request.body?.areaId || request.query?.areaId;
     }
 
     // Si NO es administrador, entonces sí verificamos sus permisos específicos
@@ -54,7 +66,9 @@ export class PermisosGuard implements CanActivate {
     );
 
     if (!tienePermiso) {
-      throw new ForbiddenException('No tienes permisos para realizar esta acción');
+      throw new ForbiddenException(
+        'No tienes permisos para realizar esta acción',
+      );
     }
 
     return true;

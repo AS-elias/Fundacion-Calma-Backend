@@ -12,7 +12,10 @@ export interface IComunidadRepository {
   /**
    * Busca usuarios activos por nombre o email.
    */
-  buscarUsuariosActivos(query: string, usuarioId: number): Promise<ContactoEntity[]>;
+  buscarUsuariosActivos(
+    query: string,
+    usuarioId: number,
+  ): Promise<ContactoEntity[]>;
 
   /**
    * Agrega un contacto existente al usuario.

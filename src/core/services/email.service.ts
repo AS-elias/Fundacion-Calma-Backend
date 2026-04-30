@@ -34,15 +34,22 @@ export class EmailService {
     });
   }
 
-  async sendNewUserNotification(to: string, payload: { nombre: string; email: string; password: string; rol: string }) {
+  async sendNewUserNotification(
+    to: string,
+    payload: { nombre: string; email: string; password: string; rol: string },
+  ) {
     if (!this.transporter) {
-      this.logger.warn('[EmailService] Transporter no inicializado, envío de email omitido (sin SMTP).');
+      this.logger.warn(
+        '[EmailService] Transporter no inicializado, envío de email omitido (sin SMTP).',
+      );
       return;
     }
 
-    const appUrl = this.configService.get<string>('APP_URL') || 'http://localhost:4200';
+    const appUrl =
+      this.configService.get<string>('APP_URL') || 'http://localhost:4200';
     const subject = 'Bienvenido a Fundación Calma - Cuenta creada';
-    const text = `Hola ${payload.nombre},\n\n` +
+    const text =
+      `Hola ${payload.nombre},\n\n` +
       `Tu cuenta en Fundación Calma ha sido creada con éxito.\n` +
       `Email: ${payload.email}\n` +
       `Contraseña temporal: ${payload.password}\n` +
@@ -51,7 +58,8 @@ export class EmailService {
       `${appUrl}/login\n\n` +
       `Saludos,\nEquipo Fundación Calma`;
 
-    const html = `<p>Hola <strong>${payload.nombre}</strong>,</p>` +
+    const html =
+      `<p>Hola <strong>${payload.nombre}</strong>,</p>` +
       `<p>Tu cuenta en Fundación Calma ha sido creada con éxito.</p>` +
       `<ul>` +
       `<li><strong>Email:</strong> ${payload.email}</li>` +
@@ -63,7 +71,8 @@ export class EmailService {
 
     try {
       const info = await this.transporter.sendMail({
-        from: this.configService.get<string>('EMAIL_FROM') || 'no-reply@calma.org',
+        from:
+          this.configService.get<string>('EMAIL_FROM') || 'no-reply@calma.org',
         to,
         subject,
         text,
@@ -71,7 +80,10 @@ export class EmailService {
       });
       this.logger.log(`[EmailService] new-user email sent: ${info.messageId}`);
     } catch (error) {
-      this.logger.error('[EmailService] Error al enviar email de usuario nuevo', error as any);
+      this.logger.error(
+        '[EmailService] Error al enviar email de usuario nuevo',
+        error,
+      );
       throw error;
     }
   }

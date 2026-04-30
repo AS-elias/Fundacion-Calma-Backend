@@ -28,7 +28,7 @@ export class ComunidadController {
     private readonly addContactoUseCase: AddContactoUseCase,
     private readonly getContactosUseCase: GetContactosUseCase,
     private readonly areasService: AreasService,
-  ) { }
+  ) {}
 
   @Get('contactos')
   @RequierePermiso(Acciones.VER_CONTACTOS)
@@ -54,19 +54,28 @@ export class ComunidadController {
   @Get('areas')
   // Sin @RequierePermiso: cualquier usuario autenticado puede ver SUS áreas.
   // AreasService filtra según el rol (Admin→todo, Director→sus áreas+subareas, resto→solo asignadas)
-  async getAreasPermitidas(@Request() req: any, @Query('todas') todas?: string) {
+  async getAreasPermitidas(
+    @Request() req: any,
+    @Query('todas') todas?: string,
+  ) {
     const usuario = req.user; // { id, email, rol } — del JwtStrategy.validate()
-    const esAdmin = usuario.rol === RolesFundacion.ADMIN || usuario.rol === RolesFundacion.ADMINISTRADOR;
+    const esAdmin =
+      usuario.rol === RolesFundacion.ADMIN ||
+      usuario.rol === RolesFundacion.ADMINISTRADOR;
     const incluirTodas = todas === 'true' && esAdmin;
     const esDirector = usuario.rol === RolesFundacion.DIRECTOR;
-    return this.areasService.obtenerAreasFiltradas(usuario.id, incluirTodas, esDirector);
+    return this.areasService.obtenerAreasFiltradas(
+      usuario.id,
+      incluirTodas,
+      esDirector,
+    );
   }
 
   @Get('areas/:id/acceso')
   @RequierePermiso(Acciones.GESTIONAR_AREAS)
   async verificarAccesoArea(
     @Param('id', ParseIntPipe) areaId: number, // 🔥 2. AGREGADO AQUÍ
-    @Request() req: any
+    @Request() req: any,
   ) {
     const usuarioId = req.user.id;
     const tieneAcceso = await this.areasService.puedeAccederAreaCompleta(
@@ -78,7 +87,8 @@ export class ComunidadController {
 
   @Get('usuarios/:id/areas')
   @RequierePermiso(Acciones.GESTIONAR_AREAS)
-  async getPermisosUsuarioAreas(@Param('id', ParseIntPipe) id: number) { // 🔥 3. AGREGADO AQUÍ
+  async getPermisosUsuarioAreas(@Param('id', ParseIntPipe) id: number) {
+    // 🔥 3. AGREGADO AQUÍ
     return this.areasService.obtenerPermisosAreaUsuario(id);
   }
 
@@ -86,7 +96,13 @@ export class ComunidadController {
   @RequierePermiso(Acciones.GESTIONAR_AREAS)
   async setPermisosUsuarioAreas(
     @Param('id', ParseIntPipe) id: number, // 🔥 4. AGREGADO AQUÍ
-    @Body() permisos: Array<{ area_id: number; puede_publicar?: boolean; puede_editar?: boolean; permitir_subareas?: boolean }>,
+    @Body()
+    permisos: Array<{
+      area_id: number;
+      puede_publicar?: boolean;
+      puede_editar?: boolean;
+      permitir_subareas?: boolean;
+    }>,
   ) {
     return this.areasService.actualizarPermisosAreaUsuario(id, permisos);
   }

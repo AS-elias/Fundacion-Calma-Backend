@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable } from '@nestjs/common';
 import { PrismaService } from '../../../../../infrastructure/prisma/prisma.service';
 import { Convenio } from '../../domain/entities/convenio.entity';
 import { ConexionConvenio } from '../../domain/enums/conexion-convenio.enum';
@@ -8,24 +8,127 @@ import { ConvenioRepository } from '../../domain/repositories/convenio.repositor
 
 @Injectable()
 export class PrismaConvenioRepository implements ConvenioRepository {
+  private static readonly DEFAULT_AREA_NAME = 'Área Comercial';
+
   constructor(private readonly prisma: PrismaService) {}
 
+  private normalizeText(value: unknown): string | undefined {
+    if (value === undefined || value === null) {
+      return undefined;
+    }
+
+    const trimmed = String(value).trim();
+    return trimmed === '' ? undefined : trimmed;
+  }
+
+  private normalizeDate(value: unknown): Date | undefined {
+    if (value === undefined || value === null || value === '') {
+      return undefined;
+    }
+
+    if (value instanceof Date) {
+      return Number.isNaN(value.getTime()) ? undefined : value;
+    }
+
+    const trimmed = String(value).trim();
+    if (!trimmed) {
+      return undefined;
+    }
+
+    const ddmmyyyyMatch = trimmed.match(/^(\d{2})\/(\d{2})\/(\d{4})$/);
+    if (ddmmyyyyMatch) {
+      const [, day, month, year] = ddmmyyyyMatch;
+      const parsed = new Date(`${year}-${month}-${day}T00:00:00`);
+      if (Number.isNaN(parsed.getTime())) {
+        throw new BadRequestException(
+          'fechaExpiracion debe tener un formato valido.',
+        );
+      }
+
+      return parsed;
+    }
+
+    const parsed = new Date(trimmed);
+    if (Number.isNaN(parsed.getTime())) {
+      throw new BadRequestException(
+        'fechaExpiracion debe tener un formato valido.',
+      );
+    }
+
+    return parsed;
+  }
+
+  private parseAreaId(value: unknown): number | undefined {
+    if (value === undefined || value === null || value === '') {
+      return undefined;
+    }
+
+    const parsed = Number(value);
+    if (!Number.isInteger(parsed) || parsed <= 0) {
+      return undefined;
+    }
+
+    return parsed;
+  }
+
+  private async findDefaultAreaId(): Promise<number | undefined> {
+    const area = await this.prisma.areas.findFirst({
+      where: { nombre: PrismaConvenioRepository.DEFAULT_AREA_NAME },
+      select: { id: true },
+      orderBy: { id: 'asc' },
+    });
+
+    return area?.id;
+  }
+
+  private async resolveAreaId(
+    value: unknown,
+    fallbackAreaId?: number,
+  ): Promise<number | undefined> {
+    const parsedAreaId = this.parseAreaId(value);
+
+    if (parsedAreaId !== undefined) {
+      const area = await this.prisma.areas.findUnique({
+        where: { id: parsedAreaId },
+        select: { id: true },
+      });
+
+      if (area) {
+        return area.id;
+      }
+    }
+
+    if (fallbackAreaId !== undefined) {
+      return fallbackAreaId;
+    }
+
+    return this.findDefaultAreaId();
+  }
+
   async create(convenio: Convenio): Promise<Convenio> {
+    const fechaExpiracion = this.normalizeDate(convenio.fechaExpiracion);
+    const areaId = await this.resolveAreaId(convenio.areaId);
+
+    if (areaId === undefined) {
+      throw new BadRequestException(
+        'No se pudo determinar un area valida para el convenio.',
+      );
+    }
+
     const created = await this.prisma.convenios.create({
       data: {
-        area_id: convenio.areaId,
-        entidad_nombre: convenio.entidadNombre,
-        logo_url: convenio.logoUrl,
-        ruc: convenio.ruc,
-        rubro: convenio.rubro,
-        contacto_nombre: convenio.contactoNombre,
-        telefono_contacto: convenio.telefonoContacto,
-        estado: convenio.estado,
-        tipo: convenio.tipo,
-        conexion: convenio.conexion,
-        fecha_expiracion: convenio.fechaExpiracion
-          ? new Date(convenio.fechaExpiracion)
-          : null,
+        area_id: areaId,
+        entidad_nombre:
+          this.normalizeText(convenio.entidadNombre) ?? convenio.entidadNombre,
+        logo_url: this.normalizeText(convenio.logoUrl),
+        ruc: this.normalizeText(convenio.ruc),
+        rubro: this.normalizeText(convenio.rubro),
+        contacto_nombre: this.normalizeText(convenio.contactoNombre),
+        telefono_contacto: this.normalizeText(convenio.telefonoContacto),
+        estado: this.normalizeText(convenio.estado),
+        tipo: this.normalizeText(convenio.tipo),
+        conexion: this.normalizeText(convenio.conexion),
+        fecha_expiracion: fechaExpiracion ?? null,
         creador_id: convenio.creadorId,
       },
     });
@@ -98,22 +201,37 @@ export class PrismaConvenioRepository implements ConvenioRepository {
   }
 
   async update(id: number, convenioData: Partial<Convenio>): Promise<Convenio> {
+    const fechaExpiracion = this.normalizeDate(
+      convenioData.fechaExpiracion as Date | string | undefined,
+    );
+    const existingConvenio = await this.prisma.convenios.findUnique({
+      where: { id },
+      select: { area_id: true },
+    });
+
+    if (!existingConvenio) {
+      throw new BadRequestException('El convenio no existe.');
+    }
+
+    const areaId = await this.resolveAreaId(
+      convenioData.areaId,
+      existingConvenio.area_id ?? undefined,
+    );
+
     const updated = await this.prisma.convenios.update({
       where: { id },
       data: {
-        area_id: convenioData.areaId,
-        entidad_nombre: convenioData.entidadNombre,
-        logo_url: convenioData.logoUrl,
-        ruc: convenioData.ruc,
-        rubro: convenioData.rubro,
-        contacto_nombre: convenioData.contactoNombre,
-        telefono_contacto: convenioData.telefonoContacto,
-        estado: convenioData.estado,
-        tipo: convenioData.tipo,
-        conexion: convenioData.conexion,
-        fecha_expiracion: convenioData.fechaExpiracion
-          ? new Date(convenioData.fechaExpiracion)
-          : undefined,
+        area_id: areaId,
+        entidad_nombre: this.normalizeText(convenioData.entidadNombre),
+        logo_url: this.normalizeText(convenioData.logoUrl),
+        ruc: this.normalizeText(convenioData.ruc),
+        rubro: this.normalizeText(convenioData.rubro),
+        contacto_nombre: this.normalizeText(convenioData.contactoNombre),
+        telefono_contacto: this.normalizeText(convenioData.telefonoContacto),
+        estado: this.normalizeText(convenioData.estado),
+        tipo: this.normalizeText(convenioData.tipo),
+        conexion: this.normalizeText(convenioData.conexion),
+        fecha_expiracion: fechaExpiracion,
       },
     });
 
@@ -140,4 +258,4 @@ export class PrismaConvenioRepository implements ConvenioRepository {
       where: { id },
     });
   }
-};
+}

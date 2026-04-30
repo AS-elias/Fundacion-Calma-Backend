@@ -3,7 +3,6 @@ import { PrismaService } from '../../../../infrastructure/prisma/prisma.service'
 import { IComunidadRepository } from '../../domain/repositories/comunidad.repository';
 import { ContactoEntity } from '../../domain/entities/contacto.entity';
 
-
 @Injectable()
 export class PrismaComunidadRepository implements IComunidadRepository {
   constructor(private readonly prisma: PrismaService) {}
@@ -15,7 +14,10 @@ export class PrismaComunidadRepository implements IComunidadRepository {
     return this.obtenerContactosActivos();
   }
 
-  async buscarUsuariosActivos(query: string, usuarioId: number): Promise<ContactoEntity[]> {
+  async buscarUsuariosActivos(
+    query: string,
+    usuarioId: number,
+  ): Promise<ContactoEntity[]> {
     const usuariosDb = await this.prisma.usuarios.findMany({
       where: {
         estado: 'ACTIVO',
@@ -41,12 +43,15 @@ export class PrismaComunidadRepository implements IComunidadRepository {
       },
     });
 
-    return usuariosDb.map(user => {
-      const iniciales = `${user.nombre_completo?.charAt(0) || ''}${user.apellido_completo?.charAt(0) || ''}`.toUpperCase();
-      const areaNombre = user.permisos_area.length > 0 && user.permisos_area[0].areas
-        ? user.permisos_area[0].areas.nombre
-        : 'General';
-      const rolNombre = user.puesto || (user.roles ? user.roles.nombre : 'Miembro');
+    return usuariosDb.map((user) => {
+      const iniciales =
+        `${user.nombre_completo?.charAt(0) || ''}${user.apellido_completo?.charAt(0) || ''}`.toUpperCase();
+      const areaNombre =
+        user.permisos_area.length > 0 && user.permisos_area[0].areas
+          ? user.permisos_area[0].areas.nombre
+          : 'General';
+      const rolNombre =
+        user.puesto || (user.roles ? user.roles.nombre : 'Miembro');
 
       return new ContactoEntity(
         user.id,
@@ -59,7 +64,7 @@ export class PrismaComunidadRepository implements IComunidadRepository {
         user.estado,
         rolNombre,
         areaNombre,
-        iniciales
+        iniciales,
       );
     });
   }
@@ -89,24 +94,27 @@ export class PrismaComunidadRepository implements IComunidadRepository {
         roles: true,
         permisos_area: {
           include: {
-            areas: true
+            areas: true,
           },
-          take: 1 // Tomamos solo la primera área para la tarjeta principal
-        }
-      }
+          take: 1, // Tomamos solo la primera área para la tarjeta principal
+        },
+      },
     });
 
     // 2. Mapeamos la respuesta de la Base de Datos a nuestra Entidad de Negocio
-    return usuariosDb.map(user => {
+    return usuariosDb.map((user) => {
       // Calculamos las iniciales (Ej: Juan Perez -> JP)
-      const iniciales = `${user.nombre_completo?.charAt(0) || ''}${user.apellido_completo?.charAt(0) || ''}`.toUpperCase();
-      
-      // Obtenemos el nombre del área
-      const areaNombre = user.permisos_area.length > 0 && user.permisos_area[0].areas 
-        ? user.permisos_area[0].areas.nombre 
-        : 'General';
+      const iniciales =
+        `${user.nombre_completo?.charAt(0) || ''}${user.apellido_completo?.charAt(0) || ''}`.toUpperCase();
 
-      const rolNombre = user.puesto || (user.roles ? user.roles.nombre : 'Miembro');
+      // Obtenemos el nombre del área
+      const areaNombre =
+        user.permisos_area.length > 0 && user.permisos_area[0].areas
+          ? user.permisos_area[0].areas.nombre
+          : 'General';
+
+      const rolNombre =
+        user.puesto || (user.roles ? user.roles.nombre : 'Miembro');
 
       return new ContactoEntity(
         user.id,
@@ -119,7 +127,7 @@ export class PrismaComunidadRepository implements IComunidadRepository {
         user.estado,
         rolNombre,
         areaNombre,
-        iniciales
+        iniciales,
       );
     });
   }

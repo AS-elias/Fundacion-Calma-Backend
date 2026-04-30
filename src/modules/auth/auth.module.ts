@@ -33,8 +33,6 @@ import { EmailService } from '../../core/services/email.service';
 })
 export class AuthModule implements NestModule {
   configure(consumer: MiddlewareConsumer) {
-    consumer
-      .apply(AuthLoggerMiddleware)
-      .forRoutes('auth');
+    consumer.apply(AuthLoggerMiddleware).forRoutes('auth');
   }
 }

@@ -1,6 +1,6 @@
-import { ConexionConvenio } from "../../domain/enums/conexion-convenio.enum";
-import { EstadoConvenio } from "../../domain/enums/estado-convenio.enum";
-import { TipoConvenio } from "../../domain/enums/tipo-convenio.enum";
+import { ConexionConvenio } from '../../domain/enums/conexion-convenio.enum';
+import { EstadoConvenio } from '../../domain/enums/estado-convenio.enum';
+import { TipoConvenio } from '../../domain/enums/tipo-convenio.enum';
 
 export class UpdateConvenioDto {
   entidadNombre?: string;

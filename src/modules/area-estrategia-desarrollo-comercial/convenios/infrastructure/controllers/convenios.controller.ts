@@ -27,9 +27,18 @@ export class ConveniosController {
     private readonly deleteConvenio: DeleteConvenioUseCase,
   ) {}
 
+  private withSuccessMessage<T extends object>(data: T, message: string) {
+    return {
+      ...data,
+      message,
+      mensaje: message,
+    };
+  }
+
   @Post()
   async create(@Body() dto: CreateConvenioDto) {
-    return this.createConvenio.execute(dto);
+    const convenio = await this.createConvenio.execute(dto);
+    return this.withSuccessMessage(convenio, 'Convenio guardado exitosamente.');
   }
 
   @Get()
@@ -44,7 +53,11 @@ export class ConveniosController {
 
   @Put(':id')
   async update(@Param('id') id: string, @Body() dto: UpdateConvenioDto) {
-    return this.updateConvenio.execute(Number(id), dto);
+    const convenio = await this.updateConvenio.execute(Number(id), dto);
+    return this.withSuccessMessage(
+      convenio,
+      'Se guardaron los cambios exitosamente.',
+    );
   }
 
   @Delete(':id')

@@ -28,10 +28,13 @@ export class AreasService {
    * Obtiene todas las áreas a las que un usuario tiene acceso,
    * incluyendo permisos específicos y jerarquía de subáreas.
    */
-  async obtenerAreasPermitidasParaUsuario(usuarioId: number, esDirector: boolean = false): Promise<AreaConPermisos[]> {
+  async obtenerAreasPermitidasParaUsuario(
+    usuarioId: number,
+    esDirector: boolean = false,
+  ): Promise<AreaConPermisos[]> {
     // 1. Obtener todas las áreas para poder buscar subáreas recursivamente
     const todasAreasDb = await this.prisma.areas.findMany();
-    
+
     // 2. Obtener permisos explícitos del usuario
     const permisosUsuario = await this.prisma.permisos_area.findMany({
       where: { usuario_id: usuarioId },
@@ -41,7 +44,7 @@ export class AreasService {
     if (permisosUsuario.length === 0) {
       return [];
     }
-    
+
     const areasMap = new Map<number, AreaConPermisos>();
     for (const area of todasAreasDb) {
       areasMap.set(area.id, {
@@ -63,19 +66,24 @@ export class AreasService {
 
     for (const permiso of permisosUsuario) {
       if (!permiso.area_id) continue;
-      
+
       const areaNode = areasMap.get(permiso.area_id);
       if (!areaNode) continue;
-      
+
       areaNode.permisos.puede_publicar = permiso.puede_publicar || false;
       areaNode.permisos.puede_editar = permiso.puede_editar || false;
       areaNode.permisos.permitir_subareas = permiso.permitir_subareas || false;
-      
+
       permitidasMap.set(areaNode.id, areaNode);
-      
+
       // Si es director o tiene permitir_subareas en true, incluimos sus subareas jerárquicamente
       if (esDirector || areaNode.permisos.permitir_subareas) {
-         this.agregarSubareasRecursivas(areaNode.id, areasMap, permitidasMap, areaNode.permisos);
+        this.agregarSubareasRecursivas(
+          areaNode.id,
+          areasMap,
+          permitidasMap,
+          areaNode.permisos,
+        );
       }
     }
 
@@ -84,10 +92,10 @@ export class AreasService {
   }
 
   private agregarSubareasRecursivas(
-    padreId: number, 
-    areasMap: Map<number, AreaConPermisos>, 
+    padreId: number,
+    areasMap: Map<number, AreaConPermisos>,
     permitidasMap: Map<number, AreaConPermisos>,
-    permisosHeredados: any
+    permisosHeredados: any,
   ) {
     for (const area of areasMap.values()) {
       if (area.padre_id === padreId) {
@@ -95,29 +103,36 @@ export class AreasService {
           area.permisos = { ...permisosHeredados };
           permitidasMap.set(area.id, area);
         }
-        this.agregarSubareasRecursivas(area.id, areasMap, permitidasMap, permisosHeredados);
+        this.agregarSubareasRecursivas(
+          area.id,
+          areasMap,
+          permitidasMap,
+          permisosHeredados,
+        );
       }
     }
   }
 
-  private construirArbolFiltrado(permitidasMap: Map<number, AreaConPermisos>): AreaConPermisos[] {
+  private construirArbolFiltrado(
+    permitidasMap: Map<number, AreaConPermisos>,
+  ): AreaConPermisos[] {
     const raices: AreaConPermisos[] = [];
-    
+
     for (const area of permitidasMap.values()) {
-       // La limpiamos temporalmente por si quedan cosas viejas en la instancia
-       area.subareas = [];
+      // La limpiamos temporalmente por si quedan cosas viejas en la instancia
+      area.subareas = [];
     }
 
     for (const area of permitidasMap.values()) {
-       // Es raiz relativa si no tiene padre_id, O SI su padre_id no fue incluido en permitidasMap
-       if (!area.padre_id || !permitidasMap.has(area.padre_id)) {
-          raices.push(area);
-       } else {
-          // Si su padre está en permitidasMap, se lo agregamos
-          const padre = permitidasMap.get(area.padre_id)!;
-          if (!padre.subareas) padre.subareas = [];
-          padre.subareas.push(area);
-       }
+      // Es raiz relativa si no tiene padre_id, O SI su padre_id no fue incluido en permitidasMap
+      if (!area.padre_id || !permitidasMap.has(area.padre_id)) {
+        raices.push(area);
+      } else {
+        // Si su padre está en permitidasMap, se lo agregamos
+        const padre = permitidasMap.get(area.padre_id)!;
+        if (!padre.subareas) padre.subareas = [];
+        padre.subareas.push(area);
+      }
     }
     return raices;
   }
@@ -126,14 +141,18 @@ export class AreasService {
    * Verifica si un usuario puede acceder a una área específica,
    * considerando la jerarquía (si tiene acceso al padre, puede ver subáreas).
    */
-  async puedeAccederAreaCompleta(usuarioId: number, areaId: number): Promise<boolean> {
+  async puedeAccederAreaCompleta(
+    usuarioId: number,
+    areaId: number,
+  ): Promise<boolean> {
     // Verificar acceso directo
-    const accesoDirecto = await this.prisma.permisos_area.count({
-      where: {
-        usuario_id: usuarioId,
-        area_id: areaId,
-      },
-    }) > 0;
+    const accesoDirecto =
+      (await this.prisma.permisos_area.count({
+        where: {
+          usuario_id: usuarioId,
+          area_id: areaId,
+        },
+      })) > 0;
 
     if (accesoDirecto) {
       return true;
@@ -172,8 +191,18 @@ export class AreasService {
     });
   }
 
-  async actualizarPermisosAreaUsuario(usuarioId: number, permisos: { area_id: number; puede_publicar?: boolean; puede_editar?: boolean; permitir_subareas?: boolean; }[]) {
-    await this.prisma.permisos_area.deleteMany({ where: { usuario_id: usuarioId } });
+  async actualizarPermisosAreaUsuario(
+    usuarioId: number,
+    permisos: {
+      area_id: number;
+      puede_publicar?: boolean;
+      puede_editar?: boolean;
+      permitir_subareas?: boolean;
+    }[],
+  ) {
+    await this.prisma.permisos_area.deleteMany({
+      where: { usuario_id: usuarioId },
+    });
 
     if (!permisos || permisos.length === 0) {
       return { updated: 0 };

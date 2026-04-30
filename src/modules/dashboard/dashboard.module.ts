@@ -4,8 +4,8 @@ import { DashboardService } from './dashboard.service';
 import { PrismaService } from '../../infrastructure/prisma/prisma.service';
 
 @Module({
-    controllers: [DashboardController],
-    providers: [DashboardService, PrismaService],
-    exports: [DashboardService],
+  controllers: [DashboardController],
+  providers: [DashboardService, PrismaService],
+  exports: [DashboardService],
 })
-export class DashboardModule { }
+export class DashboardModule {}

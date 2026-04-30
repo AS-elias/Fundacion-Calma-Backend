@@ -20,7 +20,7 @@ export class PermisosService {
     @Inject(USUARIO_REPOSITORY)
     private readonly usuarioRepository: IUsuarioRepository,
     private readonly prisma: PrismaService,
-  ) { }
+  ) {}
 
   /**
    * Verifica si un usuario tiene permiso para realizar una acción específica.
@@ -55,7 +55,10 @@ export class PermisosService {
   /**
    * Verifica permisos basados únicamente en el rol del usuario.
    */
-  private verificarPermisoPorRol(rol: RolesFundacion, accion: Acciones): boolean {
+  private verificarPermisoPorRol(
+    rol: RolesFundacion,
+    accion: Acciones,
+  ): boolean {
     const permisosPorRol: Record<RolesFundacion, Acciones[]> = {
       [RolesFundacion.ADMIN]: [
         Acciones.AGREGAR_CONTACTO,
@@ -86,9 +89,7 @@ export class PermisosService {
         Acciones.VER_CONTACTOS,
         Acciones.PUBLICAR_EN_AREA,
       ],
-      [RolesFundacion.PRACTICANTE]: [
-        Acciones.VER_CONTACTOS,
-      ],
+      [RolesFundacion.PRACTICANTE]: [Acciones.VER_CONTACTOS],
     };
 
     return permisosPorRol[rol]?.includes(accion) ?? false;
@@ -133,7 +134,10 @@ export class PermisosService {
         return permisoArea.puede_editar ?? false;
       case Acciones.GESTIONAR_AREAS:
         // Solo si puede editar y tiene subáreas permitidas
-        return (permisoArea.puede_editar ?? false) && (permisoArea.permitir_subareas ?? false);
+        return (
+          (permisoArea.puede_editar ?? false) &&
+          (permisoArea.permitir_subareas ?? false)
+        );
       default:
         return false;
     }
@@ -148,7 +152,7 @@ export class PermisosService {
       select: { area_id: true },
     });
 
-    return permisos.map(p => p.area_id).filter(id => id !== null) as number[];
+    return permisos.map((p) => p.area_id).filter((id) => id !== null);
   }
 
   /**

@@ -14,10 +14,11 @@ export class GetContactosUseCase {
   async execute(usuarioId: number): Promise<ContactoEntity[]> {
     // Aquí es donde iría la lógica de negocio pura si la hubiera.
     // Por ejemplo, verificar permisos, filtrar algo específico, etc.
-    
+
     // Llamamos al puerto (interfaz) para pedir los datos
-    const contactos = await this.comunidadRepository.obtenerContactos(usuarioId);
-    
+    const contactos =
+      await this.comunidadRepository.obtenerContactos(usuarioId);
+
     return contactos;
   }
 }

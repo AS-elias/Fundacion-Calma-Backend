@@ -2,10 +2,14 @@ import { Injectable } from '@nestjs/common';
 import { ConvenioRepository } from '../../domain/repositories/convenio.repository';
 import { Convenio } from '../../domain/entities/convenio.entity';
 import { CreateConvenioDto } from '../dto/create-convenio.dto';
+import { ConvenioHistorialService } from '../../../convenio_historial/application/services/convenio-historial.service';
 
 @Injectable()
 export class CreateConvenioUseCase {
-  constructor(private readonly convenioRepository: ConvenioRepository) {}
+  constructor(
+    private readonly convenioRepository: ConvenioRepository,
+    private readonly convenioHistorialService: ConvenioHistorialService,
+  ) {}
 
   async execute(dto: CreateConvenioDto): Promise<Convenio> {
     const convenio = new Convenio(
@@ -25,6 +29,15 @@ export class CreateConvenioUseCase {
       new Date(),
     );
 
-    return this.convenioRepository.create(convenio);
+    const created = await this.convenioRepository.create(convenio);
+
+    await this.convenioHistorialService.registrar(
+      created.id,
+      'CREACION',
+      'Convenio registrado.',
+      created.creadorId,
+    );
+
+    return created;
   }
 }

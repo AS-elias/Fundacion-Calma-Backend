@@ -11,9 +11,10 @@ import { ArchivoRepository } from './domain/repositories/archivo.repository';
 import { PrismaArchivoRepository } from './infrastructure/repositories/prisma-archivo.repository';
 
 import { ArchivosController } from './infrastructure/controllers/archivos.controller';
+import { ConvenioHistorialModule } from '../convenio_historial/convenio_historial.module';
 
 @Module({
-  imports: [ConfigModule],
+  imports: [ConfigModule, ConvenioHistorialModule],
   controllers: [ArchivosController],
   providers: [
     PrismaService,
