@@ -62,6 +62,7 @@ export class PrismaComunicacionesRepository implements ComunicacionesRepository 
                     data: participantes.map((usuarioId) => ({
                         canal_id: canal.id,
                         usuario_id: usuarioId,
+                        es_admin: usuarioId === data.creadorId,
                     })),
                     skipDuplicates: true,
                 });
@@ -98,13 +99,30 @@ export class PrismaComunicacionesRepository implements ComunicacionesRepository 
         });
     }
 
-    async addParticipant(canalId: number, usuarioId: number) {
+    async addParticipant(canalId: number, usuarioId: number, actorId: number) {
+        const actor = await this.prisma.participantes_canal.findFirst({
+            where: { canal_id: canalId, usuario_id: actorId },
+        });
+        if (!actor || !actor.es_admin) {
+            throw new Error('No tienes permisos para agregar participantes a este grupo');
+        }
+
         return this.prisma.participantes_canal.create({
             data: { canal_id: canalId, usuario_id: usuarioId },
         });
     }
 
-    async removeParticipant(canalId: number, usuarioId: number) {
+    async removeParticipant(canalId: number, usuarioId: number, actorId: number) {
+        // Un usuario siempre puede eliminarse a sí mismo (salir del grupo)
+        if (usuarioId !== actorId) {
+            const actor = await this.prisma.participantes_canal.findFirst({
+                where: { canal_id: canalId, usuario_id: actorId },
+            });
+            if (!actor || !actor.es_admin) {
+                throw new Error('No tienes permisos para eliminar a otros participantes');
+            }
+        }
+
         return this.prisma.participantes_canal.deleteMany({
             where: { canal_id: canalId, usuario_id: usuarioId },
         });
@@ -201,6 +219,46 @@ export class PrismaComunicacionesRepository implements ComunicacionesRepository 
     async getReactions(mensajeId: number) {
         return this.prisma.reacciones_mensaje.findMany({
             where: { mensaje_id: mensajeId },
+            include: { usuarios: true },
+        });
+    }
+
+    async makeAdmin(canalId: number, usuarioId: number, actorId: number) {
+        // Verificar que el actor es admin del canal
+        const actor = await this.prisma.participantes_canal.findFirst({
+            where: { canal_id: canalId, usuario_id: actorId },
+        });
+        if (!actor || !actor.es_admin) {
+            throw new Error('No tienes permisos para hacer admin a otros usuarios');
+        }
+
+        return this.prisma.participantes_canal.update({
+            where: {
+                canal_id_usuario_id: {
+                    canal_id: canalId,
+                    usuario_id: usuarioId,
+                },
+            },
+            data: { es_admin: true },
+            include: { usuarios: true },
+        });
+    }
+
+    async removeAdmin(canalId: number, usuarioId: number, actorId: number) {
+        // Verificar que el actor es admin del canal antes de que pueda quitar permisos a otros
+        const actor = await this.prisma.participantes_canal.findFirst({
+            where: { canal_id: canalId, usuario_id: actorId },
+        });
+        
+        if (!actor || !actor.es_admin) {
+            throw new Error('No tienes permisos para quitar el administrador a otros usuarios');
+        }
+
+        return this.prisma.participantes_canal.update({
+            where: {
+                canal_id_usuario_id: { canal_id: canalId, usuario_id: usuarioId },
+            },
+            data: { es_admin: false },
             include: { usuarios: true },
         });
     }

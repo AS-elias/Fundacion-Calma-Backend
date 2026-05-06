@@ -7,6 +7,8 @@ import {
   Param,
   UseGuards,
   Req,
+  Query,
+  UnauthorizedException,
 } from '@nestjs/common';
 import { AuthService } from '../../application/services/auth.service';
 import { LoginDto } from '../../application/dto/login.dto';
@@ -16,11 +18,25 @@ import { AdminGuard } from '../guards/admin.guard';
 
 @Controller('auth')
 export class AuthController {
-  constructor(private readonly authService: AuthService) {}
+  constructor(private readonly authService: AuthService) { }
 
   @Post('login')
   async login(@Body() loginDto: LoginDto) {
     return await this.authService.login(loginDto.email, loginDto.password);
+  }
+
+  @Post('refresh')
+  async refresh(@Body() body: { refresh_token: string }) {
+    if (!body.refresh_token) {
+      throw new UnauthorizedException('Refresh token requerido');
+    }
+    return await this.authService.refreshToken(body.refresh_token);
+  }
+
+  @Get('me')
+  @UseGuards(JwtAuthGuard)
+  async getCurrentUser(@Req() req: any) {
+    return await this.authService.getCurrentUser(req.user.id);
   }
 
   // 📝 REGISTRO - Solo administradores pueden crear nuevos usuarios

@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common';
 import { ScheduleModule } from '@nestjs/schedule';
 import { ConfigModule } from '@nestjs/config';
+import { APP_FILTER } from '@nestjs/core';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { AuthModule } from './modules/auth/auth.module';
@@ -14,6 +15,7 @@ import { PermisosService } from './core/services/permisos.service';
 import { AreasService } from './core/services/areas.service';
 import { ContratoCheckService } from './core/services/contrato-check.service';
 import { ComunicacionesModule } from './modules/comunicaciones/comunicaciones.module';
+import { HttpExceptionFilter } from './core/filters/http-exception.filter';
 @Module({
   imports: [
     ConfigModule.forRoot({
@@ -35,6 +37,10 @@ import { ComunicacionesModule } from './modules/comunicaciones/comunicaciones.mo
     PermisosService,
     AreasService,
     ContratoCheckService,
+    {
+      provide: APP_FILTER,
+      useClass: HttpExceptionFilter,
+    },
   ],
   exports: [PrismaService, PermisosService, AreasService],
 })

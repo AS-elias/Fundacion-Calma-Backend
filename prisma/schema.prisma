@@ -180,6 +180,7 @@ model notificaciones {
 model participantes_canal {
   canal_id   Int
   usuario_id Int
+  es_admin   Boolean? @default(false)
   canales    canales  @relation(fields: [canal_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
   usuarios   usuarios @relation(fields: [usuario_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
 
@@ -310,10 +311,29 @@ model usuarios {
   publicaciones                                               publicaciones[]
   repositorio_bloques                                         repositorio_bloques[]
   reacciones_mensaje                                         reacciones_mensaje[]
+  solicitudes_enviadas                                        solicitudes_contacto[] @relation("solicitud_solicitante")
+  solicitudes_recibidas                                       solicitudes_contacto[] @relation("solicitud_contacto")
   roles                                                       roles?                 @relation(fields: [rol_id], references: [id], onUpdate: NoAction)
 
   @@index([email], map: "idx_usuario_email")
   @@index([rol_id], map: "idx_usuarios_rol")
+  @@schema("public")
+}
+
+model solicitudes_contacto {
+  id                  Int       @id @default(autoincrement())
+  usuario_id          Int
+  contacto_id         Int
+  estado              String    @default("pendiente") @db.VarChar(20)
+  fecha_creacion      DateTime? @default(now()) @db.Timestamp(6)
+  fecha_actualizado   DateTime? @default(now()) @db.Timestamp(6)
+  usuario_solicitante usuarios  @relation("solicitud_solicitante", fields: [usuario_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  usuario_contacto    usuarios  @relation("solicitud_contacto", fields: [contacto_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@unique([usuario_id, contacto_id])
+  @@index([usuario_id], map: "idx_solicitudes_contacto_usuario")
+  @@index([contacto_id], map: "idx_solicitudes_contacto_contacto")
+  @@index([estado], map: "idx_solicitudes_contacto_estado")
   @@schema("public")
 }
 
@@ -323,4 +343,3 @@ enum UserEstado {
 
   @@schema("public")
 }
-

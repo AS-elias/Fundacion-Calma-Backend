@@ -12,7 +12,7 @@ import { PresenceService } from '../../core/services/presence.service';
   imports: [
     JwtModule.register({
       secret: process.env.JWT_SECRET || 'your-secret-key',
-      signOptions: { expiresIn: '1h' },
+      signOptions: { expiresIn: '24h' },
     }),
   ],
   controllers: [ComunicacionesController],

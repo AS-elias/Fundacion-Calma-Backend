@@ -39,12 +39,12 @@ export class ComunicacionesService {
     return this.repo.getChannelInfo(canalId);
   }
 
-  async addParticipant(canalId: number, usuarioId: number) {
-    return this.repo.addParticipant(canalId, usuarioId);
+  async addParticipant(canalId: number, usuarioId: number, actorId: number) {
+    return this.repo.addParticipant(canalId, usuarioId, actorId);
   }
 
-  async removeParticipant(canalId: number, usuarioId: number) {
-    return this.repo.removeParticipant(canalId, usuarioId);
+  async removeParticipant(canalId: number, usuarioId: number, actorId: number) {
+    return this.repo.removeParticipant(canalId, usuarioId, actorId);
   }
 
   async isParticipant(canalId: number, usuarioId: number) {
@@ -89,5 +89,13 @@ export class ComunicacionesService {
 
   async deleteChannel(canalId: number) {
     return this.repo.deleteChannel(canalId);
+  }
+
+  async makeAdmin(canalId: number, usuarioId: number, actorId: number) {
+    return this.repo.makeAdmin(canalId, usuarioId, actorId);
+  }
+
+  async removeAdmin(canalId: number, usuarioId: number, actorId: number) {
+    return this.repo.removeAdmin(canalId, usuarioId, actorId);
   }
 }

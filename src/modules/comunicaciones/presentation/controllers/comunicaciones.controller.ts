@@ -114,4 +114,23 @@ export class ComunicacionesController {
       emoji: body.emoji,
     });
   }
+
+  @Get('webrtc/ice-servers')
+  getIceServers() {
+    return {
+      stun: [
+        'stun:stun.l.google.com:19302',
+        'stun:stun1.l.google.com:19302',
+        'stun:stun2.l.google.com:19302',
+      ],
+      turn: (process.env.TURN_SERVERS || '').split(',').filter(s => s.trim()).map(server => {
+        const parts = server.trim().split('|');
+        return {
+          urls: parts[0],
+          username: parts[1] || undefined,
+          credential: parts[2] || undefined,
+        };
+      }).filter(t => t.urls),
+    };
+  }
 }

@@ -14,8 +14,8 @@ export interface MensajeData {
     canalId: number;
     remitenteId: number;
     contenido?: string;
-    tipo?: 'text' | 'image' | 'file' | 'sticker';
-    archivoUrl?: string;
+    tipo?: 'text' | 'image' | 'file' | 'sticker' | 'call' | 'call_missed' | 'call_answered' | 'call_ended';
+    archivoUrl?: string | null;
 }
 
 export interface ReactionData {
@@ -28,8 +28,8 @@ export interface ComunicacionesRepository {
     createChannel(data: CanalData): Promise<any>;
     updateChannel(canalId: number, data: Partial<CanalData>): Promise<any>;
     getChannelInfo(canalId: number): Promise<any>;
-    addParticipant(canalId: number, usuarioId: number): Promise<any>;
-    removeParticipant(canalId: number, usuarioId: number): Promise<any>;
+    addParticipant(canalId: number, usuarioId: number, actorId: number): Promise<any>;
+    removeParticipant(canalId: number, usuarioId: number, actorId: number): Promise<any>;
     isParticipant(canalId: number, usuarioId: number): Promise<boolean>;
     saveMessage(data: MensajeData): Promise<any>;
     getRecentMessages(canalId: number, limit?: number): Promise<any[]>;
@@ -49,4 +49,6 @@ export interface ComunicacionesRepository {
         emoji: string,
     ): Promise<any>;
     getReactions(mensajeId: number): Promise<any[]>;
+    makeAdmin(canalId: number, usuarioId: number, actorId: number): Promise<any>;
+    removeAdmin(canalId: number, usuarioId: number, actorId: number): Promise<any>;
 }
