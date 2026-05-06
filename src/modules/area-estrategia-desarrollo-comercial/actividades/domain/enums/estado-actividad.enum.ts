@@ -1,0 +1,6 @@
+export enum EstadoActividad {
+  PENDIENTE = 'PENDIENTE',
+  EN_PROCESO = 'EN PROCESO',
+  COMPLETADO = 'COMPLETADO',
+  PARALIZADO = 'PARALIZADO',
+}

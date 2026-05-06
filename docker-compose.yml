@@ -19,7 +19,7 @@ services:
     container_name: calma-api-container
     restart: always
     ports:
-      - "3000:3000"
+      - "3005:3005"
     environment:
       DATABASE_URL: postgresql://${DB_USER:-admin_calma}:${DB_PASSWORD:-calma_secret_2024}@db-calma:5432/${DB_NAME:-fundacion_calma_db}?schema=public
       JWT_SECRET: ${JWT_SECRET:-clave_secreta_para_desarrollo}

@@ -24,6 +24,7 @@ export class ComentarioController {
 
   @Delete(':id')
   async delete(@Param('id') id: string) {
-    return this.deleteComentarioUseCase.execute(Number(id));
+    await this.deleteComentarioUseCase.execute(Number(id));
+    return { message: 'Comentario eliminado' };
   }
 }

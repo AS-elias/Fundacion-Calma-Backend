@@ -1,3 +1,7 @@
+import { ConexionConvenio } from '../../domain/enums/conexion-convenio.enum';
+import { EstadoConvenio } from '../../domain/enums/estado-convenio.enum';
+import { TipoConvenio } from '../../domain/enums/tipo-convenio.enum';
+
 export class CreateConvenioDto {
   areaId!: number;
   entidadNombre!: string;
@@ -6,7 +10,9 @@ export class CreateConvenioDto {
   rubro!: string;
   contactoNombre!: string;
   telefonoContacto!: string;
-  estado!: string;
+  estado!: EstadoConvenio;
   fechaExpiracion!: Date;
   creadorId!: number;
+  tipo!: TipoConvenio;
+  conexion!: ConexionConvenio;
 }
