@@ -9,8 +9,10 @@ import { DeleteComentarioUseCase } from './application/use-cases/delete-comentar
 
 import { ComentarioRepository } from './domain/repositories/comentario.repository';
 import { PrismaComentarioRepository } from './infrastructure/repositories/prisma-comentario.repository';
+import { ConvenioHistorialModule } from '../convenio_historial/convenio_historial.module';
 
 @Module({
+  imports: [ConvenioHistorialModule],
   controllers: [ComentarioController],
 
   providers: [

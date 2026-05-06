@@ -1,5 +1,5 @@
 import { Module } from '@nestjs/common';
-import { PrismaService } from 'src/infrastructure/prisma/prisma.service';
+import { PrismaService } from '../../../infrastructure/prisma/prisma.service';
 
 import { ConveniosController } from './infrastructure/controllers/convenios.controller';
 
@@ -11,8 +11,10 @@ import { DeleteConvenioUseCase } from './application/use-cases/delete-convenio.u
 
 import { ConvenioRepository } from './domain/repositories/convenio.repository';
 import { PrismaConvenioRepository } from './infrastructure/repositories/prisma-convenio.repository';
+import { ConvenioHistorialModule } from '../convenio_historial/convenio_historial.module';
 
 @Module({
+  imports: [ConvenioHistorialModule],
   controllers: [ConveniosController],
 
   providers: [
@@ -30,4 +32,4 @@ import { PrismaConvenioRepository } from './infrastructure/repositories/prisma-c
     },
   ],
 })
-export class ConveniosModule {}
+export class ConveniosModule { }

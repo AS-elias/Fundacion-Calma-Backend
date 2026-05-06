@@ -6,21 +6,120 @@ generator client {
 datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
-  schemas  = ["comercial", "core"]
+  schemas  = ["public", "comercial", "core"]
 }
 
 model analisis_tareas {
-  id             Int       @id @default(autoincrement())
-  area_id        Int?
-  categoria      String    @db.VarChar(50)
-  titulo         String    @db.VarChar(200)
-  subtitulo      String?   @db.VarChar(200)
-  estado         String?   @default("EN PROCESO") @db.VarChar(30)
-  creador_id     Int?
-  fecha_creacion DateTime? @default(now()) @db.Timestamp(6)
-  areas          areas?    @relation(fields: [area_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
-  usuarios       usuarios? @relation(fields: [creador_id], references: [id], onUpdate: NoAction)
+  id                      Int                       @id @default(autoincrement())
+  area_id                 Int?
+  titulo                  String                    @db.VarChar(200)
+  subtitulo               String?                   @db.VarChar(200)
+  descripcion             String?
+  estado                  String?                   @default("pendiente") @db.VarChar(30)
+  fecha_creacion          DateTime?                 @default(now()) @db.Timestamp(6)
+  fecha_limite            DateTime?                 @db.Date
+  created_at              DateTime?                 @default(now()) @db.Timestamp(6)
+  updated_at              DateTime?                 @updatedAt @db.Timestamp(6)
+  creador_id              Int?
+  analisis_tarea_enlaces  analisis_tarea_enlaces[]
+  areas                   areas?                    @relation(fields: [area_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  usuarios                usuarios?                 @relation(fields: [creador_id], references: [id], onUpdate: NoAction)
 
+  @@schema("public")
+}
+
+model analisis_tarea_enlaces {
+  id               Int              @id @default(autoincrement())
+  tarea_id         Int?
+  nombre           String           @db.VarChar(255)
+  url              String
+  created_at       DateTime?        @default(now()) @db.Timestamp(6)
+  updated_at       DateTime?        @updatedAt @db.Timestamp(6)
+  analisis_tareas  analisis_tareas? @relation(fields: [tarea_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@index([tarea_id], map: "idx_analisis_tarea_enlaces_tarea")
+  @@schema("comercial")
+}
+
+model analisis_colegios {
+  id               Int       @id @default(autoincrement())
+  codigo_modular   String?   @db.VarChar(20)
+  nombre           String    @db.VarChar(200)
+  correo           String?   @db.VarChar(120)
+  telefono         String?   @db.VarChar(30)
+  nivel            String?   @db.VarChar(80)
+  director         String?   @db.VarChar(150)
+  tipo             String?   @db.VarChar(30)
+  ugel             String?   @db.VarChar(80)
+  departamento     String?   @db.VarChar(80)
+  distrito         String?   @db.VarChar(80)
+  zona             String?   @db.VarChar(50)
+  cantidad_alumnos Int?
+  direccion        String?
+  created_at       DateTime? @default(now()) @db.Timestamp(6)
+  updated_at       DateTime? @updatedAt @db.Timestamp(6)
+
+  @@index([codigo_modular], map: "idx_analisis_colegios_codigo_modular")
+  @@index([tipo], map: "idx_analisis_colegios_tipo")
+  @@schema("comercial")
+}
+
+model analisis_empresas {
+  id            Int       @id @default(autoincrement())
+  ruc           String?   @db.VarChar(11)
+  nombre        String    @db.VarChar(200)
+  correo        String?   @db.VarChar(120)
+  telefono_fijo String?   @db.VarChar(30)
+  celular       String?   @db.VarChar(30)
+  departamento  String?   @db.VarChar(80)
+  distrito      String?   @db.VarChar(80)
+  direccion     String?
+  sector        String?   @db.VarChar(120)
+  estado        String?   @db.VarChar(30)
+  descripcion   String?
+  created_at    DateTime? @default(now()) @db.Timestamp(6)
+  updated_at    DateTime? @updatedAt @db.Timestamp(6)
+
+  @@index([ruc], map: "idx_analisis_empresas_ruc")
+  @@index([estado], map: "idx_analisis_empresas_estado")
+  @@schema("comercial")
+}
+
+model analisis_venues {
+  id                 Int       @id @default(autoincrement())
+  nombre             String    @db.VarChar(200)
+  departamento       String?   @db.VarChar(80)
+  distrito           String?   @db.VarChar(80)
+  direccion          String?
+  celular            String?   @db.VarChar(30)
+  correo             String?   @db.VarChar(120)
+  capacidad_personas Int?
+  estado             String?   @db.VarChar(30)
+  sitio_web          String?
+  detalles           String?
+  created_at         DateTime? @default(now()) @db.Timestamp(6)
+  updated_at         DateTime? @updatedAt @db.Timestamp(6)
+
+  @@index([estado], map: "idx_analisis_venues_estado")
+  @@schema("comercial")
+}
+
+model analisis_difusiones {
+  id            Int       @id @default(autoincrement())
+  nombre        String    @db.VarChar(200)
+  tipo          String?   @db.VarChar(80)
+  plataforma    String?   @db.VarChar(80)
+  lugar         String?   @db.VarChar(150)
+  contacto      String?   @db.VarChar(150)
+  celular       String?   @db.VarChar(30)
+  correo        String?   @db.VarChar(120)
+  fecha         DateTime? @db.Date
+  estado        String?   @db.VarChar(30)
+  observaciones String?
+  created_at    DateTime? @default(now()) @db.Timestamp(6)
+  updated_at    DateTime? @updatedAt @db.Timestamp(6)
+
+  @@index([estado], map: "idx_analisis_difusiones_estado")
   @@schema("comercial")
 }
 
@@ -35,7 +134,7 @@ model convenio_archivos {
   usuarios       usuarios?  @relation(fields: [subido_por_id], references: [id], onUpdate: NoAction)
 
   @@index([convenio_id], map: "idx_archivos_convenio")
-  @@schema("comercial")
+  @@schema("public")
 }
 
 model convenio_comentarios {
@@ -48,6 +147,32 @@ model convenio_comentarios {
   usuarios       usuarios?  @relation(fields: [usuario_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
 
   @@index([convenio_id], map: "idx_comentarios_convenio")
+  @@schema("public")
+}
+
+model convenio_historial {
+  id             Int        @id @default(autoincrement())
+  convenio_id    Int?
+  usuario_id     Int?
+  accion         String     @db.VarChar(50)
+  descripcion    String
+  fecha_creacion DateTime?  @default(now()) @db.Timestamp(6)
+  convenios      convenios? @relation(fields: [convenio_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  usuarios       usuarios?  @relation(fields: [usuario_id], references: [id], onDelete: SetNull, onUpdate: NoAction)
+
+  @@index([convenio_id], map: "idx_historial_convenio")
+  @@schema("comercial")
+}
+
+model actividad_enlaces {
+  id                     Int                     @id @default(autoincrement())
+  actividad_id           Int?
+  nombre_documento       String                  @db.VarChar(255)
+  url                    String
+  fecha_creacion         DateTime?               @default(now()) @db.Timestamp(6)
+  desarrollo_actividades desarrollo_actividades? @relation(fields: [actividad_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@index([actividad_id], map: "idx_actividad_enlaces_actividad")
   @@schema("comercial")
 }
 
@@ -56,21 +181,116 @@ model convenios {
   area_id              Int?
   entidad_nombre       String                 @db.VarChar(150)
   logo_url             String?
-  ruc                  String?                @db.VarChar(20)
+  ruc                  String?                @db.VarChar(11)
   rubro                String?                @db.VarChar(100)
   contacto_nombre      String?                @db.VarChar(150)
-  telefono_contacto    String?                @db.VarChar(20)
-  estado               String?                @default("PENDIENTE") @db.VarChar(50)
+  telefono_contacto    String?                @db.VarChar(9)
+  estado               String?                
   fecha_expiracion     DateTime?              @db.Date
+  tipo                 String?                
+  conexion             String?                  
   creador_id           Int?
   fecha_creacion       DateTime?              @default(now()) @db.Timestamp(6)
   convenio_archivos    convenio_archivos[]
   convenio_comentarios convenio_comentarios[]
+  convenio_historial   convenio_historial[]
   areas                areas?                 @relation(fields: [area_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
   usuarios             usuarios?              @relation(fields: [creador_id], references: [id], onUpdate: NoAction)
 
   @@index([area_id], map: "idx_convenio_area")
   @@index([estado], map: "idx_convenios_estado")
+  @@schema("public")
+}
+
+model desarrollo_actividades {
+  id                Int                 @id @default(autoincrement())
+  area_id           Int?
+  titulo            String              @db.VarChar(200)
+  descripcion       String?
+  estado            String?             @default("PENDIENTE") @db.VarChar(30)
+  fecha_limite      DateTime?           @db.Date
+  creador_id        Int?
+  fecha_creacion    DateTime?           @default(now()) @db.Timestamp(6)
+  actualizado_en    DateTime?           @updatedAt @db.Timestamp(6)
+  actividad_enlaces actividad_enlaces[]
+  areas             areas?              @relation(fields: [area_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  usuarios          usuarios?           @relation(fields: [creador_id], references: [id], onUpdate: NoAction)
+
+  @@index([area_id], map: "idx_actividad_desarrollo_area")
+  @@index([estado], map: "idx_actividad_desarrollo_estado")
+  @@index([fecha_limite], map: "idx_actividad_desarrollo_fecha_limite")
+  @@schema("comercial")
+}
+
+model estrategia_actividades {
+  id                          Int                           @id @default(autoincrement())
+  titulo                      String                        @db.VarChar(200)
+  descripcion                 String?
+  estado                      EstrategiaActividadEstado     @default(PENDIENTE)
+  creado_por                  String?                       @db.VarChar(120)
+  prioridad                   EstrategiaPrioridad           @default(MEDIA)
+  fecha_creacion              DateTime?                     @default(now()) @db.Date
+  fecha_limite                DateTime?                     @db.Date
+  created_at                  DateTime?                     @default(now()) @db.Timestamp(6)
+  updated_at                  DateTime?                     @updatedAt @db.Timestamp(6)
+  estrategia_actividad_enlaces estrategia_actividad_enlaces[]
+
+  @@index([estado], map: "idx_estrategia_actividades_estado")
+  @@index([prioridad], map: "idx_estrategia_actividades_prioridad")
+  @@schema("comercial")
+}
+
+model estrategia_actividad_enlaces {
+  id                     Int                    @id @default(autoincrement())
+  actividad_id           Int
+  nombre                 String                 @db.VarChar(255)
+  url                    String
+  created_at             DateTime?              @default(now()) @db.Timestamp(6)
+  updated_at             DateTime?              @updatedAt @db.Timestamp(6)
+  estrategia_actividades estrategia_actividades  @relation(fields: [actividad_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@index([actividad_id], map: "idx_estrategia_actividad_enlaces_actividad")
+  @@schema("comercial")
+}
+
+model estrategia_empresas {
+  id                   Int                    @id @default(autoincrement())
+  nombre               String                 @db.VarChar(200)
+  descripcion          String?
+  created_at           DateTime?              @default(now()) @db.Timestamp(6)
+  updated_at           DateTime?              @updatedAt @db.Timestamp(6)
+  estrategia_proyectos estrategia_proyectos[]
+
+  @@schema("comercial")
+}
+
+model estrategia_proyectos {
+  id                          Int                           @id @default(autoincrement())
+  empresa_id                  Int?
+  titulo                      String                        @db.VarChar(200)
+  descripcion                 String?
+  estado                      EstrategiaProyectoEstado      @default(PENDIENTE)
+  fecha_limite                DateTime?                     @db.Date
+  created_at                  DateTime?                     @default(now()) @db.Timestamp(6)
+  updated_at                  DateTime?                     @updatedAt @db.Timestamp(6)
+  estrategia_empresas         estrategia_empresas?          @relation(fields: [empresa_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  estrategia_proyecto_enlaces estrategia_proyecto_enlaces[]
+
+  @@index([empresa_id], map: "idx_estrategia_proyectos_empresa")
+  @@index([estado], map: "idx_estrategia_proyectos_estado")
+  @@schema("comercial")
+}
+
+model estrategia_proyecto_enlaces {
+  id                   Int                  @id @default(autoincrement())
+  proyecto_id          Int?
+  etiqueta             String               @db.VarChar(255)
+  url                  String
+  created_at           DateTime?            @default(now()) @db.Timestamp(6)
+  updated_at           DateTime?            @updatedAt @db.Timestamp(6)
+  estrategia_proyectos estrategia_proyectos? @relation(fields: [proyecto_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@index([proyecto_id], map: "idx_estrategia_proyecto_enlaces_proyecto")
   @@schema("comercial")
 }
 
@@ -90,7 +310,7 @@ model estrategia_tareas {
   usuarios_estrategia_tareas_creador_idTousuarios    usuarios? @relation("estrategia_tareas_creador_idTousuarios", fields: [creador_id], references: [id], onUpdate: NoAction)
 
   @@index([estado], map: "idx_tareas_estrategia_estado")
-  @@schema("comercial")
+  @@schema("public")
 }
 
 model areas {
@@ -101,6 +321,7 @@ model areas {
   config_conexion     Json?
   config_visual       Json?
   analisis_tareas     analisis_tareas[]
+  desarrollo_actividades desarrollo_actividades[]
   convenios           convenios[]
   estrategia_tareas   estrategia_tareas[]
   areas               areas?                @relation("areasToareas", fields: [padre_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
@@ -113,7 +334,7 @@ model areas {
   repositorio_bloques repositorio_bloques[]
 
   @@index([padre_id], map: "idx_areas_padre")
-  @@schema("core")
+  @@schema("public")
 }
 
 model canales {
@@ -121,12 +342,14 @@ model canales {
   nombre              String?               @db.VarChar(100)
   area_id             Int?
   es_grupo            Boolean?              @default(true)
+  descripcion         String?               @db.VarChar(255)
+  avatar_url          String?
   fecha_creacion      DateTime?             @default(now()) @db.Timestamp(6)
   areas               areas?                @relation(fields: [area_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
   mensajes            mensajes[]
   participantes_canal participantes_canal[]
 
-  @@schema("core")
+  @@schema("public")
 }
 
 model mensajes {
@@ -134,15 +357,31 @@ model mensajes {
   canal_id    Int?
   emisor_id   Int?
   contenido   String
+  tipo        String?   @db.VarChar(20)
   archivo_url String?
   leido       Boolean?  @default(false)
   creado_at   DateTime? @default(now()) @db.Timestamp(6)
   canales     canales?  @relation(fields: [canal_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
   usuarios    usuarios? @relation(fields: [emisor_id], references: [id], onUpdate: NoAction)
+  reacciones_mensaje reacciones_mensaje[]
 
   @@index([canal_id], map: "idx_mensaje_canal")
   @@index([creado_at], map: "idx_mensajes_fecha")
-  @@schema("core")
+  @@schema("public")
+}
+
+model reacciones_mensaje {
+  id          Int      @id @default(autoincrement())
+  mensaje_id  Int
+  usuario_id  Int
+  emoji       String   @db.VarChar(10)
+  creado_at   DateTime @default(now()) @db.Timestamp(6)
+  mensajes    mensajes @relation(fields: [mensaje_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  usuarios    usuarios @relation(fields: [usuario_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@index([mensaje_id], map: "idx_reacciones_mensaje_mensaje")
+  @@index([usuario_id], map: "idx_reacciones_mensaje_usuario")
+  @@schema("public")
 }
 
 model notificaciones {
@@ -156,17 +395,18 @@ model notificaciones {
   usuarios   usuarios? @relation(fields: [usuario_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
 
   @@index([usuario_id], map: "idx_notificaciones_usuario")
-  @@schema("core")
+  @@schema("public")
 }
 
 model participantes_canal {
   canal_id   Int
   usuario_id Int
+  es_admin   Boolean? @default(false)
   canales    canales  @relation(fields: [canal_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
   usuarios   usuarios @relation(fields: [usuario_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
 
   @@id([canal_id, usuario_id])
-  @@schema("core")
+  @@schema("public")
 }
 
 model permisos_area {
@@ -182,7 +422,7 @@ model permisos_area {
   @@unique([usuario_id, area_id])
   @@index([area_id], map: "idx_permiso_area")
   @@index([usuario_id], map: "idx_permiso_usuario")
-  @@schema("core")
+  @@schema("public")
 }
 
 model proyectos {
@@ -198,7 +438,7 @@ model proyectos {
   areas          areas?    @relation(fields: [area_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
   usuarios       usuarios? @relation(fields: [responsable_id], references: [id], onUpdate: NoAction)
 
-  @@schema("core")
+  @@schema("public")
 }
 
 model publicaciones {
@@ -212,7 +452,7 @@ model publicaciones {
   areas             areas?    @relation(fields: [area_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
   usuarios          usuarios? @relation(fields: [autor_id], references: [id], onUpdate: NoAction)
 
-  @@schema("core")
+  @@schema("public")
 }
 
 model recursos_area {
@@ -225,7 +465,7 @@ model recursos_area {
   areas          areas?  @relation(fields: [area_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
 
   @@index([area_id], map: "idx_recursos_area")
-  @@schema("core")
+  @@schema("public")
 }
 
 model repositorio_bloques {
@@ -242,7 +482,7 @@ model repositorio_bloques {
   repositorio_enlaces repositorio_enlaces[]
 
   @@index([area_id], map: "idx_repositorio_area")
-  @@schema("core")
+  @@schema("public")
 }
 
 model repositorio_enlaces {
@@ -254,7 +494,7 @@ model repositorio_enlaces {
   repositorio_bloques repositorio_bloques? @relation(fields: [bloque_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
 
   @@index([bloque_id], map: "idx_enlaces_bloque")
-  @@schema("core")
+  @@schema("public")
 }
 
 model roles {
@@ -262,7 +502,7 @@ model roles {
   nombre   String     @unique @db.VarChar(20)
   usuarios usuarios[]
 
-  @@schema("core")
+  @@schema("public")
 }
 
 /// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
@@ -275,12 +515,15 @@ model usuarios {
   password_hash                                               String
   foto_url                                                    String?
   puesto                                                      String?                @db.VarChar(40)
-  estado                                                      String?                @db.VarChar(50)
+  estado                                                      UserEstado            @default(ACTIVO)
+  fecha_fin_contrato                                          DateTime?
   rol_id                                                      Int?
   analisis_tareas                                             analisis_tareas[]
   convenio_archivos                                           convenio_archivos[]
   convenio_comentarios                                        convenio_comentarios[]
+  convenio_historial                                          convenio_historial[]
   convenios                                                   convenios[]
+  desarrollo_actividades                                      desarrollo_actividades[]
   estrategia_tareas_estrategia_tareas_asignado_a_idTousuarios estrategia_tareas[]    @relation("estrategia_tareas_asignado_a_idTousuarios")
   estrategia_tareas_estrategia_tareas_creador_idTousuarios    estrategia_tareas[]    @relation("estrategia_tareas_creador_idTousuarios")
   mensajes                                                    mensajes[]
@@ -290,9 +533,65 @@ model usuarios {
   proyectos                                                   proyectos[]
   publicaciones                                               publicaciones[]
   repositorio_bloques                                         repositorio_bloques[]
+  reacciones_mensaje                                         reacciones_mensaje[]
+  solicitudes_enviadas                                        solicitudes_contacto[] @relation("solicitud_solicitante")
+  solicitudes_recibidas                                       solicitudes_contacto[] @relation("solicitud_contacto")
   roles                                                       roles?                 @relation(fields: [rol_id], references: [id], onUpdate: NoAction)
 
   @@index([email], map: "idx_usuario_email")
   @@index([rol_id], map: "idx_usuarios_rol")
-  @@schema("core")
+  @@schema("public")
+}
+
+model solicitudes_contacto {
+  id                  Int       @id @default(autoincrement())
+  usuario_id          Int
+  contacto_id         Int
+  estado              String    @default("pendiente") @db.VarChar(20)
+  fecha_creacion      DateTime? @default(now()) @db.Timestamp(6)
+  fecha_actualizado   DateTime? @default(now()) @db.Timestamp(6)
+  usuario_solicitante usuarios  @relation("solicitud_solicitante", fields: [usuario_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  usuario_contacto    usuarios  @relation("solicitud_contacto", fields: [contacto_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@unique([usuario_id, contacto_id])
+  @@index([usuario_id], map: "idx_solicitudes_contacto_usuario")
+  @@index([contacto_id], map: "idx_solicitudes_contacto_contacto")
+  @@index([estado], map: "idx_solicitudes_contacto_estado")
+  @@schema("public")
+}
+
+enum UserEstado {
+  ACTIVO
+  INACTIVO
+
+  @@schema("public")
+}
+
+enum EstrategiaActividadEstado {
+  PENDIENTE
+  EN_PROGRESO
+  EN_REVISION
+  EN_EJECUCION
+  FINALIZADO
+  PARALIZADO
+  COMPLETADO
+
+  @@schema("comercial")
+}
+
+enum EstrategiaPrioridad {
+  ALTA
+  MEDIA
+  BAJA
+
+  @@schema("comercial")
+}
+
+enum EstrategiaProyectoEstado {
+  PENDIENTE
+  EN_PROGRESO
+  COMPLETADA
+  PARALIZADO
+
+  @@schema("comercial")
 }

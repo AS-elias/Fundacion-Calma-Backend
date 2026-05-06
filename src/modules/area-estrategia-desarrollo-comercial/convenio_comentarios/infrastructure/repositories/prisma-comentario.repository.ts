@@ -27,6 +27,24 @@ export class PrismaComentarioRepository extends ComentarioRepository {
     );
   }
 
+  async findById(id: number): Promise<ConvenioComentario | null> {
+    const comentario = await this.prisma.convenio_comentarios.findUnique({
+      where: { id },
+    });
+
+    if (!comentario) {
+      return null;
+    }
+
+    return new ConvenioComentario(
+      comentario.id,
+      comentario.convenio_id as number,
+      comentario.usuario_id as number,
+      comentario.comentario,
+      comentario.fecha_creacion ?? new Date(),
+    );
+  }
+
   async findByConvenio(convenioId: number): Promise<ConvenioComentario[]> {
     const comentarios = await this.prisma.convenio_comentarios.findMany({
       where: {
