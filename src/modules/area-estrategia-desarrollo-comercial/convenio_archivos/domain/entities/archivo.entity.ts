@@ -6,5 +6,5 @@ export class Archivo {
     public nombreArchivo: string,
     public urlArchivo: string,
     public fechaSubida: Date,
-) {}
+  ) {}
 }

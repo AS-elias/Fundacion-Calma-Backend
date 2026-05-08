@@ -11,8 +11,10 @@ import { DeleteConvenioUseCase } from './application/use-cases/delete-convenio.u
 
 import { ConvenioRepository } from './domain/repositories/convenio.repository';
 import { PrismaConvenioRepository } from './infrastructure/repositories/prisma-convenio.repository';
+import { ConvenioHistorialModule } from '../convenio_historial/convenio_historial.module';
 
 @Module({
+  imports: [ConvenioHistorialModule],
   controllers: [ConveniosController],
 
   providers: [

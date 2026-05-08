@@ -4,5 +4,5 @@ export enum RolesFundacion {
   ADMINISTRADOR = 'Administrador',
   DIRECTOR = 'Director',
   COORDINADOR = 'Coordinador',
-  PRACTICANTE = 'Practicante'
+  PRACTICANTE = 'Practicante',
 }

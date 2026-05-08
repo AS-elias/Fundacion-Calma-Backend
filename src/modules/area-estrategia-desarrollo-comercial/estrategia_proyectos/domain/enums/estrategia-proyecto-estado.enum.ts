@@ -1,0 +1,6 @@
+export enum EstrategiaProyectoEstadoEnum {
+  PENDIENTE = 'PENDIENTE',
+  EN_PROGRESO = 'EN_PROGRESO',
+  COMPLETADA = 'COMPLETADA',
+  PARALIZADO = 'PARALIZADO',
+}

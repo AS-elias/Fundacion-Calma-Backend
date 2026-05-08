@@ -11,6 +11,9 @@ export class SearchContactosUseCase {
   ) {}
 
   async execute(query: string, usuarioId: number): Promise<ContactoEntity[]> {
-    return await this.comunidadRepository.buscarUsuariosActivos(query, usuarioId);
+    return await this.comunidadRepository.buscarUsuariosActivos(
+      query,
+      usuarioId,
+    );
   }
 }

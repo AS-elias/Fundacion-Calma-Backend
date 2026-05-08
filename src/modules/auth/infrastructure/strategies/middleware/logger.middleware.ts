@@ -13,7 +13,7 @@ export class AuthLoggerMiddleware implements NestMiddleware {
     res.on('finish', () => {
       const { statusCode } = res;
       this.logger.log(
-        `${method} ${originalUrl} ${statusCode} - IP: ${ip} - Agent: ${userAgent}`
+        `${method} ${originalUrl} ${statusCode} - IP: ${ip} - Agent: ${userAgent}`,
       );
     });
 

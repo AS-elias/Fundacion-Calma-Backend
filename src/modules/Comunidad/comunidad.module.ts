@@ -18,12 +18,12 @@ import { UsuarioRepositoryImpl } from '../auth/infrastructure/repositories/usuar
     GetContactosUseCase,
     AddContactoUseCase,
     SearchContactosUseCase,
-    
+
     // 2. Servicios externos
     PrismaService,
     AreasService,
     PermisosService,
-    
+
     // 3. Inyección de dependencias (Arquitectura Hexagonal)
     {
       provide: COMUNIDAD_REPOSITORY,
@@ -34,6 +34,6 @@ import { UsuarioRepositoryImpl } from '../auth/infrastructure/repositories/usuar
       useClass: UsuarioRepositoryImpl,
     },
   ],
-  exports: []
+  exports: [],
 })
 export class ComunidadModule {}
