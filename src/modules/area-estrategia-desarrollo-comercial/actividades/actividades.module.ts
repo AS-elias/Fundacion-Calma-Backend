@@ -7,8 +7,10 @@ import { UpdateActividadUseCase } from './application/use-cases/update-actividad
 import { ActividadRepository } from './domain/repositories/actividad.repository';
 import { ActividadesController } from './infrastructure/controllers/actividades.controller';
 import { PrismaActividadRepository } from './infrastructure/repositories/prisma-actividad.repository';
+import { NotificacionesModule } from '../../notificaciones/notificaciones.module';
 
 @Module({
+  imports: [NotificacionesModule],
   controllers: [ActividadesController],
   providers: [
     PrismaService,

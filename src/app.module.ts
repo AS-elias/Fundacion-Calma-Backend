@@ -17,7 +17,9 @@ import { ComunidadModule } from './modules/Comunidad/comunidad.module';
 import { PermisosService } from './core/services/permisos.service';
 import { AreasService } from './core/services/areas.service';
 import { ContratoCheckService } from './core/services/contrato-check.service';
+import { ActividadVencimientoNotificacionService } from './core/services/actividad-vencimiento-notificacion.service';
 import { NotificacionesModule } from './modules/notificaciones/notificaciones.module';
+import { RepositorioModule } from './modules/repositorio/repositorio.module';
 @Module({
   imports: [
     ConfigModule.forRoot({
@@ -27,6 +29,7 @@ import { NotificacionesModule } from './modules/notificaciones/notificaciones.mo
     AuthModule,
     DashboardModule,
     ActividadesModule,
+    RepositorioModule,
     ConveniosModule,
     ConvenioComentariosModule,
     ConvenioArchivosModule,
@@ -43,6 +46,7 @@ import { NotificacionesModule } from './modules/notificaciones/notificaciones.mo
     PermisosService,
     AreasService,
     ContratoCheckService,
+    ActividadVencimientoNotificacionService,
   ],
   exports: [PrismaService, PermisosService, AreasService],
 })

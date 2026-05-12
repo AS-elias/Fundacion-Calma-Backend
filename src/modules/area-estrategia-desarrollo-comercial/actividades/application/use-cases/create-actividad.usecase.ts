@@ -4,10 +4,14 @@ import { Actividad } from '../../domain/entities/actividad.entity';
 import { ActividadEnlace } from '../../domain/entities/actividad-enlace.entity';
 import { EstadoActividad } from '../../domain/enums/estado-actividad.enum';
 import { ActividadRepository } from '../../domain/repositories/actividad.repository';
+import { NotificacionSistemaService } from '../../../../notificaciones/application/services/notificacion-sistema.service';
 
 @Injectable()
 export class CreateActividadUseCase {
-  constructor(private readonly actividadRepository: ActividadRepository) {}
+  constructor(
+    private readonly actividadRepository: ActividadRepository,
+    private readonly notificacionSistema: NotificacionSistemaService,
+  ) {}
 
   async execute(dto: CreateActividadDto): Promise<Actividad> {
     const actividad = new Actividad(
@@ -34,6 +38,18 @@ export class CreateActividadUseCase {
       actividad.estado = dto.estado as EstadoActividad;
     }
 
-    return this.actividadRepository.create(actividad);
+    const created = await this.actividadRepository.create(actividad);
+
+    await this.notificacionSistema.registrar(
+      'Actividad agregada',
+      `Se agrego la actividad: ${created.titulo}.`,
+      {
+        apartado: 'Desarrollo Comercial',
+        accion: 'Agrego actividad',
+        usuarioId: created.creadorId,
+      },
+    );
+
+    return created;
   }
 }

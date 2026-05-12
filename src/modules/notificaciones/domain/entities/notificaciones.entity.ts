@@ -3,7 +3,7 @@ export class Notificacion {
     public id: number,
     public titulo: string,
     public mensaje: string,
-    public tipo: 'comunicado' | 'alerta',
+    public tipo: 'sistema' | 'comunicados',
     public leido: boolean,
     public fecha: Date,
     public imagen?: string,

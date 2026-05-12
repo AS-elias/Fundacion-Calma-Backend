@@ -9,7 +9,7 @@ export class CrearNotificacionUseCase {
     private repo: NotificacionRepository,
   ) {}
 
-  async execute(data: CrearNotificacionDto) {
-    return this.repo.crear(data);
+  async execute(dto: CrearNotificacionDto) {
+    return this.repo.crear(dto);
   }
 }

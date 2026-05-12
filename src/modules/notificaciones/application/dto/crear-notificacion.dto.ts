@@ -1,6 +1,8 @@
+export type TipoNotificacion = 'sistema' | 'comunicados';
+
 export class CrearNotificacionDto {
   titulo: string;
   mensaje: string;
-  tipo: 'comunicado' | 'alerta';
+  tipo: TipoNotificacion;
   imagen?: string;
 }

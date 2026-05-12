@@ -47,8 +47,10 @@ import { UpdateAnalisisVenueUseCase } from '../analisis_venues/application/use-c
 import { AnalisisVenueRepository } from '../analisis_venues/domain/repositories/analisis-venue.repository';
 import { AnalisisVenuesController } from '../analisis_venues/infrastructure/controllers/analisis-venues.controller';
 import { PrismaAnalisisVenueRepository } from '../analisis_venues/infrastructure/repositories/prisma-analisis-venue.repository';
+import { NotificacionesModule } from '../../notificaciones/notificaciones.module';
 
 @Module({
+  imports: [NotificacionesModule],
   controllers: [
     AnalisisColegiosController,
     AnalisisEmpresasController,

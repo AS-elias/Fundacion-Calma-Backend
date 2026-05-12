@@ -7,16 +7,28 @@ import {
   Param,
   UseGuards,
   Req,
+  UploadedFile,
+  UseInterceptors,
 } from '@nestjs/common';
+import { FileInterceptor } from '@nestjs/platform-express';
 import { AuthService } from '../../application/services/auth.service';
 import { LoginDto } from '../../application/dto/login.dto';
 import { RegisterDto } from '../../application/dto/register.dto';
 import { JwtAuthGuard } from '../guards/jwt-auth.guard';
 import { AdminGuard } from '../guards/admin.guard';
+import { PerfilStorageService } from '../../application/services/perfil-storage.service';
+
+type UploadedProfileFile = {
+  originalname: string;
+  buffer: Buffer;
+};
 
 @Controller('auth')
 export class AuthController {
-  constructor(private readonly authService: AuthService) {}
+  constructor(
+    private readonly authService: AuthService,
+    private readonly perfilStorage: PerfilStorageService,
+  ) {}
 
   @Post('login')
   async login(@Body() loginDto: LoginDto) {
@@ -38,6 +50,33 @@ export class AuthController {
       mensaje: '¡Acceso autorizado a la zona segura!',
       usuario: req.user,
     };
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Get('me')
+  obtenerMiPerfil(@Req() req: any) {
+    return this.authService.findUserById(req.user.id);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Patch('me')
+  @UseInterceptors(FileInterceptor('foto'))
+  async actualizarMiPerfil(
+    @Req() req: any,
+    @Body() body: any,
+    @UploadedFile() foto?: UploadedProfileFile,
+  ) {
+    let fotoUrl: string | undefined;
+
+    if (foto) {
+      const storedFile = await this.perfilStorage.saveFile(foto);
+      fotoUrl = storedFile.urlArchivo;
+    }
+
+    return this.authService.updateOwnProfile(req.user.id, {
+      ...body,
+      ...(fotoUrl ? { foto_url: fotoUrl } : {}),
+    });
   }
 
   // Listar usuarios (admin)

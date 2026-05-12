@@ -10,32 +10,32 @@ datasource db {
 }
 
 model analisis_tareas {
-  id                      Int                       @id @default(autoincrement())
-  area_id                 Int?
-  titulo                  String                    @db.VarChar(200)
-  subtitulo               String?                   @db.VarChar(200)
-  descripcion             String?
-  estado                  String?                   @default("pendiente") @db.VarChar(30)
-  fecha_creacion          DateTime?                 @default(now()) @db.Timestamp(6)
-  fecha_limite            DateTime?                 @db.Date
-  created_at              DateTime?                 @default(now()) @db.Timestamp(6)
-  updated_at              DateTime?                 @updatedAt @db.Timestamp(6)
-  creador_id              Int?
-  analisis_tarea_enlaces  analisis_tarea_enlaces[]
-  areas                   areas?                    @relation(fields: [area_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
-  usuarios                usuarios?                 @relation(fields: [creador_id], references: [id], onUpdate: NoAction)
+  id                     Int                      @id @default(autoincrement())
+  area_id                Int?
+  titulo                 String                   @db.VarChar(200)
+  subtitulo              String?                  @db.VarChar(200)
+  descripcion            String?
+  estado                 String?                  @default("pendiente") @db.VarChar(30)
+  fecha_creacion         DateTime?                @default(now()) @db.Timestamp(6)
+  fecha_limite           DateTime?                @db.Date
+  created_at             DateTime?                @default(now()) @db.Timestamp(6)
+  updated_at             DateTime?                @updatedAt @db.Timestamp(6)
+  creador_id             Int?
+  analisis_tarea_enlaces analisis_tarea_enlaces[]
+  areas                  areas?                   @relation(fields: [area_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  usuarios               usuarios?                @relation(fields: [creador_id], references: [id], onUpdate: NoAction)
 
   @@schema("comercial")
 }
 
 model analisis_tarea_enlaces {
-  id               Int              @id @default(autoincrement())
-  tarea_id         Int?
-  nombre           String           @db.VarChar(255)
-  url              String
-  created_at       DateTime?        @default(now()) @db.Timestamp(6)
-  updated_at       DateTime?        @updatedAt @db.Timestamp(6)
-  analisis_tareas  analisis_tareas? @relation(fields: [tarea_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  id              Int              @id @default(autoincrement())
+  tarea_id        Int?
+  nombre          String           @db.VarChar(255)
+  url             String
+  created_at      DateTime?        @default(now()) @db.Timestamp(6)
+  updated_at      DateTime?        @updatedAt @db.Timestamp(6)
+  analisis_tareas analisis_tareas? @relation(fields: [tarea_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
 
   @@index([tarea_id], map: "idx_analisis_tarea_enlaces_tarea")
   @@schema("comercial")
@@ -185,10 +185,10 @@ model convenios {
   rubro                String?                @db.VarChar(100)
   contacto_nombre      String?                @db.VarChar(150)
   telefono_contacto    String?                @db.VarChar(9)
-  estado               String?                
+  estado               String?
   fecha_expiracion     DateTime?              @db.Date
-  tipo                 String?                
-  conexion             String?                  
+  tipo                 String?
+  conexion             String?
   creador_id           Int?
   fecha_creacion       DateTime?              @default(now()) @db.Timestamp(6)
   convenio_archivos    convenio_archivos[]
@@ -223,16 +223,16 @@ model desarrollo_actividades {
 }
 
 model estrategia_actividades {
-  id                          Int                           @id @default(autoincrement())
-  titulo                      String                        @db.VarChar(200)
-  descripcion                 String?
-  estado                      EstrategiaActividadEstado     @default(PENDIENTE)
-  creado_por                  String?                       @db.VarChar(120)
-  prioridad                   EstrategiaPrioridad           @default(MEDIA)
-  fecha_creacion              DateTime?                     @default(now()) @db.Date
-  fecha_limite                DateTime?                     @db.Date
-  created_at                  DateTime?                     @default(now()) @db.Timestamp(6)
-  updated_at                  DateTime?                     @updatedAt @db.Timestamp(6)
+  id                           Int                            @id @default(autoincrement())
+  titulo                       String                         @db.VarChar(200)
+  descripcion                  String?
+  estado                       EstrategiaActividadEstado      @default(PENDIENTE)
+  creado_por                   String?                        @db.VarChar(120)
+  prioridad                    EstrategiaPrioridad            @default(MEDIA)
+  fecha_creacion               DateTime?                      @default(now()) @db.Date
+  fecha_limite                 DateTime?                      @db.Date
+  created_at                   DateTime?                      @default(now()) @db.Timestamp(6)
+  updated_at                   DateTime?                      @updatedAt @db.Timestamp(6)
   estrategia_actividad_enlaces estrategia_actividad_enlaces[]
 
   @@index([estado], map: "idx_estrategia_actividades_estado")
@@ -247,7 +247,7 @@ model estrategia_actividad_enlaces {
   url                    String
   created_at             DateTime?              @default(now()) @db.Timestamp(6)
   updated_at             DateTime?              @updatedAt @db.Timestamp(6)
-  estrategia_actividades estrategia_actividades  @relation(fields: [actividad_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  estrategia_actividades estrategia_actividades @relation(fields: [actividad_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
 
   @@index([actividad_id], map: "idx_estrategia_actividad_enlaces_actividad")
   @@schema("comercial")
@@ -282,12 +282,12 @@ model estrategia_proyectos {
 }
 
 model estrategia_proyecto_enlaces {
-  id                   Int                  @id @default(autoincrement())
+  id                   Int                   @id @default(autoincrement())
   proyecto_id          Int?
-  etiqueta             String               @db.VarChar(255)
+  etiqueta             String                @db.VarChar(255)
   url                  String
-  created_at           DateTime?            @default(now()) @db.Timestamp(6)
-  updated_at           DateTime?            @updatedAt @db.Timestamp(6)
+  created_at           DateTime?             @default(now()) @db.Timestamp(6)
+  updated_at           DateTime?             @updatedAt @db.Timestamp(6)
   estrategia_proyectos estrategia_proyectos? @relation(fields: [proyecto_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
 
   @@index([proyecto_id], map: "idx_estrategia_proyecto_enlaces_proyecto")
@@ -314,24 +314,24 @@ model estrategia_tareas {
 }
 
 model areas {
-  id                  Int                   @id @default(autoincrement())
-  nombre              String                @db.VarChar(30)
-  padre_id            Int?
-  es_externa          Boolean?              @default(false)
-  config_conexion     Json?
-  config_visual       Json?
-  analisis_tareas     analisis_tareas[]
+  id                     Int                      @id @default(autoincrement())
+  nombre                 String                   @db.VarChar(30)
+  padre_id               Int?
+  es_externa             Boolean?                 @default(false)
+  config_conexion        Json?
+  config_visual          Json?
+  analisis_tareas        analisis_tareas[]
   desarrollo_actividades desarrollo_actividades[]
-  convenios           convenios[]
-  estrategia_tareas   estrategia_tareas[]
-  areas               areas?                @relation("areasToareas", fields: [padre_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
-  other_areas         areas[]               @relation("areasToareas")
-  canales             canales[]
-  permisos_area       permisos_area[]
-  proyectos           proyectos[]
-  publicaciones       publicaciones[]
-  recursos_area       recursos_area[]
-  repositorio_bloques repositorio_bloques[]
+  convenios              convenios[]
+  estrategia_tareas      estrategia_tareas[]
+  areas                  areas?                   @relation("areasToareas", fields: [padre_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  other_areas            areas[]                  @relation("areasToareas")
+  canales                canales[]
+  permisos_area          permisos_area[]
+  proyectos              proyectos[]
+  publicaciones          publicaciones[]
+  recursos_area          recursos_area[]
+  repositorio_bloques    repositorio_bloques[]
 
   @@index([padre_id], map: "idx_areas_padre")
   @@schema("core")
@@ -367,16 +367,52 @@ model mensajes {
 }
 
 model notificaciones {
-  id         Int       @id @default(autoincrement())
-  usuario_id Int?
-  titulo     String    @db.VarChar(150)
-  mensaje    String?
-  leido      Boolean?  @default(false)
-  tipo       String?   @db.VarChar(50)
-  creado_at  DateTime? @default(now()) @db.Timestamp(6)
-  usuarios   usuarios? @relation(fields: [usuario_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  id                      Int                       @id @default(autoincrement())
+  usuario_id              Int?
+  titulo                  String                    @db.VarChar(150)
+  mensaje                 String?
+  imagen                  String?
+  leido                   Boolean?                  @default(false)
+  tipo                    String?                   @db.VarChar(50)
+  creado_at               DateTime?                 @default(now()) @db.Timestamp(6)
+  usuarios                usuarios?                 @relation(fields: [usuario_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  notificacion_eliminadas notificacion_eliminadas[]
+  notificacion_lecturas   notificacion_lecturas[]
 
   @@index([usuario_id], map: "idx_notificaciones_usuario")
+  @@schema("core")
+}
+
+model notificacion_lecturas {
+  notificacion_id Int
+  usuario_id      Int
+  leido           Boolean        @default(false)
+  favorito        Boolean        @default(false)
+  archivado       Boolean        @default(false)
+  actualizado_at  DateTime?      @default(now()) @db.Timestamp(6)
+  notificaciones  notificaciones @relation(fields: [notificacion_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  usuarios        usuarios       @relation(fields: [usuario_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@id([notificacion_id, usuario_id])
+  @@schema("core")
+}
+
+model notificacion_eliminadas {
+  notificacion_id Int
+  usuario_id      Int
+  eliminado_at    DateTime?      @default(now()) @db.Timestamp(6)
+  notificaciones  notificaciones @relation(fields: [notificacion_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  usuarios        usuarios       @relation(fields: [usuario_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@id([notificacion_id, usuario_id])
+  @@schema("core")
+}
+
+model notificacion_inicio_usuario {
+  usuario_id    Int      @id
+  fecha_ingreso DateTime @default(now()) @db.Timestamp(6)
+  usuarios      usuarios @relation(fields: [usuario_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
   @@schema("core")
 }
 
@@ -488,15 +524,15 @@ model roles {
 
 /// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
 model usuarios {
-  id                                                          Int                    @id @default(autoincrement())
-  nombre_completo                                             String                 @db.VarChar(30)
-  apellido_completo                                           String                 @db.VarChar(30)
-  email                                                       String                 @unique @db.VarChar(50)
-  telefono                                                    String?                @db.VarChar(20)
+  id                                                          Int                          @id @default(autoincrement())
+  nombre_completo                                             String                       @db.VarChar(30)
+  apellido_completo                                           String                       @db.VarChar(30)
+  email                                                       String                       @unique @db.VarChar(50)
+  telefono                                                    String?                      @db.VarChar(20)
   password_hash                                               String
   foto_url                                                    String?
-  puesto                                                      String?                @db.VarChar(40)
-  estado                                                      UserEstado            @default(ACTIVO)
+  puesto                                                      String?                      @db.VarChar(40)
+  estado                                                      UserEstado                   @default(ACTIVO)
   fecha_fin_contrato                                          DateTime?
   rol_id                                                      Int?
   analisis_tareas                                             analisis_tareas[]
@@ -505,16 +541,19 @@ model usuarios {
   convenio_historial                                          convenio_historial[]
   convenios                                                   convenios[]
   desarrollo_actividades                                      desarrollo_actividades[]
-  estrategia_tareas_estrategia_tareas_asignado_a_idTousuarios estrategia_tareas[]    @relation("estrategia_tareas_asignado_a_idTousuarios")
-  estrategia_tareas_estrategia_tareas_creador_idTousuarios    estrategia_tareas[]    @relation("estrategia_tareas_creador_idTousuarios")
+  estrategia_tareas_estrategia_tareas_asignado_a_idTousuarios estrategia_tareas[]          @relation("estrategia_tareas_asignado_a_idTousuarios")
+  estrategia_tareas_estrategia_tareas_creador_idTousuarios    estrategia_tareas[]          @relation("estrategia_tareas_creador_idTousuarios")
   mensajes                                                    mensajes[]
+  notificacion_eliminadas                                     notificacion_eliminadas[]
+  notificacion_inicio_usuario                                 notificacion_inicio_usuario?
+  notificacion_lecturas                                       notificacion_lecturas[]
   notificaciones                                              notificaciones[]
   participantes_canal                                         participantes_canal[]
   permisos_area                                               permisos_area[]
   proyectos                                                   proyectos[]
   publicaciones                                               publicaciones[]
   repositorio_bloques                                         repositorio_bloques[]
-  roles                                                       roles?                 @relation(fields: [rol_id], references: [id], onUpdate: NoAction)
+  roles                                                       roles?                       @relation(fields: [rol_id], references: [id], onUpdate: NoAction)
 
   @@index([email], map: "idx_usuario_email")
   @@index([rol_id], map: "idx_usuarios_rol")
@@ -556,4 +595,3 @@ enum EstrategiaProyectoEstado {
 
   @@schema("comercial")
 }
-

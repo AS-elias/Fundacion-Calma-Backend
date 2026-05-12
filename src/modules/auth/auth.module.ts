@@ -9,6 +9,7 @@ import { JwtStrategy } from './infrastructure/strategies/jwt.strategy';
 import { AuthLoggerMiddleware } from './infrastructure/strategies/middleware/logger.middleware';
 import { USUARIO_REPOSITORY } from './domain/repositories/usuario.repository';
 import { EmailService } from '../../core/services/email.service';
+import { PerfilStorageService } from './application/services/perfil-storage.service';
 
 @Module({
   imports: [
@@ -22,6 +23,7 @@ import { EmailService } from '../../core/services/email.service';
   providers: [
     AuthService,
     EmailService,
+    PerfilStorageService,
     PrismaService,
     JwtStrategy,
     {

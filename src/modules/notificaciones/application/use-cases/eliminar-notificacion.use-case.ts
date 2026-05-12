@@ -8,7 +8,7 @@ export class EliminarNotificacionUseCase {
     private repo: NotificacionRepository,
   ) {}
 
-  async execute(id: number) {
-    return this.repo.eliminar(id);
+  async execute(id: number, usuarioId?: number) {
+    return this.repo.eliminar(id, usuarioId);
   }
 }
