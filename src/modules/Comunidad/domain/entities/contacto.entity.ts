@@ -13,7 +13,8 @@ export class ContactoEntity {
     public readonly rolNombre?: string,
     public readonly areaPrincipal?: string,
     public readonly iniciales?: string,
-  ) {}
+    public readonly online?: boolean,
+  ) { }
 
   // Aquí podríamos tener métodos de negocio puros en el futuro.
   // Por ejemplo:

@@ -1,9 +1,9 @@
 export class UsuarioEntity {
-  id: number;
-  nombre_completo: string;
-  apellido_completo: string;
-  email: string;
-  password_hash: string;
+  id!: number;
+  nombre_completo!: string;
+  apellido_completo!: string;
+  email!: string;
+  password_hash!: string;
   puesto?: string | null;
   estado?: string | null;
   rol_id?: number | null;

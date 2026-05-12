@@ -1,8 +1,13 @@
 import { PrismaClient } from '@prisma/client';
+import * as bcrypt from 'bcrypt';
 const prisma = new PrismaClient();
 
 async function main() {
   console.log('🌱 Sembrando la base de datos de Fundación Calma...');
+
+  const hashPassword = async (password: string) => {
+    return await bcrypt.hash(password, 12);
+  };
 
   // ===============================
   // 1. LIMPIAR DATA (ORDEN CORRECTO POR FK)
@@ -69,13 +74,13 @@ async function main() {
   // ===============================
   // 4. USUARIOS
   // ===============================
+  const passwordHash = await hashPassword('password123');
   const admin = await prisma.usuarios.create({
     data: {
       nombre_completo: 'Super',
       apellido_completo: 'Admin',
       email: 'admin@calma.org',
-      password_hash:
-        '$2a$12$C9zbAgk.BQEpFtHGuM4B1u4ZpkXXKez4tA0zeImPTRPG/vnc.iHPS', // admin123
+      password_hash: passwordHash,
       puesto: 'Administrador del Sistema',
       estado: 'ACTIVO',
       rol_id: rolAdministrador.id,
@@ -87,8 +92,7 @@ async function main() {
       nombre_completo: 'Deivi',
       apellido_completo: 'Flores',
       email: 'dflores@calma.org',
-      password_hash:
-        '$2a$12$RXx9ZeV7Abocd6leL/tHJOT8YPj6irKX6mC.4569.Fyzsek2qEs4O', // Deivi123
+      password_hash: passwordHash,
       puesto: 'Director Comercial',
       estado: 'ACTIVO',
       rol_id: rolDirector.id,
@@ -100,8 +104,7 @@ async function main() {
       nombre_completo: 'Lucía',
       apellido_completo: 'Ramírez',
       email: 'lramirez@calma.org',
-      password_hash:
-        '$2a$12$/AB8hNZCrZM.jIEZhAz0puEbCgK8vyK1WwdKF7zG.oonfASK8yv.K', // Lucia123
+      password_hash: passwordHash,
       puesto: 'Analista Datos',
       estado: 'ACTIVO',
       rol_id: rolPracticante.id,
@@ -113,8 +116,7 @@ async function main() {
       nombre_completo: 'Usuario',
       apellido_completo: 'Prueba',
       email: 'user@calma.org',
-      password_hash:
-        '$2a$12$j3DCpGZWQXL85nvqBJDFoeJlghoKKkj84H6X/rXzfGt1Q5ZwFFmsm', // Prueba123
+      password_hash: passwordHash,
       puesto: 'Relacionista Institucional',
       estado: 'ACTIVO',
       rol_id: rolPracticante.id,

@@ -57,9 +57,16 @@ export class AuthService {
       rol: usuario.rol?.nombre,
     };
 
-    // 5. Emitimos y retornamos el JWT
+    // 5. Generar access_token y refresh_token
+    const access_token = this.jwtService.sign(payload);
+    const refresh_token = this.jwtService.sign(payload, { 
+      expiresIn: '7d' 
+    });
+
+    // 6. Retornar tokens y data del usuario
     return {
-      access_token: this.jwtService.sign(payload),
+      access_token,
+      refresh_token,
       usuario: {
         id: usuario.id,
       nombre: usuario.nombre_completo,
@@ -68,6 +75,56 @@ export class AuthService {
       foto_url: usuario.foto_url,
       rol: usuario.rol?.nombre,
       },
+    };
+  }
+
+  async refreshToken(refreshToken: string) {
+    try {
+      // Verificar que el refresh_token sea válido
+      const payload = this.jwtService.verify(refreshToken);
+
+      if (!payload.sub) {
+        throw new UnauthorizedException('Token inválido');
+      }
+
+      // Verificar que el usuario siga existiendo y esté activo
+      const usuario = await this.usuarioRepository.findById(payload.sub);
+      if (!usuario || usuario.estado !== 'ACTIVO') {
+        throw new UnauthorizedException('Usuario no válido o inactivo');
+      }
+
+      // Generar nuevo access_token
+      const newPayload = {
+        sub: usuario.id,
+        email: usuario.email,
+        rol: usuario.rol?.nombre,
+      };
+
+      const new_access_token = this.jwtService.sign(newPayload);
+      const new_refresh_token = this.jwtService.sign(newPayload, { 
+        expiresIn: '7d' 
+      });
+
+      return {
+        access_token: new_access_token,
+        refresh_token: new_refresh_token,
+      };
+    } catch (error) {
+      throw new UnauthorizedException('Refresh token inválido o expirado');
+    }
+  }
+
+  async getCurrentUser(usuarioId: number) {
+    const usuario = await this.usuarioRepository.findById(usuarioId);
+    if (!usuario) {
+      throw new UnauthorizedException('Usuario no encontrado');
+    }
+
+    return {
+      id: usuario.id,
+      nombre: usuario.nombre_completo,
+      email: usuario.email,
+      rol: usuario.rol?.nombre,
     };
   }
 

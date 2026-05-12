@@ -2,6 +2,7 @@ import { Module, NestModule, MiddlewareConsumer } from '@nestjs/common';
 import { JwtModule } from '@nestjs/jwt';
 import { PassportModule } from '@nestjs/passport';
 import { AuthController } from './infrastructure/controllers/auth.controller';
+import { UsuariosController } from './infrastructure/controllers/usuarios.controller';
 import { AuthService } from './application/services/auth.service';
 import { UsuarioRepositoryImpl } from './infrastructure/repositories/usuario.repository.impl';
 import { PrismaService } from '../../infrastructure/prisma/prisma.service';
@@ -16,10 +17,10 @@ import { PerfilStorageService } from './application/services/perfil-storage.serv
     PassportModule,
     JwtModule.register({
       secret: process.env.JWT_SECRET || 'your-secret-key',
-      signOptions: { expiresIn: '1h' },
+      signOptions: { expiresIn: '24h' },
     }),
   ],
-  controllers: [AuthController],
+  controllers: [AuthController, UsuariosController],
   providers: [
     AuthService,
     EmailService,

@@ -1,5 +1,5 @@
 import { Module } from '@nestjs/common';
-import { PrismaService } from 'src/infrastructure/prisma/prisma.service';
+import { PrismaService } from '../../../infrastructure/prisma/prisma.service';
 import { CreateActividadUseCase } from './application/use-cases/create-actividad.usecase';
 import { GetActividadUseCase } from './application/use-cases/get-actividad.usecase';
 import { GetActividadesUseCase } from './application/use-cases/get-actividades.usecase';

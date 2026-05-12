@@ -3,16 +3,16 @@ import { EstadoConvenio } from '../../domain/enums/estado-convenio.enum';
 import { TipoConvenio } from '../../domain/enums/tipo-convenio.enum';
 
 export class CreateConvenioDto {
-  areaId: number;
-  entidadNombre: string;
+  areaId!: number;
+  entidadNombre!: string;
   logoUrl?: string;
-  ruc: string;
-  rubro: string;
-  contactoNombre: string;
-  telefonoContacto: string;
-  estado: EstadoConvenio;
-  fechaExpiracion: Date;
-  creadorId: number;
-  tipo: TipoConvenio;
-  conexion: ConexionConvenio;
+  ruc!: string;
+  rubro!: string;
+  contactoNombre!: string;
+  telefonoContacto!: string;
+  estado!: EstadoConvenio;
+  fechaExpiracion!: Date;
+  creadorId!: number;
+  tipo!: TipoConvenio;
+  conexion!: ConexionConvenio;
 }
