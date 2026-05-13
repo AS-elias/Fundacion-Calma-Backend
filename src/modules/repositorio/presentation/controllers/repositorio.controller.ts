@@ -3,14 +3,18 @@ import {
   Body,
   Controller,
   Delete,
+  ForbiddenException,
   Get,
   NotFoundException,
   Param,
   Post,
+  Req,
   UploadedFile,
+  UseGuards,
   UseInterceptors,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
+import { JwtAuthGuard } from '../../../auth/infrastructure/guards/jwt-auth.guard';
 import { RepositorioStorageService } from '../../application/services/repositorio-storage.service';
 import { RepositorioDocumento } from '../../domain/entities/repositorio-documento.entity';
 import { PrismaRepositorioDocumentoRepository } from '../../infrastructure/repositories/prisma-repositorio-documento.repository';
@@ -118,7 +122,14 @@ export class RepositorioController {
   }
 
   @Delete(':id')
-  async remove(@Param('id') id: string): Promise<void> {
+  @UseGuards(JwtAuthGuard)
+  async remove(@Param('id') id: string, @Req() req: any): Promise<void> {
+    if (this.esPracticante(req.user?.rol)) {
+      throw new ForbiddenException(
+        'Los practicantes no pueden eliminar archivos ni enlaces del repositorio.',
+      );
+    }
+
     const documentoId = Number(id);
 
     if (!Number.isInteger(documentoId) || documentoId <= 0) {
@@ -134,5 +145,14 @@ export class RepositorioController {
     }
 
     return /^https?:\/\//i.test(url) ? url : `https://${url}`;
+  }
+
+  private esPracticante(rol: string | undefined): boolean {
+    const normalized = (rol ?? '')
+      .toString()
+      .trim()
+      .toLowerCase();
+
+    return normalized === 'practicante' || normalized === 'coordinador';
   }
 }

@@ -1,6 +1,6 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
-import { PrismaService } from 'src/infrastructure/prisma/prisma.service';
+import { PrismaService } from '../../infrastructure/prisma/prisma.service';
 
 import { RepositorioStorageService } from './application/services/repositorio-storage.service';
 import { PrismaRepositorioDocumentoRepository } from './infrastructure/repositories/prisma-repositorio-documento.repository';

@@ -342,6 +342,8 @@ model canales {
   nombre              String?               @db.VarChar(100)
   area_id             Int?
   es_grupo            Boolean?              @default(true)
+  descripcion         String?               @db.VarChar(255)
+  avatar_url          String?
   fecha_creacion      DateTime?             @default(now()) @db.Timestamp(6)
   areas               areas?                @relation(fields: [area_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
   mensajes            mensajes[]
@@ -351,15 +353,17 @@ model canales {
 }
 
 model mensajes {
-  id          Int       @id @default(autoincrement())
-  canal_id    Int?
-  emisor_id   Int?
-  contenido   String
-  archivo_url String?
-  leido       Boolean?  @default(false)
-  creado_at   DateTime? @default(now()) @db.Timestamp(6)
-  canales     canales?  @relation(fields: [canal_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
-  usuarios    usuarios? @relation(fields: [emisor_id], references: [id], onUpdate: NoAction)
+  id                 Int                  @id @default(autoincrement())
+  canal_id           Int?
+  emisor_id          Int?
+  contenido          String
+  archivo_url        String?
+  leido              Boolean?             @default(false)
+  tipo               String?              @db.VarChar(20)
+  creado_at          DateTime?            @default(now()) @db.Timestamp(6)
+  canales            canales?             @relation(fields: [canal_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  usuarios           usuarios?            @relation(fields: [emisor_id], references: [id], onUpdate: NoAction)
+  reacciones_mensaje reacciones_mensaje[]
 
   @@index([canal_id], map: "idx_mensaje_canal")
   @@index([creado_at], map: "idx_mensajes_fecha")
@@ -419,10 +423,25 @@ model notificacion_inicio_usuario {
 model participantes_canal {
   canal_id   Int
   usuario_id Int
+  es_admin   Boolean? @default(false)
   canales    canales  @relation(fields: [canal_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
   usuarios   usuarios @relation(fields: [usuario_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
 
   @@id([canal_id, usuario_id])
+  @@schema("core")
+}
+
+model reacciones_mensaje {
+  id         Int      @id @default(autoincrement())
+  mensaje_id Int
+  usuario_id Int
+  emoji      String   @db.VarChar(10)
+  creado_at  DateTime @default(now()) @db.Timestamp(6)
+  mensajes   mensajes @relation(fields: [mensaje_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  usuarios   usuarios @relation(fields: [usuario_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@index([mensaje_id], map: "idx_reacciones_mensaje_mensaje")
+  @@index([usuario_id], map: "idx_reacciones_mensaje_usuario")
   @@schema("core")
 }
 
@@ -552,11 +571,31 @@ model usuarios {
   permisos_area                                               permisos_area[]
   proyectos                                                   proyectos[]
   publicaciones                                               publicaciones[]
+  reacciones_mensaje                                          reacciones_mensaje[]
   repositorio_bloques                                         repositorio_bloques[]
   roles                                                       roles?                       @relation(fields: [rol_id], references: [id], onUpdate: NoAction)
+  solicitudes_enviadas                                        solicitudes_contacto[]       @relation("solicitudes_contacto_usuario_idTousuarios")
+  solicitudes_recibidas                                       solicitudes_contacto[]       @relation("solicitudes_contacto_contacto_idTousuarios")
 
   @@index([email], map: "idx_usuario_email")
   @@index([rol_id], map: "idx_usuarios_rol")
+  @@schema("core")
+}
+
+model solicitudes_contacto {
+  id                  Int      @id @default(autoincrement())
+  usuario_id          Int
+  contacto_id         Int
+  estado              String   @default("pendiente") @db.VarChar(20)
+  fecha_creacion      DateTime @default(now()) @db.Timestamp(6)
+  fecha_actualizado   DateTime @default(now()) @db.Timestamp(6)
+  usuario_solicitante usuarios @relation("solicitudes_contacto_usuario_idTousuarios", fields: [usuario_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  usuario_contacto    usuarios @relation("solicitudes_contacto_contacto_idTousuarios", fields: [contacto_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@unique([usuario_id, contacto_id])
+  @@index([contacto_id], map: "idx_solicitudes_contacto_contacto")
+  @@index([estado], map: "idx_solicitudes_contacto_estado")
+  @@index([usuario_id], map: "idx_solicitudes_contacto_usuario")
   @@schema("core")
 }
 
