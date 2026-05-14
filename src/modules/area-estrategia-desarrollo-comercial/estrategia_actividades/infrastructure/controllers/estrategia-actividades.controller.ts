@@ -43,12 +43,16 @@ export class EstrategiaActividadesController {
   }
 
   @Put(':id')
-  update(@Param('id') id: string, @Body() dto: UpdateEstrategiaActividadDto) {
-    return this.updateActividad.execute(positiveId(id), dto);
+  update(
+    @Param('id') id: string,
+    @Body() dto: UpdateEstrategiaActividadDto,
+    @Query('usuarioNombre') usuarioNombre?: string,
+  ) {
+    return this.updateActividad.execute(positiveId(id), dto, usuarioNombre);
   }
 
   @Delete(':id')
-  delete(@Param('id') id: string) {
-    return this.deleteActividad.execute(positiveId(id));
+  delete(@Param('id') id: string, @Query('usuarioNombre') usuarioNombre?: string) {
+    return this.deleteActividad.execute(positiveId(id), usuarioNombre);
   }
 }

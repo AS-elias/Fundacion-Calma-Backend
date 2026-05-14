@@ -13,6 +13,7 @@ import { RegisterDto } from '../dto/register.dto';
 import { RolesFundacion } from '../../domain/enums/roles.enum';
 import * as bcrypt from 'bcrypt';
 import { EmailService } from '../../../../core/services/email.service';
+import { PrismaService } from '../../../../infrastructure/prisma/prisma.service';
 
 @Injectable()
 export class AuthService {
@@ -23,6 +24,7 @@ export class AuthService {
     private readonly usuarioRepository: IUsuarioRepository,
     private readonly jwtService: JwtService,
     private readonly emailService: EmailService,
+    private readonly prisma: PrismaService,
   ) {}
 
   async login(email: string, passwordPlana: string) {
@@ -67,9 +69,11 @@ export class AuthService {
       refresh_token,
       usuario: {
         id: usuario.id,
-        nombre: usuario.nombre_completo,
-        email: usuario.email,
-        rol: usuario.rol?.nombre,
+      nombre: usuario.nombre_completo,
+      apellido: usuario.apellido_completo,
+      email: usuario.email,
+      foto_url: usuario.foto_url,
+      rol: usuario.rol?.nombre,
       },
     };
   }
@@ -128,8 +132,30 @@ export class AuthService {
     return this.usuarioRepository.findAll();
   }
 
+  async findUserById(id: number) {
+    const usuario = await this.usuarioRepository.findById(id);
+
+    if (!usuario) {
+      throw new UnauthorizedException('Usuario no encontrado');
+    }
+
+    return usuario;
+  }
+
   async updateUser(id: number, usuario: Partial<any>) {
     return this.usuarioRepository.update(id, usuario);
+  }
+
+  async updateOwnProfile(id: number, usuario: Partial<any>) {
+    const allowedFields = {
+      nombre_completo: usuario.nombre_completo,
+      apellido_completo: usuario.apellido_completo,
+      telefono: usuario.telefono,
+      puesto: usuario.puesto,
+      foto_url: usuario.foto_url,
+    };
+
+    return this.usuarioRepository.update(id, allowedFields);
   }
 
   async register(registerDto: RegisterDto) {
@@ -194,6 +220,9 @@ export class AuthService {
       rol_id: rol.id,
     });
 
+    await this.registrarInicioNotificaciones(nuevoUsuario.id);
+    await this.crearBienvenidaNuevoUsuario(nuevoUsuario);
+
     try {
       await this.emailService.sendNewUserNotification(nuevoUsuario.email, {
         nombre: `${nuevoUsuario.nombre_completo} ${nuevoUsuario.apellido_completo}`,
@@ -223,5 +252,32 @@ export class AuthService {
     return Array.from({ length }, () =>
       chars.charAt(Math.floor(Math.random() * chars.length)),
     ).join('');
+  }
+
+  private async crearBienvenidaNuevoUsuario(usuario: any): Promise<void> {
+    const nombre = usuario.nombre_completo || 'usuario';
+
+    await this.prisma.notificaciones.create({
+      data: {
+        usuario_id: usuario.id,
+        titulo: 'Bienvenido a CALMA',
+        tipo: 'comunicados',
+        leido: false,
+        imagen: null,
+        mensaje: [
+          `Hola ${nombre}, bienvenido a la plataforma de Fundacion Calma.`,
+          'Desde aqui podras revisar tus notificaciones, acceder a recursos internos y dar seguimiento a las actividades segun tu rol.',
+          'Atte. Equipo CALMA',
+        ].join('\n\n'),
+      },
+    });
+  }
+
+  private async registrarInicioNotificaciones(usuarioId: number): Promise<void> {
+    await this.prisma.notificacion_inicio_usuario.upsert({
+      where: { usuario_id: usuarioId },
+      create: { usuario_id: usuarioId },
+      update: {},
+    });
   }
 }

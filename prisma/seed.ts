@@ -195,21 +195,79 @@ async function main() {
   // ===============================
   // 9. REPOSITORIO BLOQUE
   // ===============================
-  const bloque = await prisma.repositorio_bloques.create({
-    data: {
+  const bloquesRepositorio = [
+    {
+      area_id: areaPadre.id,
+      titulo: 'MOF - Manual de Organización y Funciones',
+      subtitulo: 'Documentos institucionales',
+      icono: '\u{1F4C1}',
+      creado_por: director.id,
+    },
+    {
+      area_id: areaPadre.id,
+      titulo: 'Redes Sociales de la Fundación',
+      subtitulo: 'Enlaces oficiales',
+      icono: '\u{1F310}',
+      creado_por: director.id,
+    },
+    {
+      area_id: areaPadre.id,
+      titulo: 'Recursos Generales',
+      subtitulo: 'Archivos generales',
+      icono: '\u{1F4C4}',
+      creado_por: director.id,
+    },
+    {
+      area_id: areaPadre.id,
+      titulo: 'Políticas y Procedimientos',
+      subtitulo: 'Normas internas',
+      icono: '\u{1F4D1}',
+      creado_por: director.id,
+    },
+    {
+      area_id: areaPadre.id,
+      titulo: 'Reportes Estratégicos',
+      subtitulo: 'Reportes y análisis',
+      icono: '\u{1F4CA}',
+      creado_por: director.id,
+    },
+    {
+      area_id: areaPadre.id,
+      titulo: 'Materiales de Capacitación',
+      subtitulo: 'Capacitaciones y guías',
+      icono: '\u{1F4DA}',
+      creado_por: director.id,
+    },
+    {
       area_id: areaPadre.id,
       titulo: 'Plantillas Comerciales',
       subtitulo: 'Documentos oficiales',
       creado_por: director.id,
     },
-  });
+  ];
+
+  const bloquesCreados = await Promise.all(
+    bloquesRepositorio.map((bloque) =>
+      prisma.repositorio_bloques.create({
+        data: bloque,
+      }),
+    ),
+  );
+
+  const bloquePlantillas = bloquesCreados.find(
+    (bloque) => bloque.titulo === 'Plantillas Comerciales',
+  );
+
+  if (!bloquePlantillas) {
+    throw new Error('No se pudo crear el bloque Plantillas Comerciales');
+  }
 
   // ===============================
   // 10. REPOSITORIO ENLACES
   // ===============================
   await prisma.repositorio_enlaces.create({
     data: {
-      bloque_id: bloque.id,
+      bloque_id: bloquePlantillas.id,
       nombre_documento: 'Plantilla Propuesta.docx',
       url_drive: 'https://drive.google.com/plantilla',
     },

@@ -5,5 +5,6 @@ export class ConvenioComentario {
     public usuarioId: number,
     public comentario: string,
     public fechaCreacion: Date,
+    public usuarioNombre?: string | null,
   ) {}
 }

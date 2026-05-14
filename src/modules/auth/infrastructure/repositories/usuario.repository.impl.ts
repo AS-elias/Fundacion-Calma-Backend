@@ -74,11 +74,14 @@ export class UsuarioRepositoryImpl implements IUsuarioRepository {
 
     // 🔥 SOLUCIÓN DEL ERROR 500 🔥
     // Si viene una fecha como texto, la transformamos a objeto Date (ISO-8601)
-    if ((updateData as any).fecha_fin_contrato) {
+    if (
+      Object.prototype.hasOwnProperty.call(updateData, 'fecha_fin_contrato') &&
+      (updateData as any).fecha_fin_contrato
+    ) {
       (updateData as any).fecha_fin_contrato = new Date(
         (updateData as any).fecha_fin_contrato,
       );
-    } else {
+    } else if (Object.prototype.hasOwnProperty.call(updateData, 'fecha_fin_contrato')) {
       // Si el campo viene vacío o no viene, aseguramos que sea null para Prisma
       (updateData as any).fecha_fin_contrato = null;
     }

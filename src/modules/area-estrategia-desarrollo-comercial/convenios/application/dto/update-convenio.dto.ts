@@ -13,4 +13,7 @@ export class UpdateConvenioDto {
   fechaExpiracion?: Date;
   tipo?: TipoConvenio;
   conexion?: ConexionConvenio;
+  creadorId?: number;
+  usuarioId?: number;
+  usuarioNombre?: string;
 }

@@ -1,7 +1,6 @@
 import { Module } from '@nestjs/common';
 import { ScheduleModule } from '@nestjs/schedule';
 import { ConfigModule } from '@nestjs/config';
-import { APP_FILTER } from '@nestjs/core';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { AuthModule } from './modules/auth/auth.module';
@@ -21,6 +20,9 @@ import { ContratoCheckService } from './core/services/contrato-check.service';
 import { ComunicacionesModule } from './modules/comunicaciones/comunicaciones.module';
 import { SalasTrabajoModule } from './modules/salas/salas-trabajo.module';
 import { HttpExceptionFilter } from './core/filters/http-exception.filter';
+import { ActividadVencimientoNotificacionService } from './core/services/actividad-vencimiento-notificacion.service';
+import { NotificacionesModule } from './modules/notificaciones/notificaciones.module';
+import { RepositorioModule } from './modules/repositorio/repositorio.module';
 @Module({
   imports: [
     ConfigModule.forRoot({
@@ -30,6 +32,7 @@ import { HttpExceptionFilter } from './core/filters/http-exception.filter';
     AuthModule,
     DashboardModule,
     ActividadesModule,
+    RepositorioModule,
     ConveniosModule,
     ConvenioComentariosModule,
     ConvenioArchivosModule,
@@ -39,6 +42,7 @@ import { HttpExceptionFilter } from './core/filters/http-exception.filter';
     ComunidadModule,
     ComunicacionesModule,
     SalasTrabajoModule,
+    NotificacionesModule,
   ],
   controllers: [AppController],
   providers: [
@@ -47,10 +51,7 @@ import { HttpExceptionFilter } from './core/filters/http-exception.filter';
     PermisosService,
     AreasService,
     ContratoCheckService,
-    {
-      provide: APP_FILTER,
-      useClass: HttpExceptionFilter,
-    },
+    ActividadVencimientoNotificacionService,
   ],
   exports: [PrismaService, PermisosService, AreasService],
 })
