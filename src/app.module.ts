@@ -19,6 +19,7 @@ import { PermisosService } from './core/services/permisos.service';
 import { AreasService } from './core/services/areas.service';
 import { ContratoCheckService } from './core/services/contrato-check.service';
 import { ComunicacionesModule } from './modules/comunicaciones/comunicaciones.module';
+import { SalasTrabajoModule } from './modules/salas/salas-trabajo.module';
 import { HttpExceptionFilter } from './core/filters/http-exception.filter';
 @Module({
   imports: [
@@ -37,6 +38,7 @@ import { HttpExceptionFilter } from './core/filters/http-exception.filter';
     EstrategiaComercialModule,
     ComunidadModule,
     ComunicacionesModule,
+    SalasTrabajoModule,
   ],
   controllers: [AppController],
   providers: [

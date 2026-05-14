@@ -35,6 +35,7 @@ async function main() {
   await prisma.estrategia_tareas.deleteMany();
   await prisma.proyectos.deleteMany();
   await prisma.permisos_area.deleteMany();
+  await prisma.salas_trabajo.deleteMany();
   await prisma.usuarios.deleteMany();
   await prisma.areas.deleteMany();
   await prisma.roles.deleteMany();
@@ -552,6 +553,54 @@ async function main() {
         ],
       },
     },
+  });
+
+  // ===============================
+  // 19. SALAS DE TRABAJO
+  // ===============================
+  await prisma.salas_trabajo.createMany({
+    data: [
+      {
+        nombre: 'Sala General - Fundación Calma',
+        area: 'General',
+        link: 'https://meet.google.com/fundacion-calma-general',
+        descripcion: 'Sala principal para todas las reuniones generales',
+        es_general: true,
+        creador_id: admin.id,
+      },
+      {
+        nombre: 'Sala de Reuniones',
+        area: 'Estrategias',
+        link: 'https://meet.google.com/abc-estrategias',
+        descripcion: 'Reunión semanal del equipo de estrategia',
+        es_general: false,
+        creador_id: director.id,
+      },
+      {
+        nombre: 'Daily Frontend',
+        area: 'Desarrollo',
+        link: 'https://meet.google.com/xyz-desarrollo',
+        descripcion: 'Para sincronización diaria del equipo de desarrollo',
+        es_general: false,
+        creador_id: practicante.id,
+      },
+      {
+        nombre: 'Análisis de Datos',
+        area: 'Análisis de Datos',
+        link: 'https://meet.google.com/analisis-datos',
+        descripcion: 'Reuniones del equipo de análisis',
+        es_general: false,
+        creador_id: analistaUser.id,
+      },
+      {
+        nombre: 'Comunicaciones Internas',
+        area: 'Comunicaciones',
+        link: 'https://meet.google.com/comunicaciones',
+        descripcion: 'Sala para el equipo de marketing y comunicaciones',
+        es_general: false,
+        creador_id: director.id,
+      },
+    ],
   });
 
   console.log('✅ Base de datos sembrada con éxito.');

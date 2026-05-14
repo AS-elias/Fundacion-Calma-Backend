@@ -534,12 +534,28 @@ model usuarios {
   publicaciones                                               publicaciones[]
   repositorio_bloques                                         repositorio_bloques[]
   reacciones_mensaje                                         reacciones_mensaje[]
+  salas_trabajo                                               salas_trabajo[]
   solicitudes_enviadas                                        solicitudes_contacto[] @relation("solicitud_solicitante")
   solicitudes_recibidas                                       solicitudes_contacto[] @relation("solicitud_contacto")
   roles                                                       roles?                 @relation(fields: [rol_id], references: [id], onUpdate: NoAction)
 
   @@index([email], map: "idx_usuario_email")
   @@index([rol_id], map: "idx_usuarios_rol")
+  @@schema("public")
+}
+
+model salas_trabajo {
+  id            Int       @id @default(autoincrement())
+  nombre        String    @db.VarChar(200)
+  area          String    @db.VarChar(200)
+  link          String
+  descripcion   String?   @db.VarChar(500)
+  es_general    Boolean   @default(false)
+  creador_id    Int?
+  created_at    DateTime? @default(now()) @db.Timestamp(6)
+  updated_at    DateTime? @updatedAt @db.Timestamp(6)
+  usuarios      usuarios? @relation(fields: [creador_id], references: [id], onDelete: SetNull, onUpdate: NoAction)
+
   @@schema("public")
 }
 
