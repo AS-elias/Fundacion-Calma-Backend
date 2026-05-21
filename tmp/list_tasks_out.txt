@@ -1,0 +1,40 @@
+--- desarrollo_actividades ---
+[]
+
+--- estrategia_actividades ---
+PrismaClientValidationError: 
+Invalid `prisma.estrategia_actividades.findMany()` invocation in
+J:\Universidad\Proyectos de Codigos\Fundacion-Calma-Backend\tmp\list_tasks.js:10:53
+
+   7 console.log(JSON.stringify(dev, null, 2));
+   8 
+   9 console.log('\n--- estrategia_actividades ---');
+→ 10 const est = await prisma.estrategia_actividades.findMany({
+       select: {
+         id: true,
+         titulo: true,
+         estado: true,
+         area_id: true,
+         ~~~~~~~
+         creador_id: true,
+     ?   descripcion?: true,
+     ?   creado_por?: true,
+     ?   prioridad?: true,
+     ?   fecha_creacion?: true,
+     ?   fecha_limite?: true,
+     ?   created_at?: true,
+     ?   updated_at?: true,
+     ?   estrategia_actividad_enlaces?: true,
+     ?   _count?: true
+       }
+     })
+
+Unknown field `area_id` for select statement on model `estrategia_actividades`. Available options are marked with ?.
+    at Nn (J:\Universidad\Proyectos de Codigos\Fundacion-Calma-Backend\node_modules\@prisma\client\runtime\library.js:29:1363)
+    at ei.handleRequestError (J:\Universidad\Proyectos de Codigos\Fundacion-Calma-Backend\node_modules\@prisma\client\runtime\library.js:121:6911)
+    at ei.handleAndLogRequestError (J:\Universidad\Proyectos de Codigos\Fundacion-Calma-Backend\node_modules\@prisma\client\runtime\library.js:121:6593)
+    at ei.request (J:\Universidad\Proyectos de Codigos\Fundacion-Calma-Backend\node_modules\@prisma\client\runtime\library.js:121:6300)
+    at async a (J:\Universidad\Proyectos de Codigos\Fundacion-Calma-Backend\node_modules\@prisma\client\runtime\library.js:130:9551)
+    at async J:\Universidad\Proyectos de Codigos\Fundacion-Calma-Backend\tmp\list_tasks.js:10:17 {
+  clientVersion: '6.19.2'
+}
