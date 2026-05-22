@@ -23,6 +23,9 @@ import { HttpExceptionFilter } from './core/filters/http-exception.filter';
 import { ActividadVencimientoNotificacionService } from './core/services/actividad-vencimiento-notificacion.service';
 import { NotificacionesModule } from './modules/notificaciones/notificaciones.module';
 import { RepositorioModule } from './modules/repositorio/repositorio.module';
+import { WebsocketsModule } from './modules/websockets/websockets.module';
+import { CloudStorageModule } from './core/cloud-storage/cloud-storage.module';
+
 @Module({
   imports: [
     ConfigModule.forRoot({
@@ -33,6 +36,7 @@ import { RepositorioModule } from './modules/repositorio/repositorio.module';
     DashboardModule,
     ActividadesModule,
     RepositorioModule,
+    WebsocketsModule,
     ConveniosModule,
     ConvenioComentariosModule,
     ConvenioArchivosModule,
@@ -43,6 +47,7 @@ import { RepositorioModule } from './modules/repositorio/repositorio.module';
     ComunicacionesModule,
     SalasTrabajoModule,
     NotificacionesModule,
+    CloudStorageModule,
   ],
   controllers: [AppController],
   providers: [

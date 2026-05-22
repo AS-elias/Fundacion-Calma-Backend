@@ -1,5 +1,5 @@
 generator client {
-  provider        = "prisma-client-js"
+  provider = "prisma-client-js"
 }
 
 datasource db {
@@ -13,13 +13,13 @@ model analisis_tareas {
   area_id                Int?
   titulo                 String                   @db.VarChar(200)
   subtitulo              String?                  @db.VarChar(200)
-  descripcion            String?
   estado                 String?                  @default("pendiente") @db.VarChar(30)
+  creador_id             Int?
   fecha_creacion         DateTime?                @default(now()) @db.Timestamp(6)
+  descripcion            String?
   fecha_limite           DateTime?                @db.Date
   created_at             DateTime?                @default(now()) @db.Timestamp(6)
   updated_at             DateTime?                @updatedAt @db.Timestamp(6)
-  creador_id             Int?
   analisis_tarea_enlaces analisis_tarea_enlaces[]
   areas                  areas?                   @relation(fields: [area_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
   usuarios               usuarios?                @relation(fields: [creador_id], references: [id], onUpdate: NoAction)
@@ -157,7 +157,7 @@ model convenio_historial {
   descripcion    String
   fecha_creacion DateTime?  @default(now()) @db.Timestamp(6)
   convenios      convenios? @relation(fields: [convenio_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
-  usuarios       usuarios?  @relation(fields: [usuario_id], references: [id], onDelete: SetNull, onUpdate: NoAction)
+  usuarios       usuarios?  @relation(fields: [usuario_id], references: [id], onUpdate: NoAction)
 
   @@index([convenio_id], map: "idx_historial_convenio")
   @@schema("comercial")
@@ -186,10 +186,10 @@ model convenios {
   telefono_contacto    String?                @db.VarChar(9)
   estado               String?
   fecha_expiracion     DateTime?              @db.Date
-  tipo                 String?
-  conexion             String?
   creador_id           Int?
   fecha_creacion       DateTime?              @default(now()) @db.Timestamp(6)
+  conexion             String?
+  tipo                 String?
   convenio_archivos    convenio_archivos[]
   convenio_comentarios convenio_comentarios[]
   convenio_historial   convenio_historial[]
@@ -272,8 +272,8 @@ model estrategia_proyectos {
   fecha_limite                DateTime?                     @db.Date
   created_at                  DateTime?                     @default(now()) @db.Timestamp(6)
   updated_at                  DateTime?                     @updatedAt @db.Timestamp(6)
-  estrategia_empresas         estrategia_empresas?          @relation(fields: [empresa_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
   estrategia_proyecto_enlaces estrategia_proyecto_enlaces[]
+  estrategia_empresas         estrategia_empresas?          @relation(fields: [empresa_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
 
   @@index([empresa_id], map: "idx_estrategia_proyectos_empresa")
   @@index([estado], map: "idx_estrategia_proyectos_estado")
@@ -320,8 +320,8 @@ model areas {
   config_conexion        Json?
   config_visual          Json?
   analisis_tareas        analisis_tareas[]
-  desarrollo_actividades desarrollo_actividades[]
   convenios              convenios[]
+  desarrollo_actividades desarrollo_actividades[]
   estrategia_tareas      estrategia_tareas[]
   areas                  areas?                   @relation("areasToareas", fields: [padre_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
   other_areas            areas[]                  @relation("areasToareas")
@@ -341,9 +341,9 @@ model canales {
   nombre              String?               @db.VarChar(100)
   area_id             Int?
   es_grupo            Boolean?              @default(true)
-  descripcion         String?               @db.VarChar(255)
-  avatar_url          String?
   fecha_creacion      DateTime?             @default(now()) @db.Timestamp(6)
+  avatar_url          String?
+  descripcion         String?               @db.VarChar(255)
   areas               areas?                @relation(fields: [area_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
   mensajes            mensajes[]
   participantes_canal participantes_canal[]
@@ -358,8 +358,8 @@ model mensajes {
   contenido          String
   archivo_url        String?
   leido              Boolean?             @default(false)
-  tipo               String?              @db.VarChar(20)
   creado_at          DateTime?            @default(now()) @db.Timestamp(6)
+  tipo               String?              @db.VarChar(20)
   canales            canales?             @relation(fields: [canal_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
   usuarios           usuarios?            @relation(fields: [emisor_id], references: [id], onUpdate: NoAction)
   reacciones_mensaje reacciones_mensaje[]
@@ -374,13 +374,13 @@ model notificaciones {
   usuario_id              Int?
   titulo                  String                    @db.VarChar(150)
   mensaje                 String?
-  imagen                  String?
   leido                   Boolean?                  @default(false)
   tipo                    String?                   @db.VarChar(50)
   creado_at               DateTime?                 @default(now()) @db.Timestamp(6)
-  usuarios                usuarios?                 @relation(fields: [usuario_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  imagen                  String?
   notificacion_eliminadas notificacion_eliminadas[]
   notificacion_lecturas   notificacion_lecturas[]
+  usuarios                usuarios?                 @relation(fields: [usuario_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
 
   @@index([usuario_id], map: "idx_notificaciones_usuario")
   @@schema("core")
@@ -479,13 +479,12 @@ model proyectos {
 model director_evaluaciones {
   id          Int       @id @default(autoincrement())
   director_id Int?
-  usuario_id  Int?
   rating      Int
   comentario  String?   @db.VarChar(500)
   created_at  DateTime? @default(now()) @db.Timestamp(6)
-
+  usuario_id  Int?
   director    usuarios? @relation("DirectorEvaluationsDirector", fields: [director_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
-  usuario     usuarios? @relation("DirectorEvaluationsUsuario", fields: [usuario_id], references: [id], onDelete: SetNull, onUpdate: NoAction)
+  usuario     usuarios? @relation("DirectorEvaluationsUsuario", fields: [usuario_id], references: [id], onUpdate: NoAction)
 
   @@index([director_id], map: "idx_director_evaluaciones_director")
   @@index([usuario_id], map: "idx_director_evaluaciones_usuario")
@@ -566,10 +565,10 @@ model usuarios {
   password_hash                                               String
   foto_url                                                    String?
   puesto                                                      String?                      @db.VarChar(40)
+  rol_id                                                      Int?
+  fecha_fin_contrato                                          DateTime?
   estado                                                      UserEstado                   @default(ACTIVO)
   debe_cambiar_password                                       Boolean                      @default(false)
-  fecha_fin_contrato                                          DateTime?
-  rol_id                                                      Int?
   analisis_tareas                                             analisis_tareas[]
   convenio_archivos                                           convenio_archivos[]
   convenio_comentarios                                        convenio_comentarios[]
@@ -578,6 +577,8 @@ model usuarios {
   desarrollo_actividades                                      desarrollo_actividades[]
   estrategia_tareas_estrategia_tareas_asignado_a_idTousuarios estrategia_tareas[]          @relation("estrategia_tareas_asignado_a_idTousuarios")
   estrategia_tareas_estrategia_tareas_creador_idTousuarios    estrategia_tareas[]          @relation("estrategia_tareas_creador_idTousuarios")
+  evaluaciones_como_director                                  director_evaluaciones[]      @relation("DirectorEvaluationsDirector")
+  evaluaciones_recibidas                                      director_evaluaciones[]      @relation("DirectorEvaluationsUsuario")
   mensajes                                                    mensajes[]
   notificacion_eliminadas                                     notificacion_eliminadas[]
   notificacion_inicio_usuario                                 notificacion_inicio_usuario?
@@ -589,12 +590,10 @@ model usuarios {
   publicaciones                                               publicaciones[]
   reacciones_mensaje                                          reacciones_mensaje[]
   repositorio_bloques                                         repositorio_bloques[]
+  solicitudes_recibidas                                       solicitudes_contacto[]       @relation("solicitudes_contacto_contacto_idTousuarios")
+  solicitudes_enviadas                                        solicitudes_contacto[]       @relation("solicitudes_contacto_usuario_idTousuarios")
   roles                                                       roles?                       @relation(fields: [rol_id], references: [id], onUpdate: NoAction)
   salas_trabajo                                               salas_trabajo[]
-  evaluaciones_como_director                                  director_evaluaciones[]      @relation("DirectorEvaluationsDirector")
-  evaluaciones_recibidas                                      director_evaluaciones[]      @relation("DirectorEvaluationsUsuario")
-  solicitudes_enviadas                                        solicitudes_contacto[]       @relation("solicitudes_contacto_usuario_idTousuarios")
-  solicitudes_recibidas                                       solicitudes_contacto[]       @relation("solicitudes_contacto_contacto_idTousuarios")
 
   @@index([email], map: "idx_usuario_email")
   @@index([rol_id], map: "idx_usuarios_rol")
@@ -602,16 +601,16 @@ model usuarios {
 }
 
 model salas_trabajo {
-  id            Int       @id @default(autoincrement())
-  nombre        String    @db.VarChar(200)
-  area          String    @db.VarChar(200)
-  link          String
-  descripcion   String?   @db.VarChar(500)
-  es_general    Boolean   @default(false)
-  creador_id    Int?
-  created_at    DateTime? @default(now()) @db.Timestamp(6)
-  updated_at    DateTime? @updatedAt @db.Timestamp(6)
-  usuarios      usuarios? @relation(fields: [creador_id], references: [id], onDelete: SetNull, onUpdate: NoAction)
+  id          Int       @id @default(autoincrement())
+  nombre      String    @db.VarChar(200)
+  area        String    @db.VarChar(200)
+  link        String
+  descripcion String?   @db.VarChar(500)
+  es_general  Boolean   @default(false)
+  creador_id  Int?
+  created_at  DateTime? @default(now()) @db.Timestamp(6)
+  updated_at  DateTime? @updatedAt @db.Timestamp(6)
+  usuarios    usuarios? @relation(fields: [creador_id], references: [id], onUpdate: NoAction)
 
   @@schema("public")
 }
@@ -623,13 +622,23 @@ model solicitudes_contacto {
   estado              String   @default("pendiente") @db.VarChar(20)
   fecha_creacion      DateTime @default(now()) @db.Timestamp(6)
   fecha_actualizado   DateTime @default(now()) @db.Timestamp(6)
-  usuario_solicitante usuarios @relation("solicitudes_contacto_usuario_idTousuarios", fields: [usuario_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
   usuario_contacto    usuarios @relation("solicitudes_contacto_contacto_idTousuarios", fields: [contacto_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  usuario_solicitante usuarios @relation("solicitudes_contacto_usuario_idTousuarios", fields: [usuario_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
 
   @@unique([usuario_id, contacto_id])
   @@index([contacto_id], map: "idx_solicitudes_contacto_contacto")
   @@index([estado], map: "idx_solicitudes_contacto_estado")
   @@index([usuario_id], map: "idx_solicitudes_contacto_usuario")
+  @@schema("core")
+}
+
+model notificacion_alertas_actividad {
+  tipo_actividad String    @db.VarChar(30)
+  actividad_id   Int
+  fecha_limite   DateTime  @db.Date
+  creado_at      DateTime? @default(now()) @db.Timestamp(6)
+
+  @@id([tipo_actividad, actividad_id, fecha_limite])
   @@schema("core")
 }
 

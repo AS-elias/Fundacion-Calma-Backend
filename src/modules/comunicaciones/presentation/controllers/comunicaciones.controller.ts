@@ -13,7 +13,8 @@ import {
   BadRequestException,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
-import { diskStorage } from 'multer';
+import { CloudStorageService } from '../../../../core/cloud-storage/cloud-storage.service';
+import { memoryStorage } from 'multer';
 import { ComunicacionesService } from '../../application/services/comunicaciones.service';
 import { JwtAuthGuard } from '../../../auth/infrastructure/guards/jwt-auth.guard';
 import { CreateChannelDto } from '../../application/dto/create-channel.dto';
@@ -23,7 +24,10 @@ import { ReactionDto } from '../../application/dto/reaction.dto';
 @Controller('comunicaciones')
 @UseGuards(JwtAuthGuard)
 export class ComunicacionesController {
-  constructor(private readonly comunicacionesService: ComunicacionesService) { }
+  constructor(
+    private readonly comunicacionesService: ComunicacionesService,
+    private readonly cloudStorageService: CloudStorageService,
+  ) { }
 
   @Post('channels')
   async createChannel(@Body() dto: CreateChannelDto) {
@@ -60,14 +64,7 @@ export class ComunicacionesController {
   @Post('channels/:id/files')
   @UseInterceptors(
     FileInterceptor('file', {
-      storage: diskStorage({
-        destination: './uploads/comunicaciones',
-        filename: (_req, file, cb) => {
-          const timestamp = Date.now();
-          const safeName = file.originalname.replace(/[^a-zA-Z0-9.\-_]/g, '_');
-          cb(null, `${timestamp}_${safeName}`);
-        },
-      }),
+      storage: memoryStorage(),
       limits: { fileSize: 20 * 1024 * 1024 }, // 20MB
     }),
   )
@@ -89,11 +86,19 @@ export class ComunicacionesController {
       throw new BadRequestException('Usuario inválido');
     }
 
+    const timestamp = Date.now();
+    const safeName = file.originalname.replace(/[^a-zA-Z0-9.\-_]/g, '_');
+    const cloudUrl = await this.cloudStorageService.uploadFile(
+      file.buffer,
+      'comunicaciones',
+      `${timestamp}_${safeName}`,
+    );
+
     const message = await this.comunicacionesService.saveMessage({
       canalId,
       remitenteId: userId,
       tipo: 'file',
-      archivoUrl: `/uploads/comunicaciones/${file.filename}`,
+      archivoUrl: cloudUrl,
     });
 
     return {

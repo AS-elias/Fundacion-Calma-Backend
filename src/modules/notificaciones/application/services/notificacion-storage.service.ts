@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
-import { promises as fs } from 'fs';
-import { extname, join } from 'path';
+import { extname } from 'path';
+import { CloudStorageService } from '../../../../core/cloud-storage/cloud-storage.service';
 
 type UploadedNotificacionFile = {
   originalname: string;
@@ -9,28 +9,23 @@ type UploadedNotificacionFile = {
 
 @Injectable()
 export class NotificacionStorageService {
-  async saveFile(file: UploadedNotificacionFile) {
+  constructor(private readonly cloudStorageService: CloudStorageService) {}
 
+  async saveFile(file: UploadedNotificacionFile) {
     const extension = extname(file.originalname);
 
     const filename =
       `${Date.now()}-${Math.round(Math.random() * 1e9)}${extension}`;
 
-    const folderPath = join(
-      process.cwd(),
-      'uploads',
-      'notificaciones'
+    const urlArchivo = await this.cloudStorageService.uploadFile(
+      file.buffer,
+      'notificaciones',
+      filename,
     );
-
-    const uploadPath = join(folderPath, filename);
-
-    await fs.mkdir(folderPath, { recursive: true });
-
-    await fs.writeFile(uploadPath, file.buffer);
 
     return {
       nombreArchivo: file.originalname,
-      urlArchivo: `/uploads/notificaciones/${filename}`,
+      urlArchivo,
     };
   }
 }

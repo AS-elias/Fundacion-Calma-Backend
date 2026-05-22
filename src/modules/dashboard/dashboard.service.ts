@@ -5,9 +5,14 @@ import {
   DashboardUserDto,
 } from './application/dto/dashboard-response.dto';
 
+import { DashboardGateway } from './../websockets/gateways/dashboard.gateway';
+
 @Injectable()
 export class DashboardService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly dashboardGateway: DashboardGateway,
+  ) {}
 
   private getTodayStart() {
     const today = new Date();
@@ -185,6 +190,7 @@ export class DashboardService {
         RETURNING id, director_id, usuario_id, rating, comentario, created_at
       `) || [];
 
+      this.dashboardGateway.emitDashboardUpdated('evaluacion');
       return created;
     } catch (err: any) {
       if (!(err?.code === 'P2010' && err?.meta?.code === '42703')) {
@@ -204,6 +210,8 @@ export class DashboardService {
         VALUES (${directorId}, ${rating}, ${comentario?.trim() || null})
         RETURNING id, director_id, rating, comentario, created_at
       `) || [];
+
+      this.dashboardGateway.emitDashboardUpdated('evaluacion');
 
       return {
         id: createdAlt?.id,

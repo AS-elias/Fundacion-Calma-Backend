@@ -8,7 +8,7 @@ export class ListarNotificacionesUseCase {
     private repo: NotificacionRepository,
   ) {}
 
-  async execute() {
-    return this.repo.listar();
+  async execute(actualUserId: number, rol: string, queryUserId?: number) {
+    return this.repo.listar(actualUserId, rol, queryUserId);
   }
 }

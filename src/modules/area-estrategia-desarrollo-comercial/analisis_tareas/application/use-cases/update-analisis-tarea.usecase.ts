@@ -4,11 +4,14 @@ import { AnalisisTareaRepository } from '../../domain/repositories/analisis-tare
 import { AnalisisTarea } from '../../domain/entities/analisis-tarea.entity';
 import { NotificacionSistemaService } from '../../../../notificaciones/application/services/notificacion-sistema.service';
 
+import { DashboardGateway } from '../../../../websockets/gateways/dashboard.gateway';
+
 @Injectable()
 export class UpdateAnalisisTareaUseCase {
   constructor(
     private readonly repository: AnalisisTareaRepository,
     private readonly notificacionSistema: NotificacionSistemaService,
+    private readonly dashboardGateway: DashboardGateway,
   ) {}
 
   async execute(id: number, dto: UpdateAnalisisTareaDto) {
@@ -28,6 +31,8 @@ export class UpdateAnalisisTareaUseCase {
         usuarioId: this.numero(dto.creador_id ?? dto.creadorId ?? updated.creador_id),
       },
     );
+
+    this.dashboardGateway.emitDashboardUpdated('analisis_tarea');
 
     return updated;
   }

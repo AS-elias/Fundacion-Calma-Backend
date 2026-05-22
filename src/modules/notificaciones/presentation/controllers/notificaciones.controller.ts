@@ -20,6 +20,7 @@ import { FileInterceptor } from '@nestjs/platform-express';
 import { NotificacionPrismaRepository } from '../../infrastructure/repositories/prisma-notificacion.repository';
 import { NotificacionStorageService } from '../../application/services/notificacion-storage.service';
 import { JwtAuthGuard } from '../../../auth/infrastructure/guards/jwt-auth.guard';
+import { UsuarioActual } from '../../../auth/infrastructure/decorators/current-user.decorator';
 import { RolesFundacion } from '../../../auth/domain/enums/roles.enum';
 
 type UploadedNotificacionFile = {
@@ -71,8 +72,12 @@ export class NotificacionesController {
   }
 
   @Get()
-  listar(@Query('usuarioId') usuarioId?: string) {
-    return this.repo.listar(this.parseOptionalUserId(usuarioId));
+  @UseGuards(JwtAuthGuard)
+  listar(
+    @UsuarioActual() usuario: { id: number; rol: string },
+    @Query('usuarioId') usuarioId?: string
+  ) {
+    return this.repo.listar(usuario.id, usuario.rol, this.parseOptionalUserId(usuarioId));
   }
 
   @Patch(':id/leido')

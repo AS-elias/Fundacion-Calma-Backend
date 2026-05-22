@@ -6,11 +6,14 @@ import { EstadoActividad } from '../../domain/enums/estado-actividad.enum';
 import { ActividadRepository } from '../../domain/repositories/actividad.repository';
 import { NotificacionSistemaService } from '../../../../notificaciones/application/services/notificacion-sistema.service';
 
+import { DashboardGateway } from '../../../../websockets/gateways/dashboard.gateway';
+
 @Injectable()
 export class CreateActividadUseCase {
   constructor(
     private readonly actividadRepository: ActividadRepository,
     private readonly notificacionSistema: NotificacionSistemaService,
+    private readonly dashboardGateway: DashboardGateway,
   ) {}
 
   async execute(dto: CreateActividadDto): Promise<Actividad> {
@@ -49,6 +52,8 @@ export class CreateActividadUseCase {
         usuarioId: created.creadorId,
       },
     );
+
+    this.dashboardGateway.emitDashboardUpdated('actividad');
 
     return created;
   }

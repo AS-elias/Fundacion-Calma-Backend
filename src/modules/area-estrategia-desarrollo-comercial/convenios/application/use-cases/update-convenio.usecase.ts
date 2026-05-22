@@ -5,12 +5,15 @@ import { UpdateConvenioDto } from '../dto/update-convenio.dto';
 import { ConvenioHistorialService } from '../../../convenio_historial/application/services/convenio-historial.service';
 import { NotificacionSistemaService } from '../../../../notificaciones/application/services/notificacion-sistema.service';
 
+import { DashboardGateway } from '../../../../websockets/gateways/dashboard.gateway';
+
 @Injectable()
 export class UpdateConvenioUseCase {
   constructor(
     private readonly convenioRepository: ConvenioRepository,
     private readonly convenioHistorialService: ConvenioHistorialService,
     private readonly notificacionSistema: NotificacionSistemaService,
+    private readonly dashboardGateway: DashboardGateway,
   ) {}
 
   async execute(id: number, dto: UpdateConvenioDto): Promise<Convenio> {
@@ -38,6 +41,8 @@ export class UpdateConvenioUseCase {
         usuarioNombre: dto.usuarioNombre,
       },
     );
+
+    this.dashboardGateway.emitDashboardUpdated('convenio');
 
     return updated;
   }

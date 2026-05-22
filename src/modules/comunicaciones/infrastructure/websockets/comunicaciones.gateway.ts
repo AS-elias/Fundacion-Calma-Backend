@@ -22,6 +22,8 @@ import { EditDeleteDto } from '../../application/dto/edit-delete.dto';
 import { GetRecentMessagesDto } from '../../application/dto/get-recent-messages.dto';
 import { PresenceService } from '../../../../core/services/presence.service';
 
+import { NotificacionSistemaService } from '../../../notificaciones/application/services/notificacion-sistema.service';
+
 @WebSocketGateway({
   namespace: '/comunicaciones',
   cors: {
@@ -37,7 +39,11 @@ export class ComunicacionesGateway
   private readonly logger = new Logger(ComunicacionesGateway.name);
   private activeCallTimeouts = new Map<string, NodeJS.Timeout>(); // Track call timeouts
 
-  constructor(private readonly comunicacionesService: ComunicacionesService, private readonly presenceService: PresenceService) { }
+  constructor(
+    private readonly comunicacionesService: ComunicacionesService, 
+    private readonly presenceService: PresenceService,
+    private readonly notificacionSistema: NotificacionSistemaService,
+  ) { }
 
   async handleConnection(socket: Socket) {
     try {
@@ -319,6 +325,32 @@ export class ComunicacionesGateway
 
       this.server.to(`canal_${dto.canalId}`).emit('newMessage', response);
       socket.emit('sendMessageResponse', { success: true, data: response });
+
+      // Notify other participants
+      try {
+        const canalInfo = await this.comunicacionesService.getChannelInfo(dto.canalId);
+        if (canalInfo && canalInfo.participantes_canal) {
+          const senderName = socket.data.user?.nombre || 'Un usuario';
+          const titulo = 'Nuevo mensaje';
+          const descripcion = `Tienes un nuevo mensaje en ${canalInfo.nombre || 'el chat'}`;
+          
+          canalInfo.participantes_canal.forEach(p => {
+            if (p.usuario_id !== usuarioId) {
+              this.notificacionSistema.registrar(
+                titulo,
+                descripcion,
+                {
+                  apartado: 'Comunicaciones',
+                  accion: 'Nuevo mensaje recibido',
+                  usuarioId: p.usuario_id,
+                }
+              ).catch(e => this.logger.warn(`Failed to notify user ${p.usuario_id}: ${e.message}`));
+            }
+          });
+        }
+      } catch (notifyErr) {
+        this.logger.warn(`Could not send notifications for new message: ${notifyErr}`);
+      }
     } catch (error: any) {
       this.logger.error('sendMessage error:', error.message);
       socket.emit('sendMessageResponse', {
@@ -367,12 +399,13 @@ export class ComunicacionesGateway
       );
       const connectedUsers = Array.from(this.presenceService.getConnectedUsers() || []);
 
-      const result = canales.map((p) => ({
+      const result = canales.map((p: any) => ({
         canalId: p.canal_id,
         nombre: p.canales?.nombre,
         descripcion: p.canales?.descripcion,
         avatarUrl: p.canales?.avatar_url,
         esGrupo: p.canales?.es_grupo,
+        unreadCount: p.canales?.unreadCount ?? 0,
         totalParticipantes: p.canales?.participantes_canal?.length ?? 0,
         participantes:
           p.canales?.participantes_canal.map((pc) => ({
@@ -571,7 +604,7 @@ export class ComunicacionesGateway
       const dto = await this.validatePayload(payload, ReadReceiptDto);
       const usuarioId = socket.data.user.sub; // Usar usuario autenticado
       await this.comunicacionesService.markAsRead(dto.mensajeId, usuarioId);
-      this.server.to(`canal_${dto.canalId}`).emit('readReceipt', { ...dto, usuarioId });
+      this.server.to(`canal_${dto.canalId}`).emit('messageRead', { ...dto, usuarioId });
       socket.emit('readMessageResponse', {
         success: true,
         data: dto,

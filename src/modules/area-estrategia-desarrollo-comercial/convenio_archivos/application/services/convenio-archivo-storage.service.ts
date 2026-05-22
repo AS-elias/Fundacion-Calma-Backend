@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { randomUUID } from 'crypto';
-import { mkdir, writeFile } from 'fs/promises';
-import { extname, join } from 'path';
+import { extname } from 'path';
+import { CloudStorageService } from '../../../../../core/cloud-storage/cloud-storage.service';
 
 type UploadedConvenioFile = {
   originalname: string;
@@ -10,13 +10,12 @@ type UploadedConvenioFile = {
 
 @Injectable()
 export class ConvenioArchivoStorageService {
+  constructor(private readonly cloudStorageService: CloudStorageService) {}
+
   async saveFile(file: UploadedConvenioFile): Promise<{
     nombreArchivo: string;
     urlArchivo: string;
   }> {
-    const uploadsDir = join(process.cwd(), 'uploads', 'convenios');
-    await mkdir(uploadsDir, { recursive: true });
-
     const extension = extname(file.originalname) || '.pdf';
     const safeBaseName = file.originalname
       .replace(extension, '')
@@ -26,11 +25,15 @@ export class ConvenioArchivoStorageService {
       .replace(/^_+|_+$/g, '');
     const fileName = `${safeBaseName || 'archivo'}-${randomUUID()}${extension}`;
 
-    await writeFile(join(uploadsDir, fileName), file.buffer);
+    const urlArchivo = await this.cloudStorageService.uploadFile(
+      file.buffer,
+      'convenios',
+      fileName,
+    );
 
     return {
       nombreArchivo: file.originalname,
-      urlArchivo: `/uploads/convenios/${fileName}`,
+      urlArchivo,
     };
   }
 }

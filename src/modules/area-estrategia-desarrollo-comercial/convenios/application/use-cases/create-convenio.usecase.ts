@@ -5,12 +5,15 @@ import { CreateConvenioDto } from '../dto/create-convenio.dto';
 import { ConvenioHistorialService } from '../../../convenio_historial/application/services/convenio-historial.service';
 import { NotificacionSistemaService } from '../../../../notificaciones/application/services/notificacion-sistema.service';
 
+import { DashboardGateway } from '../../../../websockets/gateways/dashboard.gateway';
+
 @Injectable()
 export class CreateConvenioUseCase {
   constructor(
     private readonly convenioRepository: ConvenioRepository,
     private readonly convenioHistorialService: ConvenioHistorialService,
     private readonly notificacionSistema: NotificacionSistemaService,
+    private readonly dashboardGateway: DashboardGateway,
   ) {}
 
   async execute(dto: CreateConvenioDto): Promise<Convenio> {
@@ -49,6 +52,8 @@ export class CreateConvenioUseCase {
         usuarioId: created.creadorId,
       },
     );
+
+    this.dashboardGateway.emitDashboardUpdated('convenio');
 
     return created;
   }

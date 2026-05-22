@@ -157,7 +157,7 @@ export class PrismaComunicacionesRepository implements ComunicacionesRepository 
     }
 
     async getUserChannels(usuarioId: number) {
-        return this.prisma.participantes_canal.findMany({
+        const result = await this.prisma.participantes_canal.findMany({
             where: { usuario_id: usuarioId },
             include: {
                 canales: {
@@ -168,9 +168,30 @@ export class PrismaComunicacionesRepository implements ComunicacionesRepository 
                             take: 1,
                             include: { usuarios: true },
                         },
+                        _count: {
+                            select: {
+                                mensajes: {
+                                    where: {
+                                        leido: false,
+                                        emisor_id: { not: usuarioId },
+                                    },
+                                },
+                            },
+                        },
                     },
                 },
             },
+        });
+
+        return result.map(pc => {
+            const { _count, ...canalData } = pc.canales;
+            return {
+                ...pc,
+                canales: {
+                    ...canalData,
+                    unreadCount: _count?.mensajes || 0,
+                },
+            };
         });
     }
 
