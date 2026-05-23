@@ -1,4 +1,4 @@
-import { IsInt, Min } from 'class-validator';
+import { IsInt, Min, IsOptional } from 'class-validator';
 
 export class ReadReceiptDto {
   @IsInt()
@@ -6,10 +6,9 @@ export class ReadReceiptDto {
   canalId!: number;
 
   @IsInt()
-  @Min(1)
   mensajeId!: number;
 
+  @IsOptional()
   @IsInt()
-  @Min(1)
-  usuarioId!: number;
+  usuarioId?: number;
 }

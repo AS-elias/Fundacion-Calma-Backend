@@ -53,12 +53,13 @@ export class ComunicacionesController {
   }
 
   @Delete('channels/:id')
-  async deleteChannel(@Param('id') id: string) {
+  async deleteChannel(@Param('id') id: string, @Req() req: any) {
     const canalId = Number(id);
     if (Number.isNaN(canalId) || canalId < 1) {
       throw new BadRequestException('canalId inválido');
     }
-    return this.comunicacionesService.deleteChannel(canalId);
+    const usuarioId = req.user.sub;
+    return this.comunicacionesService.deleteChannel(canalId, usuarioId);
   }
 
   @Post('channels/:id/files')
@@ -112,6 +113,9 @@ export class ComunicacionesController {
     const mensajeId = Number(id);
     if (Number.isNaN(mensajeId) || mensajeId < 1) {
       throw new BadRequestException('mensajeId inválido');
+    }
+    if (!body.usuarioId) {
+      throw new BadRequestException('usuarioId es requerido');
     }
     return this.comunicacionesService.addReaction({
       mensajeId,

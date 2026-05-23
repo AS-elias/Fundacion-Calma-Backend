@@ -1,13 +1,13 @@
-import { IsInt, Min, IsString, IsNotEmpty } from 'class-validator';
+import { IsInt, Min, IsString, IsNotEmpty, IsOptional } from 'class-validator';
 
 export class ReactionDto {
   @IsInt()
   @Min(1)
   mensajeId!: number;
 
+  @IsOptional()
   @IsInt()
-  @Min(1)
-  usuarioId!: number;
+  usuarioId?: number;
 
   @IsString()
   @IsNotEmpty()

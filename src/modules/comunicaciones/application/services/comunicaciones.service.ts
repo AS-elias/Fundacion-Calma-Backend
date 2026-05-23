@@ -55,8 +55,8 @@ export class ComunicacionesService {
     return this.repo.saveMessage(data);
   }
 
-  async getRecentMessages(canalId: number, limit?: number) {
-    return this.repo.getRecentMessages(canalId, limit);
+  async getRecentMessages(canalId: number, usuarioId: number, limit?: number) {
+    return this.repo.getRecentMessages(canalId, usuarioId, limit);
   }
 
   async getUserChannels(usuarioId: number) {
@@ -75,6 +75,14 @@ export class ComunicacionesService {
     return this.repo.deleteMessage(mensajeId, remitenteId);
   }
 
+  async deleteMessageForMe(mensajeId: number, usuarioId: number) {
+    return this.repo.deleteMessageForMe(mensajeId, usuarioId);
+  }
+
+  async deleteMessageForAll(mensajeId: number, remitenteId: number) {
+    return this.repo.deleteMessageForAll(mensajeId, remitenteId);
+  }
+
   async addReaction(reaction: ReactionData) {
     return this.repo.addReaction(reaction);
   }
@@ -87,8 +95,12 @@ export class ComunicacionesService {
     return this.repo.getReactions(mensajeId);
   }
 
-  async deleteChannel(canalId: number) {
-    return this.repo.deleteChannel(canalId);
+  async getReactionCount(mensajeId: number, emoji: string) {
+    return this.repo.getReactionCount(mensajeId, emoji);
+  }
+
+  async deleteChannel(canalId: number, usuarioId: number) {
+    return this.repo.deleteChannel(canalId, usuarioId);
   }
 
   async makeAdmin(canalId: number, usuarioId: number, actorId: number) {

@@ -9,9 +9,9 @@ export class EditDeleteDto {
   @Min(1)
   mensajeId!: number;
 
+  @IsOptional()
   @IsInt()
-  @Min(1)
-  remitenteId!: number;
+  remitenteId?: number;
 
   @IsOptional()
   @IsString()

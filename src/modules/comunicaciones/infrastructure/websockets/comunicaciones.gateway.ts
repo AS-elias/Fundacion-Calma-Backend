@@ -56,12 +56,21 @@ export class ComunicacionesGateway
       }
 
       const payload = this.comunicacionesService.verifyToken(String(token));
+      payload.sub = Number(payload.sub); // Parse as Number to prevent bugs
       socket.data.user = payload;
       this.presenceService.addUser(payload.sub);
       socket.join(`user_${payload.sub}`); // Join to user-specific room for WebRTC signaling
+
+      // Auto-join all channel rooms so the socket receives newMessage events
+      // from every channel regardless of which screen the user is on
+      const canalesDelUsuario = await this.comunicacionesService.getUserChannels(payload.sub);
+      for (const participacion of canalesDelUsuario) {
+        socket.join(`canal_${participacion.canal_id}`);
+      }
+
       this.server.emit('userOnline', { usuarioId: payload.sub });
       this.logger.log(
-        `Socket conectado: ${socket.id}, usuario: ${payload.sub}`,
+        `Socket conectado: ${socket.id}, usuario: ${payload.sub} (${canalesDelUsuario.length} canales)`,
       );
     } catch (err: any) {
       this.logger.warn(`Conexión rechazada: ${socket.id} -> ${err.message}`);
@@ -267,7 +276,8 @@ export class ComunicacionesGateway
   ) {
     try {
       const dto = await this.validatePayload(payload, JoinChannelDto);
-      await this.comunicacionesService.deleteChannel(dto.canalId);
+      const usuarioId = socket.data.user.sub;
+      await this.comunicacionesService.deleteChannel(dto.canalId, usuarioId);
       const room = `canal_${dto.canalId}`;
       socket.leave(room);
       this.server.to(room).emit('channelDeleted', { canalId: dto.canalId });
@@ -370,8 +380,10 @@ export class ComunicacionesGateway
         payload,
         GetRecentMessagesDto,
       );
+      const usuarioId = socket.data.user?.sub;
       const mensajes = await this.comunicacionesService.getRecentMessages(
         canalesDto.canalId,
+        usuarioId,
       );
       const reversedMessages = mensajes.reverse();
       socket.emit('recentMessages', reversedMessages);
@@ -520,55 +532,7 @@ export class ComunicacionesGateway
     }
   }
 
-  @SubscribeMessage('addReaction')
-  async addReaction(
-    @MessageBody() payload: ReactionDto,
-    @ConnectedSocket() socket: Socket,
-  ) {
-    try {
-      const dto = await this.validatePayload(payload, ReactionDto);
-      const usuarioId = socket.data.user.sub; // Usar usuario autenticado
-      const reaction = await this.comunicacionesService.addReaction({ ...dto, usuarioId });
-      this.server.to(`canal_${dto.canalId}`).emit('reactionAdded', reaction);
-      socket.emit('addReactionResponse', {
-        success: true,
-        data: reaction,
-      });
-    } catch (error: any) {
-      this.logger.error('addReaction error:', error.message);
-      socket.emit('addReactionResponse', {
-        success: false,
-        error: error.message || 'Error adding reaction',
-      });
-    }
-  }
 
-  @SubscribeMessage('removeReaction')
-  async removeReaction(
-    @MessageBody() payload: ReactionDto,
-    @ConnectedSocket() socket: Socket,
-  ) {
-    try {
-      const dto = await this.validatePayload(payload, ReactionDto);
-      const usuarioId = socket.data.user.sub; // Usar usuario autenticado
-      await this.comunicacionesService.removeReaction(
-        dto.mensajeId,
-        usuarioId,
-        dto.emoji,
-      );
-      this.server.to(`canal_${dto.canalId}`).emit('reactionRemoved', { ...dto, usuarioId });
-      socket.emit('removeReactionResponse', {
-        success: true,
-        data: dto,
-      });
-    } catch (error: any) {
-      this.logger.error('removeReaction error:', error.message);
-      socket.emit('removeReactionResponse', {
-        success: false,
-        error: error.message || 'Error removing reaction',
-      });
-    }
-  }
 
   @SubscribeMessage('getReactions')
   async getReactions(
@@ -614,6 +578,80 @@ export class ComunicacionesGateway
       socket.emit('readMessageResponse', {
         success: false,
         error: error.message || 'Error marking message as read',
+      });
+    }
+  }
+
+  @SubscribeMessage('reactToMessage')
+  async reactToMessage(
+    @MessageBody() payload: ReactionDto,
+    @ConnectedSocket() socket: Socket,
+  ) {
+    try {
+      const dto = await this.validatePayload(payload, ReactionDto);
+      const usuarioId = socket.data.user.sub;
+      
+      // Obtener todas las reacciones del mensaje
+      const existingReactions = await this.comunicacionesService.getReactions(dto.mensajeId);
+      
+      // IMPORTANTE: Buscar si el usuario ya reaccionó a este mensaje (sin importar el emoji viejo)
+      const userReaction = existingReactions.find((r: any) => r.usuario_id === usuarioId);
+      if (userReaction) {
+        if (userReaction.emoji === dto.emoji) {
+          // Caso B: Toggle off (el usuario le dio click al MISMO emoji para quitarlo)
+          await this.comunicacionesService.removeReaction(dto.mensajeId, usuarioId, dto.emoji);
+          
+          const count = await this.comunicacionesService.getReactionCount(dto.mensajeId, dto.emoji);
+          this.server.to(`canal_${dto.canalId}`).emit('messageReacted', {
+            mensajeId: dto.mensajeId,
+            usuarioId: usuarioId,
+            emoji: dto.emoji,
+            count: count
+          });
+        } else {
+          // Caso C: Cambiar reacción (el usuario tenía un emoji y eligió uno NUEVO)
+          const oldEmoji = userReaction.emoji;
+          
+          // Borrar reacción vieja y guardar la nueva
+          await this.comunicacionesService.removeReaction(dto.mensajeId, usuarioId, oldEmoji);
+          await this.comunicacionesService.addReaction({ ...dto, usuarioId });
+          
+          // Disparar evento para RESTAR el emoji viejo
+          const oldCount = await this.comunicacionesService.getReactionCount(dto.mensajeId, oldEmoji);
+          this.server.to(`canal_${dto.canalId}`).emit('messageReacted', {
+            mensajeId: dto.mensajeId,
+            usuarioId: usuarioId,
+            emoji: oldEmoji,
+            count: oldCount
+          });
+          
+          // Disparar evento para SUMAR el emoji nuevo
+          const newCount = await this.comunicacionesService.getReactionCount(dto.mensajeId, dto.emoji);
+          this.server.to(`canal_${dto.canalId}`).emit('messageReacted', {
+            mensajeId: dto.mensajeId,
+            usuarioId: usuarioId,
+            emoji: dto.emoji,
+            count: newCount
+          });
+        }
+      } else {
+        // Caso A: Toggle on (el usuario no tenía ninguna reacción)
+        await this.comunicacionesService.addReaction({ ...dto, usuarioId });
+        
+        const count = await this.comunicacionesService.getReactionCount(dto.mensajeId, dto.emoji);
+        this.server.to(`canal_${dto.canalId}`).emit('messageReacted', {
+          mensajeId: dto.mensajeId,
+          usuarioId: usuarioId,
+          emoji: dto.emoji,
+          count: count
+        });
+      }
+      socket.emit('reactToMessageResponse', { success: true });
+    } catch (error: any) {
+      this.logger.error('reactToMessage error:', error.message);
+      socket.emit('reactToMessageResponse', {
+        success: false,
+        error: error.message || 'Error reacting to message',
       });
     }
   }

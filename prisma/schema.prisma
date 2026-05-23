@@ -357,12 +357,14 @@ model mensajes {
   emisor_id          Int?
   contenido          String
   archivo_url        String?
-  leido              Boolean?             @default(false)
-  creado_at          DateTime?            @default(now()) @db.Timestamp(6)
-  tipo               String?              @db.VarChar(20)
-  canales            canales?             @relation(fields: [canal_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
-  usuarios           usuarios?            @relation(fields: [emisor_id], references: [id], onUpdate: NoAction)
-  reacciones_mensaje reacciones_mensaje[]
+  leido                       Boolean?                      @default(false)
+  eliminado                   Boolean?                      @default(false)
+  creado_at                   DateTime?                     @default(now()) @db.Timestamp(6)
+  tipo                        String?                       @db.VarChar(20)
+  canales                     canales?                      @relation(fields: [canal_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  usuarios                    usuarios?                     @relation(fields: [emisor_id], references: [id], onUpdate: NoAction)
+  reacciones_mensaje          reacciones_mensaje[]
+  mensajes_eliminados_usuario mensajes_eliminados_usuario[]
 
   @@index([canal_id], map: "idx_mensaje_canal")
   @@index([creado_at], map: "idx_mensajes_fecha")
@@ -580,6 +582,7 @@ model usuarios {
   evaluaciones_como_director                                  director_evaluaciones[]      @relation("DirectorEvaluationsDirector")
   evaluaciones_recibidas                                      director_evaluaciones[]      @relation("DirectorEvaluationsUsuario")
   mensajes                                                    mensajes[]
+  mensajes_eliminados_usuario                                 mensajes_eliminados_usuario[]
   notificacion_eliminadas                                     notificacion_eliminadas[]
   notificacion_inicio_usuario                                 notificacion_inicio_usuario?
   notificacion_lecturas                                       notificacion_lecturas[]
@@ -676,4 +679,18 @@ enum EstrategiaProyectoEstado {
   PARALIZADO
 
   @@schema("comercial")
+}
+
+model mensajes_eliminados_usuario {
+  id             Int       @id @default(autoincrement())
+  mensaje_id     Int
+  usuario_id     Int
+  fecha_creacion DateTime? @default(now()) @db.Timestamp(6)
+  mensajes       mensajes  @relation(fields: [mensaje_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  usuarios       usuarios  @relation(fields: [usuario_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@unique([mensaje_id, usuario_id])
+  @@index([mensaje_id], map: "idx_mensajes_eliminados_mensaje")
+  @@index([usuario_id], map: "idx_mensajes_eliminados_usuario")
+  @@schema("core")
 }
