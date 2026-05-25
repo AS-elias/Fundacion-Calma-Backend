@@ -1,5 +1,6 @@
 generator client {
-  provider = "prisma-client-js"
+  provider        = "prisma-client-js"
+  previewFeatures = ["multiSchema"]
 }
 
 datasource db {
@@ -531,21 +532,43 @@ model repositorio_bloques {
   fecha_creacion      DateTime?             @default(now()) @db.Timestamp(6)
   areas               areas?                @relation(fields: [area_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
   usuarios            usuarios?             @relation(fields: [creado_por], references: [id], onUpdate: NoAction)
-  repositorio_enlaces repositorio_enlaces[]
+  repositorio_enlaces  repositorio_enlaces[]
+  repositorio_carpetas repositorio_carpetas[]
 
   @@index([area_id], map: "idx_repositorio_area")
   @@schema("core")
 }
 
-model repositorio_enlaces {
-  id                  Int                  @id @default(autoincrement())
+model repositorio_carpetas {
+  id                  Int                   @id @default(autoincrement())
   bloque_id           Int?
-  nombre_documento    String               @db.VarChar(255)
-  url_drive           String
-  fecha_agregado      DateTime?            @default(now()) @db.Timestamp(6)
-  repositorio_bloques repositorio_bloques? @relation(fields: [bloque_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  padre_id            Int?
+  nombre              String                @db.VarChar(255)
+  fecha_creacion      DateTime?             @default(now()) @db.Timestamp(6)
+
+  repositorio_bloques repositorio_bloques?  @relation(fields: [bloque_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  carpeta_padre       repositorio_carpetas? @relation("JerarquiaCarpetas", fields: [padre_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  subcarpetas         repositorio_carpetas[] @relation("JerarquiaCarpetas")
+  repositorio_enlaces repositorio_enlaces[]
+
+  @@index([bloque_id], map: "idx_carpetas_bloque")
+  @@index([padre_id], map: "idx_carpetas_padre")
+  @@schema("core")
+}
+
+model repositorio_enlaces {
+  id                   Int                   @id @default(autoincrement())
+  bloque_id            Int?
+  carpeta_id           Int?
+  nombre_documento     String                @db.VarChar(255)
+  url_drive            String
+  fecha_agregado       DateTime?             @default(now()) @db.Timestamp(6)
+  
+  repositorio_bloques  repositorio_bloques?  @relation(fields: [bloque_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  repositorio_carpetas repositorio_carpetas? @relation(fields: [carpeta_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
 
   @@index([bloque_id], map: "idx_enlaces_bloque")
+  @@index([carpeta_id], map: "idx_enlaces_carpeta")
   @@schema("core")
 }
 
@@ -566,6 +589,9 @@ model usuarios {
   telefono                                                    String?                      @db.VarChar(20)
   password_hash                                               String
   foto_url                                                    String?
+  fecha_nacimiento                                            DateTime?                    @db.Date
+  linkedin_url                                                String?
+  biografia                                                   String?
   puesto                                                      String?                      @db.VarChar(40)
   rol_id                                                      Int?
   fecha_fin_contrato                                          DateTime?

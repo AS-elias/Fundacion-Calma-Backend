@@ -1,4 +1,6 @@
 import { Module } from '@nestjs/common';
+import { APP_GUARD } from '@nestjs/core';
+import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
 import { ScheduleModule } from '@nestjs/schedule';
 import { ConfigModule } from '@nestjs/config';
 import { AppController } from './app.controller';
@@ -25,12 +27,17 @@ import { NotificacionesModule } from './modules/notificaciones/notificaciones.mo
 import { RepositorioModule } from './modules/repositorio/repositorio.module';
 import { WebsocketsModule } from './modules/websockets/websockets.module';
 import { CloudStorageModule } from './core/cloud-storage/cloud-storage.module';
+import { HealthModule } from './core/health/health.module';
 
 @Module({
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
     }),
+    ThrottlerModule.forRoot([{
+      ttl: 60000, // 60 segundos (en ms para v6)
+      limit: 100, // máximo 100 peticiones
+    }]),
     ScheduleModule.forRoot(),
     AuthModule,
     DashboardModule,
@@ -48,6 +55,7 @@ import { CloudStorageModule } from './core/cloud-storage/cloud-storage.module';
     SalasTrabajoModule,
     NotificacionesModule,
     CloudStorageModule,
+    HealthModule,
   ],
   controllers: [AppController],
   providers: [
@@ -57,6 +65,10 @@ import { CloudStorageModule } from './core/cloud-storage/cloud-storage.module';
     AreasService,
     ContratoCheckService,
     ActividadVencimientoNotificacionService,
+    {
+      provide: APP_GUARD,
+      useClass: ThrottlerGuard,
+    },
   ],
   exports: [PrismaService, PermisosService, AreasService],
 })

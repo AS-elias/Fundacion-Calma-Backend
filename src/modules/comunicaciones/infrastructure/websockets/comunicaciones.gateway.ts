@@ -21,6 +21,7 @@ import { ReadReceiptDto } from '../../application/dto/read-receipt.dto';
 import { EditDeleteDto } from '../../application/dto/edit-delete.dto';
 import { GetRecentMessagesDto } from '../../application/dto/get-recent-messages.dto';
 import { PresenceService } from '../../../../core/services/presence.service';
+import { SystemGateway } from '../../../websockets/gateways/system.gateway';
 
 import { NotificacionSistemaService } from '../../../notificaciones/application/services/notificacion-sistema.service';
 
@@ -43,6 +44,7 @@ export class ComunicacionesGateway
     private readonly comunicacionesService: ComunicacionesService, 
     private readonly presenceService: PresenceService,
     private readonly notificacionSistema: NotificacionSistemaService,
+    private readonly systemGateway: SystemGateway,
   ) { }
 
   async handleConnection(socket: Socket) {
@@ -69,6 +71,7 @@ export class ComunicacionesGateway
       }
 
       this.server.emit('userOnline', { usuarioId: payload.sub });
+      this.systemGateway.emitSistemaActualizado('comunidad', 'conectar');
       this.logger.log(
         `Socket conectado: ${socket.id}, usuario: ${payload.sub} (${canalesDelUsuario.length} canales)`,
       );
@@ -83,6 +86,7 @@ export class ComunicacionesGateway
     if (socket.data.user) {
       this.presenceService.removeUser(socket.data.user.sub);
       this.server.emit('userOffline', { usuarioId: socket.data.user.sub });
+      this.systemGateway.emitSistemaActualizado('comunidad', 'desconectar');
     }
     this.logger.log(`Conexión WebSocket finalizada: ${socket.id}`);
   }

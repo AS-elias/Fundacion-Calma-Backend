@@ -7,6 +7,7 @@ import { GetSalasUseCase } from './application/use-cases/get-salas.usecase';
 import { GetSalaGeneralUseCase } from './application/use-cases/get-sala-general.usecase';
 import { CreateSalaUseCase } from './application/use-cases/create-sala.usecase';
 import { DeleteSalaUseCase } from './application/use-cases/delete-sala.usecase';
+import { UpdateSalaUseCase } from './application/use-cases/update-sala.usecase';
 
 @Module({
   controllers: [SalasTrabajoController],
@@ -20,6 +21,7 @@ import { DeleteSalaUseCase } from './application/use-cases/delete-sala.usecase';
     GetSalaGeneralUseCase,
     CreateSalaUseCase,
     DeleteSalaUseCase,
+    UpdateSalaUseCase,
   ],
 })
 export class SalasTrabajoModule {}

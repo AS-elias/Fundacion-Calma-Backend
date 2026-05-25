@@ -43,4 +43,11 @@ export class PrismaSalaRepository implements ISalaRepository {
     const count = await this.prisma.salas_trabajo.count({ where: { id } });
     return count > 0;
   }
+
+  async actualizarSala(id: number, data: Partial<{ nombre: string; area: string; link: string; descripcion: string }>): Promise<SalaEntity> {
+    return this.prisma.salas_trabajo.update({
+      where: { id },
+      data,
+    });
+  }
 }

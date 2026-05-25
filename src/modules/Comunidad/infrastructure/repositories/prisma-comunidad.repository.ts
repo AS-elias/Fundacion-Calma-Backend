@@ -72,6 +72,9 @@ export class PrismaComunidadRepository implements IComunidadRepository {
         areaNombre,
         iniciales,
         this.presenceService.isUserOnline(user.id),
+        user.biografia,
+        user.linkedin_url,
+        user.fecha_nacimiento,
       );
     });
   }
@@ -137,6 +140,9 @@ export class PrismaComunidadRepository implements IComunidadRepository {
         areaNombre,
         iniciales,
         this.presenceService.isUserOnline(user.id),
+        user.biografia,
+        user.linkedin_url,
+        user.fecha_nacimiento,
       );
     });
   }
@@ -355,6 +361,9 @@ export class PrismaComunidadRepository implements IComunidadRepository {
         areaNombre,
         iniciales,
         this.presenceService.isUserOnline(user.id),
+        user.biografia,
+        user.linkedin_url,
+        user.fecha_nacimiento,
       );
     });
   }

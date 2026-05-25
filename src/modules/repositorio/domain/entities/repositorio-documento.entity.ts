@@ -5,5 +5,6 @@ export class RepositorioDocumento {
     public nombreDocumento: string,
     public urlDocumento: string,
     public fechaAgregado: Date,
+    public carpetaId?: number | null,
   ) {}
 }

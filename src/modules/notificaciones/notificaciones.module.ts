@@ -12,6 +12,7 @@ import { EliminarNotificacionUseCase } from './application/use-cases/eliminar-no
 
 import { NotificacionStorageService } from './application/services/notificacion-storage.service';
 import { NotificacionSistemaService } from './application/services/notificacion-sistema.service';
+import { CumpleanosCronService } from './application/services/cumpleanos-cron.service';
 
 @Module({
   controllers: [NotificacionesController],
@@ -21,6 +22,7 @@ import { NotificacionSistemaService } from './application/services/notificacion-
     NotificacionPrismaRepository,
     NotificacionStorageService,
     NotificacionSistemaService,
+    CumpleanosCronService,
 
     {
       provide: NotificacionRepository,
