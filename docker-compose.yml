@@ -18,6 +18,7 @@ services:
     build: .
     container_name: calma-api-container
     restart: always
+    command: sh -c "npx prisma generate && node dist/main.js"
     ports:
       - "3005:3005"
     environment:

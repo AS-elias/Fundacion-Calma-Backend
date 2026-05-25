@@ -67,9 +67,34 @@ export class PrismaAnalisisTareaRepository extends AnalisisTareaRepository {
     }
   }
 
+  private async resolveOptionalAreaId(
+    value: unknown,
+    field: string,
+  ): Promise<number | null | undefined> {
+    if (value === undefined) return undefined;
+    if (value === null || value === '') return null;
+
+    const parsed = Number(value);
+    if (!Number.isInteger(parsed) || parsed <= 0) {
+      throw new BadRequestException(`${field} debe ser un numero valido.`);
+    }
+
+    const area = await this.prisma.areas.findUnique({
+      where: { id: parsed },
+      select: { id: true },
+    });
+
+    if (!area) {
+      throw new BadRequestException(`El area especificado no existe.`);
+    }
+
+    return parsed;
+  }
+
   private toEntity(row: TareaWithEnlaces): AnalisisTarea {
     return new AnalisisTarea({
       ...row,
+      estado: row.estado ? row.estado.toUpperCase().replace(/[- ]/g, '_') : null,
       analisis_tarea_enlaces: row.analisis_tarea_enlaces.map(
         (enlace) => new AnalisisTareaEnlace(enlace),
       ),
@@ -111,11 +136,15 @@ export class PrismaAnalisisTareaRepository extends AnalisisTareaRepository {
   }
 
   async create(dto: CreateAnalisisTareaDto): Promise<AnalisisTarea> {
-    const row = await this.prisma.analisis_tareas.create({
-      data: this.toCreateData(dto),
-      include: { analisis_tarea_enlaces: { orderBy: { id: 'asc' } } },
-    });
-    return this.toEntity(row);
+    try {
+      const row = await this.prisma.analisis_tareas.create({
+        data: await this.toCreateData(dto),
+        include: { analisis_tarea_enlaces: { orderBy: { id: 'asc' } } },
+      });
+      return this.toEntity(row);
+    } catch (error) {
+      this.handlePrismaForeignKeyError(error);
+    }
   }
 
   async update(
@@ -125,12 +154,17 @@ export class PrismaAnalisisTareaRepository extends AnalisisTareaRepository {
     this.validateId(id);
     const exists = await this.findById(id);
     if (!exists) throw new NotFoundException('La tarea no existe.');
-    const row = await this.prisma.analisis_tareas.update({
-      where: { id },
-      data: this.toUpdateData(dto),
-      include: { analisis_tarea_enlaces: { orderBy: { id: 'asc' } } },
-    });
-    return this.toEntity(row);
+
+    try {
+      const row = await this.prisma.analisis_tareas.update({
+        where: { id },
+        data: await this.toUpdateData(dto),
+        include: { analisis_tarea_enlaces: { orderBy: { id: 'asc' } } },
+      });
+      return this.toEntity(row);
+    } catch (error) {
+      this.handlePrismaForeignKeyError(error);
+    }
   }
 
   async delete(id: number): Promise<void> {
@@ -140,13 +174,16 @@ export class PrismaAnalisisTareaRepository extends AnalisisTareaRepository {
     await this.prisma.analisis_tareas.delete({ where: { id } });
   }
 
-  private toCreateData(
+  private async toCreateData(
     dto: CreateAnalisisTareaDto,
-  ): Prisma.analisis_tareasUncheckedCreateInput {
+  ): Promise<Prisma.analisis_tareasUncheckedCreateInput> {
     const enlaces = Array.isArray(dto.enlaces) ? dto.enlaces : [];
 
     return {
-      area_id: this.int(dto.area_id ?? dto.areaId, 'area_id'),
+      area_id: await this.resolveOptionalAreaId(
+        dto.area_id ?? dto.areaId,
+        'area_id',
+      ),
       titulo: this.requiredText(dto.titulo, 'titulo'),
       subtitulo: this.text(dto.subtitulo),
       descripcion: this.text(dto.descripcion),
@@ -165,16 +202,35 @@ export class PrismaAnalisisTareaRepository extends AnalisisTareaRepository {
     };
   }
 
-  private toUpdateData(
+  private handlePrismaForeignKeyError(error: unknown): never {
+    if (
+      error instanceof Prisma.PrismaClientKnownRequestError &&
+      error.code === 'P2003'
+    ) {
+      const constraint = String(error.meta?.constraint ?? '').toLowerCase();
+      if (constraint.includes('area_id')) {
+        throw new BadRequestException('El area especificado no existe.');
+      }
+      if (constraint.includes('creador_id')) {
+        throw new BadRequestException('El creador especificado no existe.');
+      }
+    }
+    throw error;
+  }
+
+  private async toUpdateData(
     dto: UpdateAnalisisTareaDto,
-  ): Prisma.analisis_tareasUncheckedUpdateInput {
+  ): Promise<Prisma.analisis_tareasUncheckedUpdateInput> {
     const titulo = this.text(dto.titulo);
     if (dto.titulo !== undefined && !titulo) {
       throw new BadRequestException('titulo es obligatorio.');
     }
 
     return {
-      area_id: this.int(dto.area_id ?? dto.areaId, 'area_id'),
+      area_id: await this.resolveOptionalAreaId(
+        dto.area_id ?? dto.areaId,
+        'area_id',
+      ),
       titulo: titulo ?? undefined,
       subtitulo: this.text(dto.subtitulo),
       descripcion: this.text(dto.descripcion),

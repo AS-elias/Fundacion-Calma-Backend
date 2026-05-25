@@ -17,7 +17,7 @@ COPY . .
 # 6. Generar el cliente de Prisma
 RUN npx prisma generate
 
-# 7. Exponer puerto de la app
+# 7. Exponer puerto (NestJS por defecto usa 3000)
 EXPOSE 3005
 
 # 8. Comando para desarrollo

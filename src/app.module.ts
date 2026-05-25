@@ -1,7 +1,8 @@
 import { Module } from '@nestjs/common';
+import { APP_GUARD } from '@nestjs/core';
+import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
 import { ScheduleModule } from '@nestjs/schedule';
 import { ConfigModule } from '@nestjs/config';
-import { APP_FILTER } from '@nestjs/core';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { AuthModule } from './modules/auth/auth.module';
@@ -19,16 +20,30 @@ import { PermisosService } from './core/services/permisos.service';
 import { AreasService } from './core/services/areas.service';
 import { ContratoCheckService } from './core/services/contrato-check.service';
 import { ComunicacionesModule } from './modules/comunicaciones/comunicaciones.module';
+import { SalasTrabajoModule } from './modules/salas/salas-trabajo.module';
 import { HttpExceptionFilter } from './core/filters/http-exception.filter';
+import { ActividadVencimientoNotificacionService } from './core/services/actividad-vencimiento-notificacion.service';
+import { NotificacionesModule } from './modules/notificaciones/notificaciones.module';
+import { RepositorioModule } from './modules/repositorio/repositorio.module';
+import { WebsocketsModule } from './modules/websockets/websockets.module';
+import { CloudStorageModule } from './core/cloud-storage/cloud-storage.module';
+import { HealthModule } from './core/health/health.module';
+
 @Module({
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
     }),
+    ThrottlerModule.forRoot([{
+      ttl: 60000, // 60 segundos (en ms para v6)
+      limit: 100, // máximo 100 peticiones
+    }]),
     ScheduleModule.forRoot(),
     AuthModule,
     DashboardModule,
     ActividadesModule,
+    RepositorioModule,
+    WebsocketsModule,
     ConveniosModule,
     ConvenioComentariosModule,
     ConvenioArchivosModule,
@@ -37,6 +52,10 @@ import { HttpExceptionFilter } from './core/filters/http-exception.filter';
     EstrategiaComercialModule,
     ComunidadModule,
     ComunicacionesModule,
+    SalasTrabajoModule,
+    NotificacionesModule,
+    CloudStorageModule,
+    HealthModule,
   ],
   controllers: [AppController],
   providers: [
@@ -45,9 +64,10 @@ import { HttpExceptionFilter } from './core/filters/http-exception.filter';
     PermisosService,
     AreasService,
     ContratoCheckService,
+    ActividadVencimientoNotificacionService,
     {
-      provide: APP_FILTER,
-      useClass: HttpExceptionFilter,
+      provide: APP_GUARD,
+      useClass: ThrottlerGuard,
     },
   ],
   exports: [PrismaService, PermisosService, AreasService],

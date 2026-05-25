@@ -7,36 +7,45 @@ import {
   Param,
   UseGuards,
   Req,
-  Query,
-  UnauthorizedException,
+  UploadedFile,
+  UseInterceptors,
 } from '@nestjs/common';
+import { FileInterceptor } from '@nestjs/platform-express';
 import { AuthService } from '../../application/services/auth.service';
 import { LoginDto } from '../../application/dto/login.dto';
 import { RegisterDto } from '../../application/dto/register.dto';
+
+import { ForgotPasswordDto } from '../../application/dto/forgot-password.dto';
+import { ResetPasswordDto } from '../../application/dto/reset-password.dto';
 import { JwtAuthGuard } from '../guards/jwt-auth.guard';
 import { AdminGuard } from '../guards/admin.guard';
+import { PerfilStorageService } from '../../application/services/perfil-storage.service';
+
+type UploadedProfileFile = {
+  originalname: string;
+  buffer: Buffer;
+};
 
 @Controller('auth')
 export class AuthController {
-  constructor(private readonly authService: AuthService) { }
+  constructor(
+    private readonly authService: AuthService,
+    private readonly perfilStorage: PerfilStorageService,
+  ) {}
 
   @Post('login')
   async login(@Body() loginDto: LoginDto) {
     return await this.authService.login(loginDto.email, loginDto.password);
   }
 
-  @Post('refresh')
-  async refresh(@Body() body: { refresh_token: string }) {
-    if (!body.refresh_token) {
-      throw new UnauthorizedException('Refresh token requerido');
-    }
-    return await this.authService.refreshToken(body.refresh_token);
+  @Post('forgot-password')
+  async forgotPassword(@Body() forgotPasswordDto: ForgotPasswordDto) {
+    return await this.authService.forgotPassword(forgotPasswordDto);
   }
 
-  @Get('me')
-  @UseGuards(JwtAuthGuard)
-  async getCurrentUser(@Req() req: any) {
-    return await this.authService.getCurrentUser(req.user.id);
+  @Post('reset-password')
+  async resetPassword(@Body() resetPasswordDto: ResetPasswordDto) {
+    return await this.authService.resetPassword(resetPasswordDto);
   }
 
   // 📝 REGISTRO - Solo administradores pueden crear nuevos usuarios
@@ -54,6 +63,33 @@ export class AuthController {
       mensaje: '¡Acceso autorizado a la zona segura!',
       usuario: req.user,
     };
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Get('me')
+  obtenerMiPerfil(@Req() req: any) {
+    return this.authService.findUserById(req.user.id);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Patch('me')
+  @UseInterceptors(FileInterceptor('foto'))
+  async actualizarMiPerfil(
+    @Req() req: any,
+    @Body() body: any,
+    @UploadedFile() foto?: UploadedProfileFile,
+  ) {
+    let fotoUrl: string | undefined;
+
+    if (foto) {
+      const storedFile = await this.perfilStorage.saveFile(foto);
+      fotoUrl = storedFile.urlArchivo;
+    }
+
+    return this.authService.updateOwnProfile(req.user.id, {
+      ...body,
+      ...(fotoUrl ? { foto_url: fotoUrl } : {}),
+    });
   }
 
   // Listar usuarios (admin)

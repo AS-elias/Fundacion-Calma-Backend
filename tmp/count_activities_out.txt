@@ -1,0 +1,6 @@
+{
+  desarrollo: 0,
+  analisis: 1,
+  estrategia_actividades: 2,
+  estrategia_tareas: 1
+}

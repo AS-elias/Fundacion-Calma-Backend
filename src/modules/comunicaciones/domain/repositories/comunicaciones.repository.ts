@@ -32,7 +32,7 @@ export interface ComunicacionesRepository {
     removeParticipant(canalId: number, usuarioId: number, actorId: number): Promise<any>;
     isParticipant(canalId: number, usuarioId: number): Promise<boolean>;
     saveMessage(data: MensajeData): Promise<any>;
-    getRecentMessages(canalId: number, limit?: number): Promise<any[]>;
+    getRecentMessages(canalId: number, usuarioId: number, limit?: number): Promise<any[]>;
     getUserChannels(usuarioId: number): Promise<any[]>;
     markAsRead(mensajeId: number, usuarioId: number): Promise<any>;
     editMessage(
@@ -41,7 +41,9 @@ export interface ComunicacionesRepository {
         contenido: string,
     ): Promise<any>;
     deleteMessage(mensajeId: number, remitenteId: number): Promise<any>;
-    deleteChannel(canalId: number): Promise<any>;
+    deleteMessageForMe(mensajeId: number, usuarioId: number): Promise<any>;
+    deleteMessageForAll(mensajeId: number, remitenteId: number): Promise<any>;
+    deleteChannel(canalId: number, usuarioId: number): Promise<any>;
     addReaction(reaction: ReactionData): Promise<any>;
     removeReaction(
         mensajeId: number,
@@ -49,6 +51,7 @@ export interface ComunicacionesRepository {
         emoji: string,
     ): Promise<any>;
     getReactions(mensajeId: number): Promise<any[]>;
+    getReactionCount(mensajeId: number, emoji: string): Promise<number>;
     makeAdmin(canalId: number, usuarioId: number, actorId: number): Promise<any>;
     removeAdmin(canalId: number, usuarioId: number, actorId: number): Promise<any>;
 }

@@ -3,12 +3,17 @@ import { ConvenioRepository } from '../../domain/repositories/convenio.repositor
 import { Convenio } from '../../domain/entities/convenio.entity';
 import { CreateConvenioDto } from '../dto/create-convenio.dto';
 import { ConvenioHistorialService } from '../../../convenio_historial/application/services/convenio-historial.service';
+import { NotificacionSistemaService } from '../../../../notificaciones/application/services/notificacion-sistema.service';
+
+import { DashboardGateway } from '../../../../websockets/gateways/dashboard.gateway';
 
 @Injectable()
 export class CreateConvenioUseCase {
   constructor(
     private readonly convenioRepository: ConvenioRepository,
     private readonly convenioHistorialService: ConvenioHistorialService,
+    private readonly notificacionSistema: NotificacionSistemaService,
+    private readonly dashboardGateway: DashboardGateway,
   ) {}
 
   async execute(dto: CreateConvenioDto): Promise<Convenio> {
@@ -34,9 +39,21 @@ export class CreateConvenioUseCase {
     await this.convenioHistorialService.registrar(
       created.id,
       'CREACION',
-      'Convenio registrado.',
+      `Convenio registrado: ${created.entidadNombre}.`,
       created.creadorId,
     );
+
+    await this.notificacionSistema.registrar(
+      'Convenio agregado',
+      `Se agrego el convenio con ${created.entidadNombre}.`,
+      {
+        apartado: 'Convenios',
+        accion: 'Agrego convenio',
+        usuarioId: created.creadorId,
+      },
+    );
+
+    this.dashboardGateway.emitDashboardUpdated('convenio');
 
     return created;
   }

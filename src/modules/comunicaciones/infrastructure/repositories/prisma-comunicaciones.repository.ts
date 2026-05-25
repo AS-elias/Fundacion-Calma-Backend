@@ -147,30 +147,106 @@ export class PrismaComunicacionesRepository implements ComunicacionesRepository 
         });
     }
 
-    async getRecentMessages(canalId: number, limit = 50) {
-        return this.prisma.mensajes.findMany({
-            where: { canal_id: canalId },
+    async getRecentMessages(canalId: number, usuarioId: number, limit = 50) {
+        const mensajes = await this.prisma.mensajes.findMany({
+            where: { 
+                canal_id: canalId,
+                eliminado: false,
+                mensajes_eliminados_usuario: {
+                    none: { usuario_id: usuarioId }
+                }
+            },
             orderBy: { creado_at: 'desc' },
             take: limit,
-            include: { usuarios: true },
+            include: { 
+                usuarios: true,
+                reacciones_mensaje: true,
+            },
+        });
+
+        return mensajes.map(m => {
+            const reactionCounts = m.reacciones_mensaje.reduce((acc, r) => {
+                acc[r.emoji] = (acc[r.emoji] || 0) + 1;
+                return acc;
+            }, {} as Record<string, number>);
+            
+            const reacciones = Object.keys(reactionCounts).map(emoji => ({
+                emoji,
+                count: reactionCounts[emoji]
+            }));
+
+            const { reacciones_mensaje, ...rest } = m;
+            return {
+                ...rest,
+                reacciones
+            };
         });
     }
 
     async getUserChannels(usuarioId: number) {
-        return this.prisma.participantes_canal.findMany({
+        const result = await this.prisma.participantes_canal.findMany({
             where: { usuario_id: usuarioId },
             include: {
                 canales: {
                     include: {
                         participantes_canal: { include: { usuarios: true } },
                         mensajes: {
+                            where: {
+                                eliminado: false,
+                                mensajes_eliminados_usuario: { none: { usuario_id: usuarioId } }
+                            },
                             orderBy: { creado_at: 'desc' },
                             take: 1,
-                            include: { usuarios: true },
+                            include: { 
+                                usuarios: true,
+                                reacciones_mensaje: true,
+                            },
+                        },
+                        _count: {
+                            select: {
+                                mensajes: {
+                                    where: {
+                                        leido: false,
+                                        emisor_id: { not: usuarioId },
+                                        eliminado: false,
+                                        mensajes_eliminados_usuario: { none: { usuario_id: usuarioId } }
+                                    },
+                                },
+                            },
                         },
                     },
                 },
             },
+        });
+
+        return result.map((r) => {
+            const unreadCount = r.canales._count.mensajes;
+            const { _count, ...canalData } = r.canales;
+            
+            // Map the last message's reactions if it exists
+            if (canalData.mensajes && canalData.mensajes.length > 0) {
+                const m = canalData.mensajes[0];
+                const reactionCounts = m.reacciones_mensaje.reduce((acc, r_msg) => {
+                    acc[r_msg.emoji] = (acc[r_msg.emoji] || 0) + 1;
+                    return acc;
+                }, {} as Record<string, number>);
+                
+                const reacciones = Object.keys(reactionCounts).map(emoji => ({
+                    emoji,
+                    count: reactionCounts[emoji]
+                }));
+
+                const { reacciones_mensaje, ...restMessage } = m;
+                canalData.mensajes[0] = { ...restMessage, reacciones } as any;
+            }
+
+            return {
+                ...r,
+                canales: {
+                    ...canalData,
+                    unreadCount,
+                },
+            };
         });
     }
 
@@ -194,7 +270,52 @@ export class PrismaComunicacionesRepository implements ComunicacionesRepository 
         });
     }
 
-    async deleteChannel(canalId: number) {
+    async deleteMessageForMe(mensajeId: number, usuarioId: number) {
+        return this.prisma.mensajes_eliminados_usuario.create({
+            data: {
+                mensaje_id: mensajeId,
+                usuario_id: usuarioId,
+            },
+        });
+    }
+
+    async deleteMessageForAll(mensajeId: number, remitenteId: number) {
+        return this.prisma.mensajes.updateMany({
+            where: { id: mensajeId, emisor_id: remitenteId },
+            data: { eliminado: true, contenido: 'Este mensaje fue eliminado' },
+        });
+    }
+
+    async deleteChannel(canalId: number, usuarioId: number) {
+        const canal = await this.prisma.canales.findUnique({
+            where: { id: canalId },
+        });
+
+        if (!canal) return null;
+
+        if (canal.es_grupo === false) {
+            // Es chat directo: limpiar el historial insertando en mensajes_eliminados_usuario
+            const mensajes = await this.prisma.mensajes.findMany({
+                where: { canal_id: canalId },
+                select: { id: true },
+            });
+
+            if (mensajes.length > 0) {
+                const dataToInsert = mensajes.map((m) => ({
+                    mensaje_id: m.id,
+                    usuario_id: usuarioId,
+                }));
+
+                await this.prisma.mensajes_eliminados_usuario.createMany({
+                    data: dataToInsert,
+                    skipDuplicates: true,
+                });
+            }
+
+            return { message: 'Historial de chat directo limpiado exitosamente' };
+        }
+
+        // Lógica estándar para grupos
         return this.prisma.canales.delete({
             where: { id: canalId },
         });
@@ -220,6 +341,15 @@ export class PrismaComunicacionesRepository implements ComunicacionesRepository 
         return this.prisma.reacciones_mensaje.findMany({
             where: { mensaje_id: mensajeId },
             include: { usuarios: true },
+        });
+    }
+
+    async getReactionCount(mensajeId: number, emoji: string) {
+        return this.prisma.reacciones_mensaje.count({
+            where: {
+                mensaje_id: mensajeId,
+                emoji: emoji,
+            },
         });
     }
 

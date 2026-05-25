@@ -35,6 +35,7 @@ async function main() {
   await prisma.estrategia_tareas.deleteMany();
   await prisma.proyectos.deleteMany();
   await prisma.permisos_area.deleteMany();
+  await prisma.salas_trabajo.deleteMany();
   await prisma.usuarios.deleteMany();
   await prisma.areas.deleteMany();
   await prisma.roles.deleteMany();
@@ -56,12 +57,12 @@ async function main() {
   // 3. ÁREAS
   // ===============================
   const areaPadre = await prisma.areas.create({
-    data: { nombre: 'Área Comercial' },
+    data: { nombre: 'Estrategia y Desarrollo' },
   });
 
   const [estrategia, analisis, desarrollo] = await Promise.all([
     prisma.areas.create({
-      data: { nombre: 'Estrategia', padre_id: areaPadre.id },
+      data: { nombre: 'Estrategia Comercial', padre_id: areaPadre.id },
     }),
     prisma.areas.create({
       data: { nombre: 'Análisis de Datos', padre_id: areaPadre.id },
@@ -84,42 +85,6 @@ async function main() {
       puesto: 'Administrador del Sistema',
       estado: 'ACTIVO',
       rol_id: rolAdministrador.id,
-    },
-  });
-
-  const director = await prisma.usuarios.create({
-    data: {
-      nombre_completo: 'Deivi',
-      apellido_completo: 'Flores',
-      email: 'dflores@calma.org',
-      password_hash: passwordHash,
-      puesto: 'Director Comercial',
-      estado: 'ACTIVO',
-      rol_id: rolDirector.id,
-    },
-  });
-
-  const analistaUser = await prisma.usuarios.create({
-    data: {
-      nombre_completo: 'Lucía',
-      apellido_completo: 'Ramírez',
-      email: 'lramirez@calma.org',
-      password_hash: passwordHash,
-      puesto: 'Analista Datos',
-      estado: 'ACTIVO',
-      rol_id: rolPracticante.id,
-    },
-  });
-
-  const practicante = await prisma.usuarios.create({
-    data: {
-      nombre_completo: 'Usuario',
-      apellido_completo: 'Prueba',
-      email: 'user@calma.org',
-      password_hash: passwordHash,
-      puesto: 'Relacionista Institucional',
-      estado: 'ACTIVO',
-      rol_id: rolPracticante.id,
     },
   });
 
@@ -156,63 +121,88 @@ async function main() {
         puede_editar: true,
         permitir_subareas: true,
       },
-      {
-        usuario_id: director.id,
-        area_id: areaPadre.id,
-        puede_publicar: true,
-        puede_editar: true,
-        permitir_subareas: true,
-      },
-      {
-        usuario_id: practicante.id,
-        area_id: estrategia.id,
-        puede_publicar: true,
-        puede_editar: false,
-        permitir_subareas: false,
-      },
     ],
   });
 
-  console.log(
-    '👤 Usuarios creados: ' +
-      [admin.email, director.email, practicante.email].join(', '),
-  );
+  console.log('👤 Usuarios creados: ' + admin.email);
 
   // ===============================
   // 8. PUBLICACIONES (Asumo que era el bloque 8 por tu código original)
   // ===============================
-  await prisma.publicaciones.create({
-    data: {
-      area_id: areaPadre.id,
-      autor_id: director.id,
-      titulo: 'Nuevo Convenio Educativo',
-      contenido: 'Se firmó convenio con institución educativa.',
-      fecha_publicacion: new Date(),
-    },
-  });
-
   // ===============================
   // 9. REPOSITORIO BLOQUE
   // ===============================
-  const bloque = await prisma.repositorio_bloques.create({
-    data: {
+  const bloquesRepositorio = [
+    {
+      area_id: areaPadre.id,
+      titulo: 'MOF - Manual de Organización y Funciones',
+      subtitulo: 'Documentos institucionales',
+      icono: '\u{1F4C1}',
+      creado_por: admin.id,
+    },
+    {
+      area_id: areaPadre.id,
+      titulo: 'Redes Sociales de la Fundación',
+      subtitulo: 'Enlaces oficiales',
+      icono: '\u{1F310}',
+      creado_por: admin.id,
+    },
+    {
+      area_id: areaPadre.id,
+      titulo: 'Recursos Generales',
+      subtitulo: 'Archivos generales',
+      icono: '\u{1F4C4}',
+      creado_por: admin.id,
+    },
+    {
+      area_id: areaPadre.id,
+      titulo: 'Políticas y Procedimientos',
+      subtitulo: 'Normas internas',
+      icono: '\u{1F4D1}',
+      creado_por: admin.id,
+    },
+    {
+      area_id: areaPadre.id,
+      titulo: 'Reportes Estratégicos',
+      subtitulo: 'Reportes y análisis',
+      icono: '\u{1F4CA}',
+      creado_por: admin.id,
+    },
+    {
+      area_id: areaPadre.id,
+      titulo: 'Materiales de Capacitación',
+      subtitulo: 'Capacitaciones y guías',
+      icono: '\u{1F4DA}',
+      creado_por: admin.id,
+    },
+    {
       area_id: areaPadre.id,
       titulo: 'Plantillas Comerciales',
       subtitulo: 'Documentos oficiales',
-      creado_por: director.id,
+      creado_por: admin.id,
     },
-  });
+  ];
+
+  const bloquesCreados = await Promise.all(
+    bloquesRepositorio.map((bloque) =>
+      prisma.repositorio_bloques.create({
+        data: bloque,
+      }),
+    ),
+  );
+
+  const bloquePlantillas = bloquesCreados.find(
+    (bloque) => bloque.titulo === 'Plantillas Comerciales',
+  );
+
+  if (!bloquePlantillas) {
+    throw new Error('No se pudo crear el bloque Plantillas Comerciales');
+  }
 
   // ===============================
   // 10. REPOSITORIO ENLACES
   // ===============================
-  await prisma.repositorio_enlaces.create({
-    data: {
-      bloque_id: bloque.id,
-      nombre_documento: 'Plantilla Propuesta.docx',
-      url_drive: 'https://drive.google.com/plantilla',
-    },
-  });
+
 
   // ===============================
   // 11. RECURSOS ÁREA
@@ -230,328 +220,38 @@ async function main() {
   // ===============================
   // 12. TAREAS ESTRATEGIA
   // ===============================
-  await prisma.estrategia_tareas.create({
-    data: {
-      area_id: estrategia.id,
-      titulo: 'Definir metas Q2',
-      descripcion: 'Establecer objetivos comerciales del segundo trimestre.',
-      estado: 'Pendiente',
-      prioridad: 'Alta',
-      fecha_vencimiento: new Date('2026-04-01'),
-      creador_id: director.id,
-      asignado_a_id: analistaUser.id,
-    },
-  });
-
   // ===============================
   // 13. NOTIFICACIONES
   // ===============================
-  await prisma.notificaciones.create({
-    data: {
-      usuario_id: analistaUser.id,
-      titulo: 'Nueva tarea asignada',
-      mensaje: 'Se te asignó la tarea: Definir metas Q2',
-      leido: false,
-      tipo: 'TAREA',
-    },
-  });
-
   // ===============================
   // 14. DATA CONVENIOS
   // ===============================
-  const convenioWiener = await prisma.convenios.create({
-    data: {
-      area_id: areaPadre.id,
-      entidad_nombre: 'Universidad Norbert Wiener',
-      ruc: '20123456789',
-      rubro: 'Educación',
-      contacto_nombre: 'María Gómez',
-      telefono_contacto: '987654321',
-      estado: 'PENDIENTE',
-      tipo: 'EMPRESA PRIVADA',
-      conexion: 'CONVENIO',
-      fecha_expiracion: new Date('2026-12-31'),
-      creador_id: director.id,
-    },
-  });
-
   // ===============================
   // 15. DATA COMENTARIOS
   // ===============================
-  await prisma.convenio_comentarios.createMany({
-    data: [
-      {
-        convenio_id: convenioWiener.id,
-        usuario_id: director.id,
-        comentario: 'Se envió propuesta institucional inicial.',
-      },
-    ],
-  });
-
   // ===============================
   // 16. DATA ARCHIVOS
   // ===============================
-  await prisma.convenio_archivos.createMany({
-    data: [
-      {
-        convenio_id: convenioWiener.id,
-        subido_por_id: director.id,
-        nombre_archivo: 'Propuesta_Convenio_Wiener.pdf',
-        url_archivo: 'https://drive.google.com/file/d/propuesta-wiener',
-      },
-    ],
-  });
-
   // ===============================
   // 17. ANALISIS TAREAS
   // ===============================
-  await prisma.analisis_tareas.createMany({
-    data: [
-      {
-        area_id: analisis.id,
-        titulo: 'Análisis de conversión de convenios',
-        subtitulo: 'Medir tasa de cierre mensual',
-        descripcion: 'Colegios de UGEL 04',
-        estado: 'pendiente',
-        creador_id: director.id,
-      },
-      {
-        area_id: analisis.id,
-        titulo: 'Reporte trimestral comercial',
-        subtitulo: 'Resumen estratégico Q1',
-        descripcion: 'Consolidar indicadores comerciales del trimestre',
-        estado: 'en-proceso',
-        creador_id: analistaUser.id,
-      },
-      {
-        area_id: analisis.id,
-        titulo: 'Actualización dashboard convenios',
-        subtitulo: 'Integrar estado y fechas de expiración',
-        descripcion: 'Actualizar visualizaciones principales',
-        estado: 'completado',
-        creador_id: analistaUser.id,
-      },
-      {
-        area_id: analisis.id,
-        titulo: 'Análisis de convenios cancelados',
-        subtitulo: 'Identificar causas recurrentes',
-        descripcion: 'Revisar causas de cancelacion',
-        estado: 'paralizado',
-        creador_id: director.id,
-      },
-      {
-        area_id: analisis.id,
-        titulo: 'Proyección de nuevos convenios 2026',
-        subtitulo: 'Modelo predictivo basado en histórico',
-        descripcion: 'Proyectar nuevos contactos institucionales',
-        estado: 'en-proceso',
-        creador_id: analistaUser.id,
-      },
-    ],
-  });
-
-  const tareaRecopilacion = await prisma.analisis_tareas.create({
-    data: {
-      area_id: analisis.id,
-      titulo: 'RECOPILACION DE DATOS',
-      descripcion: 'Colegios de UGEL 04',
-      estado: 'pendiente',
-      creador_id: director.id,
-      analisis_tarea_enlaces: {
-        create: [
-          {
-            nombre: 'Directorio UGEL 04',
-            url: 'https://example.com/directorio-ugel-04',
-          },
-        ],
-      },
-    },
-  });
-
-  await prisma.analisis_tareas.create({
-    data: {
-      area_id: analisis.id,
-      titulo: 'RECOPILACION DE DATOS',
-      descripcion: 'Colegios de UGEL 04',
-      estado: 'completado',
-      creador_id: analistaUser.id,
-      fecha_limite: new Date('2026-12-12T00:00:00'),
-    },
-  });
-
-  await prisma.analisis_colegios.createMany({
-    data: [
-      {
-        codigo_modular: '0324608',
-        nombre: 'San Vicente de Paul',
-        correo: 'secretaria@csvp.edu.pe',
-        telefono: '999999999',
-        nivel: 'Primaria',
-        director: 'Chavez Luis Roger Ulises',
-        tipo: 'Particular',
-        ugel: 'UGEL 01',
-        departamento: 'Lima',
-        distrito: 'Surquillo',
-        zona: 'Urbana',
-        cantidad_alumnos: 291,
-        direccion: 'Mz H lote 8',
-      },
-      {
-        codigo_modular: '0324609',
-        nombre: 'San Vicente de Paul',
-        correo: 'secretaria@csvp.edu.pe',
-        telefono: '999999999',
-        nivel: 'Primaria',
-        director: 'Chavez Luis Roger Ulises',
-        tipo: 'Publica',
-        ugel: 'UGEL 01',
-        departamento: 'Lima',
-        distrito: 'Surquillo',
-        zona: 'Urbana',
-        cantidad_alumnos: 291,
-        direccion: 'Mz H lote 8',
-      },
-    ],
-  });
-
-  await prisma.analisis_empresas.createMany({
-    data: [
-      {
-        ruc: '20602844219',
-        nombre: 'Inversiones Distribuciones SAC',
-        correo: 'operaciones@fulegsa.com.pe',
-        telefono_fijo: '01025897',
-        celular: '999999999',
-        departamento: 'Lima',
-        distrito: 'Surquillo',
-        direccion: 'Mz H lote 8',
-        sector: 'Educacion privada',
-        estado: 'Convenio',
-        descripcion: 'Esta empresa trabaja con la fundacion romero.',
-      },
-      {
-        ruc: '20602844229',
-        nombre: 'Inversiones Distribuciones EIRL',
-        correo: 'operaciones@fulegsa.com.pe',
-        telefono_fijo: '01025897',
-        celular: '999999999',
-        departamento: 'Lima',
-        distrito: 'Surquillo',
-        direccion: 'Mz H lote 8',
-        sector: 'Educacion privada',
-        estado: 'Alianza',
-        descripcion: 'Esta empresa trabaja con la fundacion romero.',
-      },
-    ],
-  });
-
-  await prisma.analisis_venues.createMany({
-    data: [
-      {
-        nombre: 'Villa Lucumo',
-        departamento: 'Lima',
-        distrito: 'Surquillo',
-        direccion: 'Pachacamac, Lima',
-        celular: '972162178',
-        correo: 'villa.lucumo@gmail.com',
-        capacidad_personas: 200,
-        estado: 'Contactado',
-        sitio_web: 'https://www.facebook.com/p/Villa-L%C3%BAcumo',
-        detalles: 'Este venue trabaja en la fundacion romero',
-      },
-      {
-        nombre: 'Villa Lucumo',
-        departamento: 'Lima',
-        distrito: 'Surquillo',
-        direccion: 'Pachacamac, Lima',
-        celular: '972162178',
-        correo: 'villa.lucumo@gmail.com',
-        capacidad_personas: 200,
-        estado: 'Pendiente',
-        sitio_web: 'https://www.facebook.com/p/Villa-L%C3%BAcumo',
-        detalles: 'Este venue trabaja en la fundacion romero',
-      },
-    ],
-  });
-
-  await prisma.analisis_difusiones.createMany({
-    data: [
-      {
-        nombre: 'Radio Exitosa',
-        tipo: 'Radio',
-        plataforma: 'YouTube',
-        lugar: 'Lurin, Lima',
-        contacto: 'Maria',
-        celular: '972162178',
-        correo: 'Maria.v@gmail.com',
-        fecha: new Date('2026-12-12T00:00:00'),
-        estado: 'Contactado',
-        observaciones:
-          'Este medio de comunicacion ya trabajo antes con una fundacion',
-      },
-      {
-        nombre: 'Radio Exitosa',
-        tipo: 'Radio',
-        plataforma: 'YouTube',
-        lugar: 'Lurin, Lima',
-        contacto: 'Maria',
-        celular: '972162178',
-        correo: 'Maria.v@gmail.com',
-        fecha: new Date('2026-12-12T00:00:00'),
-        estado: 'Pendiente',
-        observaciones:
-          'Este medio de comunicacion ya trabajo antes con una fundacion',
-      },
-    ],
-  });
-
-  console.log(`Tarea de analisis creada: ${tareaRecopilacion.id}`);
-
   // ===============================
   // 18. ACTIVIDADES DESARROLLO COMERCIAL
   // ===============================
-  await prisma.desarrollo_actividades.create({
-    data: {
-      area_id: desarrollo.id,
-      titulo: 'Preparar propuesta para aliados estratégicos',
-      descripcion:
-        'Consolidar la propuesta institucional y los beneficios para aliados del sector educación.',
-      estado: 'PENDIENTE',
-      fecha_limite: new Date('2026-04-20'),
-      creador_id: director.id,
-      actividad_enlaces: {
-        create: [
-          {
-            nombre_documento: 'Presentación institucional',
-            url: 'https://docs.google.com/presentation/d/demo-propuesta',
-          },
-          {
-            nombre_documento: 'Carpeta de materiales',
-            url: 'https://drive.google.com/drive/folders/demo-materiales',
-          },
-        ],
+  // ===============================
+  // 19. SALAS DE TRABAJO
+  // ===============================
+  await prisma.salas_trabajo.createMany({
+    data: [
+      {
+        nombre: 'Sala General - Fundación Calma',
+        area: 'General',
+        link: 'https://meet.google.com/fundacion-calma-general',
+        descripcion: 'Sala principal para todas las reuniones generales',
+        es_general: true,
+        creador_id: admin.id,
       },
-    },
-  });
-
-  await prisma.desarrollo_actividades.create({
-    data: {
-      area_id: desarrollo.id,
-      titulo: 'Seguimiento de reuniones con universidades',
-      descripcion:
-        'Registrar avances y próximos pasos con las universidades priorizadas para nuevos convenios.',
-      estado: 'EN PROCESO',
-      fecha_limite: new Date('2026-04-15'),
-      creador_id: practicante.id,
-      actividad_enlaces: {
-        create: [
-          {
-            nombre_documento: 'Matriz de seguimiento',
-            url: 'https://docs.google.com/spreadsheets/d/demo-seguimiento',
-          },
-        ],
-      },
-    },
+    ],
   });
 
   console.log('✅ Base de datos sembrada con éxito.');

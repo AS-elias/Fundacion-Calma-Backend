@@ -40,8 +40,10 @@ import { UpdateEstrategiaProyectoUseCase } from '../estrategia_proyectos/applica
 import { EstrategiaProyectoRepository } from '../estrategia_proyectos/domain/repositories/estrategia-proyecto.repository';
 import { EstrategiaProyectosController } from '../estrategia_proyectos/infrastructure/controllers/estrategia-proyectos.controller';
 import { PrismaEstrategiaProyectoRepository } from '../estrategia_proyectos/infrastructure/repositories/prisma-estrategia-proyecto.repository';
+import { NotificacionesModule } from '../../notificaciones/notificaciones.module';
 
 @Module({
+  imports: [NotificacionesModule],
   controllers: [
     EstrategiaActividadesController,
     EstrategiaActividadEnlacesController,

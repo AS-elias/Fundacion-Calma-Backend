@@ -10,6 +10,10 @@ export class UsuarioEntity {
   telefono?: string | null;
   foto_url?: string | null;
   rol?: { id: number; nombre: string } | null;
+  debe_cambiar_password?: boolean | null;
+  fecha_nacimiento?: Date | null;
+  linkedin_url?: string | null;
+  biografia?: string | null;
 
   constructor(data: Partial<UsuarioEntity>) {
     Object.assign(this, data);

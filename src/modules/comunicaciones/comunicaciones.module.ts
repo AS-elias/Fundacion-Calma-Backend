@@ -7,6 +7,7 @@ import { COMUNICACIONES_REPOSITORY } from './domain/repositories/comunicaciones.
 import { PrismaComunicacionesRepository } from './infrastructure/repositories/prisma-comunicaciones.repository';
 import { ComunicacionesController } from './presentation/controllers/comunicaciones.controller';
 import { PresenceService } from '../../core/services/presence.service';
+import { NotificacionesModule } from '../notificaciones/notificaciones.module';
 
 @Module({
   imports: [
@@ -14,6 +15,7 @@ import { PresenceService } from '../../core/services/presence.service';
       secret: process.env.JWT_SECRET || 'your-secret-key',
       signOptions: { expiresIn: '24h' },
     }),
+    NotificacionesModule,
   ],
   controllers: [ComunicacionesController],
   providers: [

@@ -1,0 +1,38 @@
+--- LOGIN ADMIN RESPONSE ---
+{"access_token":"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOjEsImVtYWlsIjoiYWRtaW5AY2FsbWEub3JnIiwicm9sIjoiQWRtaW5pc3RyYWRvciIsImlhdCI6MTc3OTMyMTQzMiwiZXhwIjoxNzc5NDA3ODMyfQ.jcYYA1slniyppBuKtlEjWYGXFIQEm2MjAZsQWTz3F_M","refresh_token":"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOjEsImVtYWlsIjoiYWRtaW5AY2FsbWEub3JnIiwicm9sIjoiQWRtaW5pc3RyYWRvciIsImlhdCI6MTc3OTMyMTQzMiwiZXhwIjoxNzc5OTI2MjMyfQ.68qZjlV6iNpfRgjaVw7OqVTOsQ_lUmnOQAB-qqIP678","usuario":{"id":1,"nombre":"Super","apellido":"Admin","email":"admin@calma.org","foto_url":"/uploads/perfiles/1779231962971-696984893.jpeg","rol":"Administrador"}}
+
+--- /api/dashboard/admin ---
+{
+  "totalProyectos": 3,
+  "proyectosRegistrados": 3,
+  "conveniosVigentes": 2,
+  "actividadReciente": [
+    {
+      "usuario": "Super Admin",
+      "detalle": "actualizó el estado a CONVENIO FIRMADO",
+      "entidad": "1212121",
+      "tipo": "CONVENIO",
+      "fecha": "2026-05-19T23:15:34.072Z"
+    },
+    {
+      "usuario": "Super Admin",
+      "detalle": "actualizó el estado a CONVENIO FIRMADO",
+      "entidad": "asas",
+      "tipo": "CONVENIO",
+      "fecha": "2026-05-19T23:08:52.143Z"
+    }
+  ],
+  "estadisticasTareas": {
+    "pendientes": 0,
+    "progreso": 0,
+    "ejecucion": 0,
+    "completadas": 2,
+    "paralizado": 1
+  },
+  "estadisticasComunicaciones": {
+    "pendiente": 0,
+    "proceso": 0,
+    "firmados": 2,
+    "cancelados": 0
+  }
+}

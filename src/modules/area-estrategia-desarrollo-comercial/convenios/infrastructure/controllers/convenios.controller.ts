@@ -6,6 +6,7 @@ import {
   Delete,
   Body,
   Param,
+  Query,
 } from '@nestjs/common';
 
 import { CreateConvenioUseCase } from '../../application/use-cases/create-convenio.usecase';
@@ -61,7 +62,15 @@ export class ConveniosController {
   }
 
   @Delete(':id')
-  async delete(@Param('id') id: string) {
-    return this.deleteConvenio.execute(Number(id));
+  async delete(
+    @Param('id') id: string,
+    @Query('usuarioId') usuarioId?: string,
+    @Query('usuarioNombre') usuarioNombre?: string,
+  ) {
+    return this.deleteConvenio.execute(
+      Number(id),
+      usuarioId ? Number(usuarioId) : undefined,
+      usuarioNombre,
+    );
   }
 }

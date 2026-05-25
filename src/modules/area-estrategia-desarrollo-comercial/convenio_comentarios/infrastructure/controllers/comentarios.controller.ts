@@ -1,8 +1,18 @@
-import { Controller, Post, Get, Delete, Body, Param } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  Param,
+  Post,
+  Request,
+  UseGuards,
+} from '@nestjs/common';
 import { CreateComentarioUseCase } from '../../application/use-cases/create-comentario.usecase';
 import { GetComentariosUseCase } from '../../application/use-cases/get-comentarios.usecase';
 import { DeleteComentarioUseCase } from '../../application/use-cases/delete-comentario.usecase';
 import { CreateComentarioDto } from '../../application/dto/create-comentario.dto';
+import { JwtAuthGuard } from '../../../../auth/infrastructure/guards/jwt-auth.guard';
 
 @Controller('comentarios')
 export class ComentarioController {
@@ -13,8 +23,12 @@ export class ComentarioController {
   ) {}
 
   @Post()
-  async create(@Body() dto: CreateComentarioDto) {
-    return this.createComentarioUseCase.execute(dto);
+  @UseGuards(JwtAuthGuard)
+  async create(@Body() dto: CreateComentarioDto, @Request() req: any) {
+    return this.createComentarioUseCase.execute({
+      ...dto,
+      usuarioId: req.user.id,
+    });
   }
 
   @Get(':convenioId')

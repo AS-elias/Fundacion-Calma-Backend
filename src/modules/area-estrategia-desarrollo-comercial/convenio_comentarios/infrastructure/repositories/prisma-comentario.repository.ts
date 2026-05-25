@@ -16,6 +16,14 @@ export class PrismaComentarioRepository extends ComentarioRepository {
         usuario_id: data.usuarioId,
         comentario: data.comentario,
       },
+      include: {
+        usuarios: {
+          select: {
+            nombre_completo: true,
+            apellido_completo: true,
+          },
+        },
+      },
     });
 
     return new ConvenioComentario(
@@ -24,12 +32,21 @@ export class PrismaComentarioRepository extends ComentarioRepository {
       comentario.usuario_id as number,
       comentario.comentario,
       comentario.fecha_creacion ?? new Date(),
+      this.nombreUsuario(comentario.usuarios),
     );
   }
 
   async findById(id: number): Promise<ConvenioComentario | null> {
     const comentario = await this.prisma.convenio_comentarios.findUnique({
       where: { id },
+      include: {
+        usuarios: {
+          select: {
+            nombre_completo: true,
+            apellido_completo: true,
+          },
+        },
+      },
     });
 
     if (!comentario) {
@@ -42,6 +59,7 @@ export class PrismaComentarioRepository extends ComentarioRepository {
       comentario.usuario_id as number,
       comentario.comentario,
       comentario.fecha_creacion ?? new Date(),
+      this.nombreUsuario(comentario.usuarios),
     );
   }
 
@@ -53,6 +71,14 @@ export class PrismaComentarioRepository extends ComentarioRepository {
       orderBy: {
         fecha_creacion: 'desc',
       },
+      include: {
+        usuarios: {
+          select: {
+            nombre_completo: true,
+            apellido_completo: true,
+          },
+        },
+      },
     });
 
     return comentarios.map(
@@ -63,6 +89,7 @@ export class PrismaComentarioRepository extends ComentarioRepository {
           c.usuario_id as number,
           c.comentario,
           c.fecha_creacion ?? new Date(),
+          this.nombreUsuario(c.usuarios),
         ),
     );
   }
@@ -71,5 +98,18 @@ export class PrismaComentarioRepository extends ComentarioRepository {
     await this.prisma.convenio_comentarios.delete({
       where: { id },
     });
+  }
+
+  private nombreUsuario(usuario?: {
+    nombre_completo: string;
+    apellido_completo: string;
+  } | null): string | null {
+    if (!usuario) {
+      return null;
+    }
+
+    return `${usuario.nombre_completo ?? ''} ${
+      usuario.apellido_completo ?? ''
+    }`.trim();
   }
 }

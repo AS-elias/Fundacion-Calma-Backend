@@ -1,0 +1,124 @@
+--- LOGIN RESPONSE ---
+{"access_token":"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOjIsImVtYWlsIjoiZGZsb3Jlc0BjYWxtYS5vcmciLCJyb2wiOiJEaXJlY3RvciIsImlhdCI6MTc3OTMyMTUyMywiZXhwIjoxNzc5NDA3OTIzfQ.u5Mxsi62tsAT18PNFGS1ONxuhEuG4tIEmGFHGl3uVn8","refresh_token":"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOjIsImVtYWlsIjoiZGZsb3Jlc0BjYWxtYS5vcmciLCJyb2wiOiJEaXJlY3RvciIsImlhdCI6MTc3OTMyMTUyMywiZXhwIjoxNzc5OTI2MzIzfQ.tKDP_0sJ4fZJEf0qXoOYdIjNgRC6iUW6RszwR20HpSQ","usuario":{"id":2,"nombre":"Deivi","apellido":"Flores","email":"dflores@calma.org","foto_url":null,"rol":"Director"}}
+
+--- /api/dashboard/user ---
+{
+  "misProyectos": 4,
+  "totalProyectos": 4,
+  "proyectosRegistrados": 4,
+  "misConvenios": 2,
+  "conveniosVigentes": 2,
+  "desempenoEquipo": 50,
+  "desempenoPersonal": 0,
+  "actividadReciente": [
+    {
+      "usuario": "Super Admin",
+      "detalle": "actualizó el estado a CONVENIO FIRMADO",
+      "entidad": "1212121",
+      "tipo": "CONVENIO",
+      "fecha": "2026-05-19T23:15:34.072Z"
+    },
+    {
+      "usuario": "Super Admin",
+      "detalle": "actualizó el estado a CONVENIO FIRMADO",
+      "entidad": "asas",
+      "tipo": "CONVENIO",
+      "fecha": "2026-05-19T23:08:52.143Z"
+    }
+  ],
+  "estadisticasTareas": {
+    "pendientes": 1,
+    "progreso": 0,
+    "ejecucion": 0,
+    "completadas": 2,
+    "paralizado": 1
+  },
+  "estadisticasComunicaciones": {
+    "pendiente": 0,
+    "proceso": 0,
+    "firmados": 2,
+    "cancelados": 0
+  },
+  "directorEvaluations": [
+    {
+      "id": 7,
+      "director_id": 2,
+      "rating": 4,
+      "comentario": null,
+      "created_at": "2026-05-20T23:27:15.299Z"
+    },
+    {
+      "id": 6,
+      "director_id": 2,
+      "rating": 5,
+      "comentario": null,
+      "created_at": "2026-05-20T23:22:48.309Z"
+    },
+    {
+      "id": 5,
+      "director_id": 2,
+      "rating": 3,
+      "comentario": null,
+      "created_at": "2026-05-20T23:20:45.401Z"
+    },
+    {
+      "id": 4,
+      "director_id": 2,
+      "rating": 3,
+      "comentario": null,
+      "created_at": "2026-05-20T11:17:39.043Z"
+    },
+    {
+      "id": 3,
+      "director_id": 2,
+      "rating": 3,
+      "comentario": null,
+      "created_at": "2026-05-20T11:10:53.371Z"
+    },
+    {
+      "id": 2,
+      "director_id": 2,
+      "rating": 1,
+      "comentario": null,
+      "created_at": "2026-05-20T11:10:16.971Z"
+    },
+    {
+      "id": 1,
+      "director_id": 2,
+      "rating": 5,
+      "comentario": "Prueba de evaluación de director",
+      "created_at": "2026-05-20T10:28:29.929Z"
+    }
+  ],
+  "promedioEvaluacionDirector": 3,
+  "pendientesEvaluacion": [
+    {
+      "id": 4,
+      "nombre": "Usuario Prueba",
+      "email": "user@calma.org",
+      "rol": "Practicante"
+    },
+    {
+      "id": 1,
+      "nombre": "Super Admin",
+      "email": "admin@calma.org",
+      "rol": "Administrador"
+    }
+  ]
+}
+
+--- /api/dashboard/director/pending-users ---
+[
+  {
+    "id": 4,
+    "nombre": "Usuario Prueba",
+    "email": "user@calma.org",
+    "rol": "Practicante"
+  },
+  {
+    "id": 1,
+    "nombre": "Super Admin",
+    "email": "admin@calma.org",
+    "rol": "Administrador"
+  }
+]
