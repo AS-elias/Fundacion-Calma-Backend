@@ -15,45 +15,76 @@ export class EmailService {
     this.provider = this.resolveProvider();
     if (this.provider === 'smtp') {
       this.initializeSmtpTransporter();
-    } else {
-      this.logger.log(
-        `[EmailService] Provider: ${this.provider} (HTTPS, compatible con Render Free)`,
+    }
+
+    const scriptUrl = this.configService.get<string>('GOOGLE_SCRIPT_EMAIL_URL');
+    this.logger.log(
+      `[EmailService] Provider activo: ${this.provider}` +
+        (this.provider === 'google-script'
+          ? ` | script=${scriptUrl ? 'configurada' : 'FALTA GOOGLE_SCRIPT_EMAIL_URL'}`
+          : ''),
+    );
+
+    if (this.provider === 'google-script' && !scriptUrl) {
+      this.logger.error(
+        '[EmailService] EMAIL_PROVIDER=google-script pero falta GOOGLE_SCRIPT_EMAIL_URL en variables de entorno (Render/local)',
       );
     }
   }
 
-  /** Render Free bloquea SMTP (465/587). Preferir resend o google-script en producción. */
+  /** Render Free bloquea SMTP (465/587). Preferir google-script o resend en producción. */
   private resolveProvider(): EmailProvider {
     const explicit = this.configService
       .get<string>('EMAIL_PROVIDER')
       ?.trim()
       .toLowerCase();
 
-    if (explicit === 'resend' || explicit === 'google-script' || explicit === 'smtp') {
-      return explicit;
-    }
-
-    if (this.configService.get<string>('RESEND_API_KEY')) {
-      return 'resend';
-    }
-
-    if (this.configService.get<string>('GOOGLE_SCRIPT_EMAIL_URL')) {
-      return 'google-script';
-    }
-
+    const googleUrl = this.configService.get<string>('GOOGLE_SCRIPT_EMAIL_URL')?.trim();
+    const resendKey = this.configService.get<string>('RESEND_API_KEY')?.trim();
     const emailHost = this.configService.get<string>('EMAIL_HOST');
     const emailUser = this.configService.get<string>('EMAIL_USER');
     const emailPass = this.configService.get<string>('EMAIL_PASS');
+    const hasSmtp = Boolean(emailHost && emailUser && emailPass);
 
-    if (emailHost && emailUser && emailPass) {
-      this.logger.warn(
-        '[EmailService] Usando SMTP. En Render Free los puertos 465/587 están bloqueados; configura EMAIL_PROVIDER=resend o google-script.',
-      );
+    if (explicit === 'resend') {
+      return 'resend';
+    }
+
+    if (explicit === 'google-script') {
+      return 'google-script';
+    }
+
+    // Si hay URL del script, usarla aunque EMAIL_PROVIDER=smtp o SMTP incompleto (caso Render)
+    if (googleUrl && explicit !== 'resend') {
+      if (explicit === 'smtp') {
+        this.logger.warn(
+          '[EmailService] GOOGLE_SCRIPT_EMAIL_URL definida; ignorando EMAIL_PROVIDER=smtp sin credenciales SMTP completas',
+        );
+      }
+      return 'google-script';
+    }
+
+    if (resendKey) {
+      return 'resend';
+    }
+
+    if (explicit === 'smtp' || hasSmtp) {
+      if (!hasSmtp) {
+        this.logger.error(
+          '[EmailService] SMTP incompleto (faltan HOST/USER/PASS). En Render usa EMAIL_PROVIDER=google-script y GOOGLE_SCRIPT_EMAIL_URL',
+        );
+      } else {
+        this.logger.warn(
+          '[EmailService] SMTP activo; en Render Free los puertos 465/587 suelen estar bloqueados',
+        );
+      }
       return 'smtp';
     }
 
-    this.logger.warn('[EmailService] Email no configurado');
-    return 'smtp';
+    this.logger.error(
+      '[EmailService] Correo no configurado. Añade GOOGLE_SCRIPT_EMAIL_URL + EMAIL_PROVIDER=google-script',
+    );
+    return 'google-script';
   }
 
   private initializeSmtpTransporter() {
@@ -193,7 +224,16 @@ export class EmailService {
     text: string,
   ) {
     if (!this.transporter) {
-      throw new Error('SMTP no configurado');
+      const googleUrl = this.configService.get<string>('GOOGLE_SCRIPT_EMAIL_URL');
+      if (googleUrl) {
+        this.logger.warn(
+          '[EmailService] SMTP no disponible; enviando por Google Apps Script',
+        );
+        return this.sendViaGoogleScript(to, subject, html, text);
+      }
+      throw new Error(
+        'Correo no configurado: define GOOGLE_SCRIPT_EMAIL_URL y EMAIL_PROVIDER=google-script en Render',
+      );
     }
 
     const result = await this.transporter.sendMail({

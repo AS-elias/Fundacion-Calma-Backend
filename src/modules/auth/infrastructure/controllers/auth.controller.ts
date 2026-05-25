@@ -17,6 +17,7 @@ import { RegisterDto } from '../../application/dto/register.dto';
 
 import { ForgotPasswordDto } from '../../application/dto/forgot-password.dto';
 import { ResetPasswordDto } from '../../application/dto/reset-password.dto';
+import { ChangePasswordDto } from '../../application/dto/change-password.dto';
 import { JwtAuthGuard } from '../guards/jwt-auth.guard';
 import { AdminGuard } from '../guards/admin.guard';
 import { PerfilStorageService } from '../../application/services/perfil-storage.service';
@@ -46,6 +47,12 @@ export class AuthController {
   @Post('reset-password')
   async resetPassword(@Body() resetPasswordDto: ResetPasswordDto) {
     return await this.authService.resetPassword(resetPasswordDto);
+  }
+
+  /** Primer ingreso: contraseña temporal → nueva contraseña (+ tokens) */
+  @Post('change-password')
+  async changePassword(@Body() changePasswordDto: ChangePasswordDto) {
+    return await this.authService.changePassword(changePasswordDto);
   }
 
   // 📝 REGISTRO - Solo administradores pueden crear nuevos usuarios
