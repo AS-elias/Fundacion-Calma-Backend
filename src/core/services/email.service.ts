@@ -36,7 +36,8 @@ export class EmailService {
         user,
         pass,
       },
-    });
+      family: 4, // Forzar la resolución y conexión por IPv4
+    } as any);
   }
 
   async sendNewUserNotification(
