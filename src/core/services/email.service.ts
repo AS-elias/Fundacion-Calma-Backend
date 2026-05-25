@@ -1,56 +1,71 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import * as nodemailer from 'nodemailer';
-import * as dns from 'dns';
-
-// Forzar el uso de IPv4 por defecto para evitar problemas (ESOCKET) en servidores como Render
-// que no soportan bien las conexiones salientes por IPv6 hacia smtp.gmail.com
-dns.setDefaultResultOrder('ipv4first');
 
 @Injectable()
 export class EmailService {
   private readonly logger = new Logger(EmailService.name);
-  private transporter: nodemailer.Transporter | null = null;
+  private readonly resendApiKey: string;
 
   constructor(private readonly configService: ConfigService) {
-    const host = this.configService.get<string>('EMAIL_HOST');
-    const port = Number(this.configService.get<number>('EMAIL_PORT') ?? 587);
-    const secure = this.configService.get<string>('EMAIL_SECURE') === 'true';
-    const user = this.configService.get<string>('EMAIL_USER');
-    const pass = this.configService.get<string>('EMAIL_PASS');
-
-    if (!host || !user || !pass) {
+    this.resendApiKey = this.configService.get<string>('RESEND_API_KEY') || '';
+    if (!this.resendApiKey) {
       this.logger.warn(
-        '[EmailService] No se encontraron credenciales SMTP (EMAIL_HOST/EMAIL_USER/EMAIL_PASS). Se deshabilita envío de correos.',
+        '[EmailService] No se encontró RESEND_API_KEY. Se deshabilita el envío de correos.',
       );
-      // No inicializamos transporter para evitar intentos de login con credenciales vacías.
-      this.transporter = null;
+    }
+  }
+
+  private async sendEmailViaResend(
+    to: string,
+    subject: string,
+    html: string,
+    text: string,
+  ) {
+    if (!this.resendApiKey) {
+      this.logger.warn(
+        '[EmailService] Envío omitido porque no hay RESEND_API_KEY.',
+      );
       return;
     }
 
-    this.transporter = nodemailer.createTransport({
-      host,
-      port,
-      secure,
-      auth: {
-        user,
-        pass,
-      },
-      family: 4, // Forzar la resolución y conexión por IPv4
-    } as any);
+    const from =
+      this.configService.get<string>('EMAIL_FROM') || 'onboarding@resend.dev';
+
+    try {
+      const response = await fetch('https://api.resend.com/emails', {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${this.resendApiKey}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          from,
+          to,
+          subject,
+          html,
+          text,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(
+          `Resend API Error: ${response.status} - ${JSON.stringify(data)}`,
+        );
+      }
+
+      this.logger.log(`[EmailService] Email sent successfully via Resend: ${data.id}`);
+    } catch (error) {
+      this.logger.error('[EmailService] Error al enviar email con Resend', error);
+      throw error;
+    }
   }
 
   async sendNewUserNotification(
     to: string,
     payload: { nombre: string; email: string; password: string; rol: string },
   ) {
-    if (!this.transporter) {
-      this.logger.warn(
-        '[EmailService] Transporter no inicializado, envío de email omitido (sin SMTP).',
-      );
-      return;
-    }
-
     const appUrl =
       this.configService.get<string>('APP_URL') || 'http://localhost:4200';
     const subject = 'Bienvenido a Fundación Calma - Cuenta creada';
@@ -137,33 +152,10 @@ export class EmailService {
 </html>
 `;
 
-    try {
-      const info = await this.transporter.sendMail({
-        from:
-          this.configService.get<string>('EMAIL_FROM') || 'no-reply@calma.org',
-        to,
-        subject,
-        text,
-        html,
-      });
-      this.logger.log(`[EmailService] new-user email sent: ${info.messageId}`);
-    } catch (error) {
-      this.logger.error(
-        '[EmailService] Error al enviar email de usuario nuevo',
-        error,
-      );
-      throw error;
-    }
+    await this.sendEmailViaResend(to, subject, html, text);
   }
 
   async sendPasswordResetEmail(to: string, resetLink: string) {
-    if (!this.transporter) {
-      this.logger.warn(
-        '[EmailService] Transporter no inicializado, envío de email de recuperación omitido.',
-      );
-      return;
-    }
-
     const subject = 'Recuperación de contraseña - Fundación Calma';
     const text =
       `Hola,\n\n` +
@@ -183,24 +175,6 @@ export class EmailService {
       `<p>Si no solicitaste este cambio, puedes ignorar este correo de forma segura.</p>` +
       `<p>Saludos,<br/>Equipo Fundación Calma</p>`;
 
-    try {
-      const info = await this.transporter.sendMail({
-        from:
-          this.configService.get<string>('EMAIL_FROM') || 'no-reply@calma.org',
-        to,
-        subject,
-        text,
-        html,
-      });
-      this.logger.log(
-        `[EmailService] Password reset email sent: ${info.messageId}`,
-      );
-    } catch (error) {
-      this.logger.error(
-        '[EmailService] Error al enviar email de recuperación de contraseña',
-        error,
-      );
-      throw error;
-    }
+    await this.sendEmailViaResend(to, subject, html, text);
   }
 }
