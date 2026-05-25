@@ -1,44 +1,78 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import * as nodemailer from 'nodemailer';
 
 @Injectable()
 export class EmailService {
   private readonly logger = new Logger(EmailService.name);
-  
-  // URL del Web App de Google Apps Script que hace de puente para enviar los correos
-  private readonly googleScriptUrl = 'https://script.google.com/macros/s/AKfycbwYWC4_rv_xzeBYd8AVkq6nBFplzVffwg5aHSoCYmeRg7ZjX9jNXqD_Cj14VV3ic3Gq5w/exec';
+  private transporter: nodemailer.Transporter;
 
-  constructor(private readonly configService: ConfigService) {}
+  constructor(private readonly configService: ConfigService) {
+    this.initializeTransporter();
+  }
 
-  private async sendEmailViaGoogleScript(
+  private initializeTransporter() {
+    const emailHost = this.configService.get<string>('EMAIL_HOST');
+    const emailPort = this.configService.get<number>('EMAIL_PORT');
+    const emailSecure = this.configService.get<string>('EMAIL_SECURE') === 'true';
+    const emailUser = this.configService.get<string>('EMAIL_USER');
+    const emailPass = this.configService.get<string>('EMAIL_PASS');
+
+    if (!emailHost || !emailUser || !emailPass) {
+      this.logger.warn('[EmailService] Email not fully configured - some features may not work');
+      return;
+    }
+
+    this.transporter = nodemailer.createTransport({
+      host: emailHost,
+      port: emailPort,
+      secure: emailSecure,
+      auth: {
+        user: emailUser,
+        pass: emailPass,
+      },
+    });
+
+    this.logger.log('[EmailService] Email transporter initialized successfully');
+  }
+
+  private async sendEmail(
     to: string,
     subject: string,
     html: string,
     text: string,
   ) {
+    if (!this.transporter) {
+      this.logger.error('[EmailService] Transporter not configured');
+      throw new Error('Email service is not properly configured');
+    }
+
     try {
-      const response = await fetch(this.googleScriptUrl, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'text/plain;charset=utf-8',
-        },
-        body: JSON.stringify({
-          to,
-          subject,
-          html,
-          text,
-        }),
+      this.logger.debug(`[EmailService] Sending email to ${to}`);
+
+      const emailFrom = this.configService.get<string>(
+        'EMAIL_FROM',
+        'Fundación Calma <noreply@fundacion-calma.org>',
+      );
+
+      const result = await this.transporter.sendMail({
+        from: emailFrom,
+        to,
+        subject,
+        text,
+        html,
       });
 
-      const data = await response.json();
-
-      if (data.status === 'error') {
-        throw new Error(`Google Script Error: ${data.message}`);
-      }
-
-      this.logger.log(`[EmailService] Email sent successfully via Google Script to ${to}`);
+      this.logger.log(
+        `[EmailService] Email sent successfully to ${to} (MessageID: ${result.messageId})`,
+      );
+      return result;
     } catch (error) {
-      this.logger.error('[EmailService] Error al enviar email con Google Script', error);
+      this.logger.error('[EmailService] Error sending email', {
+        message: error instanceof Error ? error.message : String(error),
+        to,
+        subject,
+      });
       throw error;
     }
   }
@@ -133,7 +167,7 @@ export class EmailService {
 </html>
 `;
 
-    await this.sendEmailViaGoogleScript(to, subject, html, text);
+    await this.sendEmail(to, subject, html, text);
   }
 
   async sendPasswordResetEmail(to: string, resetLink: string) {
@@ -156,6 +190,6 @@ export class EmailService {
       `<p>Si no solicitaste este cambio, puedes ignorar este correo de forma segura.</p>` +
       `<p>Saludos,<br/>Equipo Fundación Calma</p>`;
 
-    await this.sendEmailViaGoogleScript(to, subject, html, text);
+    await this.sendEmail(to, subject, html, text);
   }
 }
