@@ -1,6 +1,11 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import * as nodemailer from 'nodemailer';
+import * as dns from 'dns';
+
+// Forzar el uso de IPv4 por defecto para evitar problemas (ESOCKET) en servidores como Render
+// que no soportan bien las conexiones salientes por IPv6 hacia smtp.gmail.com
+dns.setDefaultResultOrder('ipv4first');
 
 @Injectable()
 export class EmailService {
