@@ -33,7 +33,8 @@ import { NotificacionSistemaService } from '../../../notificaciones/application/
   },
 })
 export class ComunicacionesGateway
-  implements OnGatewayConnection, OnGatewayDisconnect {
+  implements OnGatewayConnection, OnGatewayDisconnect
+{
   @WebSocketServer()
   server!: Server;
 
@@ -41,11 +42,11 @@ export class ComunicacionesGateway
   private activeCallTimeouts = new Map<string, NodeJS.Timeout>(); // Track call timeouts
 
   constructor(
-    private readonly comunicacionesService: ComunicacionesService, 
+    private readonly comunicacionesService: ComunicacionesService,
     private readonly presenceService: PresenceService,
     private readonly notificacionSistema: NotificacionSistemaService,
     private readonly systemGateway: SystemGateway,
-  ) { }
+  ) {}
 
   async handleConnection(socket: Socket) {
     try {
@@ -65,7 +66,8 @@ export class ComunicacionesGateway
 
       // Auto-join all channel rooms so the socket receives newMessage events
       // from every channel regardless of which screen the user is on
-      const canalesDelUsuario = await this.comunicacionesService.getUserChannels(payload.sub);
+      const canalesDelUsuario =
+        await this.comunicacionesService.getUserChannels(payload.sub);
       for (const participacion of canalesDelUsuario) {
         socket.join(`canal_${participacion.canal_id}`);
       }
@@ -110,15 +112,15 @@ export class ComunicacionesGateway
   }
 
   @SubscribeMessage('createChannel')
-  async createChannel(
-    @MessageBody() payload: CreateChannelDto,
-  ) {
+  async createChannel(@MessageBody() payload: CreateChannelDto) {
     try {
       this.logger.log('createChannel - iniciando');
       const dto = await this.validatePayload(payload, CreateChannelDto);
       const canal = await this.comunicacionesService.createChannel(dto);
 
-      const connectedUsers = Array.from(this.presenceService.getConnectedUsers() || []);
+      const connectedUsers = Array.from(
+        this.presenceService.getConnectedUsers() || [],
+      );
 
       this.server.emit('channelCreated', {
         canalId: canal.id,
@@ -134,13 +136,14 @@ export class ComunicacionesGateway
           descripcion: canal.descripcion,
           avatarUrl: canal.avatar_url,
           esGrupo: canal.es_grupo,
-          participantes: canal.participantes_canal?.map(pc => ({
-            usuarioId: pc.usuario_id,
-            nombre: pc.usuarios?.nombre_completo,
-            avatar: pc.usuarios?.foto_url,
-            esAdmin: pc.es_admin ?? false,
-            isOnline: connectedUsers.includes(pc.usuario_id),
-          })) ?? [],
+          participantes:
+            canal.participantes_canal?.map((pc) => ({
+              usuarioId: pc.usuario_id,
+              nombre: pc.usuarios?.nombre_completo,
+              avatar: pc.usuarios?.foto_url,
+              esAdmin: pc.es_admin ?? false,
+              isOnline: connectedUsers.includes(pc.usuario_id),
+            })) ?? [],
         },
       };
     } catch (error: any) {
@@ -200,7 +203,11 @@ export class ComunicacionesGateway
     try {
       const actorId = socket.data.user.sub; // Obtenemos el usuario que hace la petición
       const dto = await this.validatePayload(payload, JoinChannelDto);
-      await this.comunicacionesService.addParticipant(dto.canalId, dto.usuarioId, actorId);
+      await this.comunicacionesService.addParticipant(
+        dto.canalId,
+        dto.usuarioId,
+        actorId,
+      );
       this.server
         .to(`canal_${payload.canalId}`)
         .emit('participantAdded', payload);
@@ -228,7 +235,7 @@ export class ComunicacionesGateway
       await this.comunicacionesService.removeParticipant(
         dto.canalId,
         dto.usuarioId,
-        actorId
+        actorId,
       );
       this.server
         .to(`canal_${payload.canalId}`)
@@ -307,7 +314,7 @@ export class ComunicacionesGateway
       const dto = await this.validatePayload(payload, MessageDto);
       // IMPORTANTE: Usar el ID del usuario autenticado, NO el del payload del cliente
       const usuarioId = socket.data.user.sub;
-      
+
       const isParticipant = await this.comunicacionesService.isParticipant(
         dto.canalId,
         usuarioId,
@@ -342,28 +349,34 @@ export class ComunicacionesGateway
 
       // Notify other participants
       try {
-        const canalInfo = await this.comunicacionesService.getChannelInfo(dto.canalId);
+        const canalInfo = await this.comunicacionesService.getChannelInfo(
+          dto.canalId,
+        );
         if (canalInfo && canalInfo.participantes_canal) {
           const senderName = socket.data.user?.nombre || 'Un usuario';
           const titulo = 'Nuevo mensaje';
           const descripcion = `Tienes un nuevo mensaje en ${canalInfo.nombre || 'el chat'}`;
-          
-          canalInfo.participantes_canal.forEach(p => {
+
+          canalInfo.participantes_canal.forEach((p) => {
             if (p.usuario_id !== usuarioId) {
-              this.notificacionSistema.registrar(
-                titulo,
-                descripcion,
-                {
+              this.notificacionSistema
+                .registrar(titulo, descripcion, {
                   apartado: 'Comunicaciones',
                   accion: 'Nuevo mensaje recibido',
                   usuarioId: p.usuario_id,
-                }
-              ).catch(e => this.logger.warn(`Failed to notify user ${p.usuario_id}: ${e.message}`));
+                })
+                .catch((e) =>
+                  this.logger.warn(
+                    `Failed to notify user ${p.usuario_id}: ${e.message}`,
+                  ),
+                );
             }
           });
         }
       } catch (notifyErr) {
-        this.logger.warn(`Could not send notifications for new message: ${notifyErr}`);
+        this.logger.warn(
+          `Could not send notifications for new message: ${notifyErr}`,
+        );
       }
     } catch (error: any) {
       this.logger.error('sendMessage error:', error.message);
@@ -413,7 +426,9 @@ export class ComunicacionesGateway
       const canales = await this.comunicacionesService.getUserChannels(
         payload.usuarioId,
       );
-      const connectedUsers = Array.from(this.presenceService.getConnectedUsers() || []);
+      const connectedUsers = Array.from(
+        this.presenceService.getConnectedUsers() || [],
+      );
 
       const result = canales.map((p: any) => ({
         canalId: p.canal_id,
@@ -433,13 +448,13 @@ export class ComunicacionesGateway
           })) ?? [],
         ultimoMensaje: p.canales?.mensajes?.[0]
           ? {
-            id: p.canales.mensajes[0].id,
-            contenido: p.canales.mensajes[0].contenido,
-            tipo: p.canales.mensajes[0].tipo,
-            archivoUrl: p.canales.mensajes[0].archivo_url,
-            remitenteId: p.canales.mensajes[0].emisor_id,
-            fecha: p.canales.mensajes[0].creado_at,
-          }
+              id: p.canales.mensajes[0].id,
+              contenido: p.canales.mensajes[0].contenido,
+              tipo: p.canales.mensajes[0].tipo,
+              archivoUrl: p.canales.mensajes[0].archivo_url,
+              remitenteId: p.canales.mensajes[0].emisor_id,
+              fecha: p.canales.mensajes[0].creado_at,
+            }
           : null,
       }));
 
@@ -475,7 +490,9 @@ export class ComunicacionesGateway
         return;
       }
 
-      const connectedUsers = Array.from(this.presenceService.getConnectedUsers() || []);
+      const connectedUsers = Array.from(
+        this.presenceService.getConnectedUsers() || [],
+      );
 
       const response = {
         canalId: canal.id,
@@ -516,12 +533,15 @@ export class ComunicacionesGateway
   ) {
     try {
       const dto = await this.validatePayload(payload, UpdateChannelDto);
-      const canal = await this.comunicacionesService.updateChannel(dto.canalId, {
-        nombre: dto.nombre,
-        descripcion: dto.descripcion,
-        avatarUrl: dto.avatarUrl,
-        esGrupo: dto.esGrupo,
-      });
+      const canal = await this.comunicacionesService.updateChannel(
+        dto.canalId,
+        {
+          nombre: dto.nombre,
+          descripcion: dto.descripcion,
+          avatarUrl: dto.avatarUrl,
+          esGrupo: dto.esGrupo,
+        },
+      );
       this.server.to(`canal_${dto.canalId}`).emit('channelUpdated', canal);
       socket.emit('updateChannelResponse', {
         success: true,
@@ -535,8 +555,6 @@ export class ComunicacionesGateway
       });
     }
   }
-
-
 
   @SubscribeMessage('getReactions')
   async getReactions(
@@ -572,7 +590,9 @@ export class ComunicacionesGateway
       const dto = await this.validatePayload(payload, ReadReceiptDto);
       const usuarioId = socket.data.user.sub; // Usar usuario autenticado
       await this.comunicacionesService.markAsRead(dto.mensajeId, usuarioId);
-      this.server.to(`canal_${dto.canalId}`).emit('messageRead', { ...dto, usuarioId });
+      this.server
+        .to(`canal_${dto.canalId}`)
+        .emit('messageRead', { ...dto, usuarioId });
       socket.emit('readMessageResponse', {
         success: true,
         data: dto,
@@ -594,60 +614,84 @@ export class ComunicacionesGateway
     try {
       const dto = await this.validatePayload(payload, ReactionDto);
       const usuarioId = socket.data.user.sub;
-      
+
       // Obtener todas las reacciones del mensaje
-      const existingReactions = await this.comunicacionesService.getReactions(dto.mensajeId);
-      
+      const existingReactions = await this.comunicacionesService.getReactions(
+        dto.mensajeId,
+      );
+
       // IMPORTANTE: Buscar si el usuario ya reaccionó a este mensaje (sin importar el emoji viejo)
-      const userReaction = existingReactions.find((r: any) => r.usuario_id === usuarioId);
+      const userReaction = existingReactions.find(
+        (r: any) => r.usuario_id === usuarioId,
+      );
       if (userReaction) {
         if (userReaction.emoji === dto.emoji) {
           // Caso B: Toggle off (el usuario le dio click al MISMO emoji para quitarlo)
-          await this.comunicacionesService.removeReaction(dto.mensajeId, usuarioId, dto.emoji);
-          
-          const count = await this.comunicacionesService.getReactionCount(dto.mensajeId, dto.emoji);
+          await this.comunicacionesService.removeReaction(
+            dto.mensajeId,
+            usuarioId,
+            dto.emoji,
+          );
+
+          const count = await this.comunicacionesService.getReactionCount(
+            dto.mensajeId,
+            dto.emoji,
+          );
           this.server.to(`canal_${dto.canalId}`).emit('messageReacted', {
             mensajeId: dto.mensajeId,
             usuarioId: usuarioId,
             emoji: dto.emoji,
-            count: count
+            count: count,
           });
         } else {
           // Caso C: Cambiar reacción (el usuario tenía un emoji y eligió uno NUEVO)
           const oldEmoji = userReaction.emoji;
-          
+
           // Borrar reacción vieja y guardar la nueva
-          await this.comunicacionesService.removeReaction(dto.mensajeId, usuarioId, oldEmoji);
+          await this.comunicacionesService.removeReaction(
+            dto.mensajeId,
+            usuarioId,
+            oldEmoji,
+          );
           await this.comunicacionesService.addReaction({ ...dto, usuarioId });
-          
+
           // Disparar evento para RESTAR el emoji viejo
-          const oldCount = await this.comunicacionesService.getReactionCount(dto.mensajeId, oldEmoji);
+          const oldCount = await this.comunicacionesService.getReactionCount(
+            dto.mensajeId,
+            oldEmoji,
+          );
           this.server.to(`canal_${dto.canalId}`).emit('messageReacted', {
             mensajeId: dto.mensajeId,
             usuarioId: usuarioId,
             emoji: oldEmoji,
-            count: oldCount
+            count: oldCount,
           });
-          
+
           // Disparar evento para SUMAR el emoji nuevo
-          const newCount = await this.comunicacionesService.getReactionCount(dto.mensajeId, dto.emoji);
+          const newCount = await this.comunicacionesService.getReactionCount(
+            dto.mensajeId,
+            dto.emoji,
+          );
           this.server.to(`canal_${dto.canalId}`).emit('messageReacted', {
             mensajeId: dto.mensajeId,
             usuarioId: usuarioId,
             emoji: dto.emoji,
-            count: newCount
+            count: newCount,
           });
         }
       } else {
         // Caso A: Toggle on (el usuario no tenía ninguna reacción)
         await this.comunicacionesService.addReaction({ ...dto, usuarioId });
-        
-        const count = await this.comunicacionesService.getReactionCount(dto.mensajeId, dto.emoji);
+
+        const count = await this.comunicacionesService.getReactionCount(
+          dto.mensajeId,
+          dto.emoji,
+        );
         this.server.to(`canal_${dto.canalId}`).emit('messageReacted', {
           mensajeId: dto.mensajeId,
           usuarioId: usuarioId,
           emoji: dto.emoji,
-          count: count
+          count: count,
         });
       }
       socket.emit('reactToMessageResponse', { success: true });
@@ -668,7 +712,9 @@ export class ComunicacionesGateway
     try {
       const dto = await this.validatePayload(payload, EditDeleteDto);
       if (!dto.contenido || dto.contenido.trim() === '') {
-        throw new BadRequestException('Contenido requerido para editar mensaje');
+        throw new BadRequestException(
+          'Contenido requerido para editar mensaje',
+        );
       }
       const usuarioId = socket.data.user.sub; // Usar usuario autenticado
       await this.comunicacionesService.editMessage(
@@ -676,7 +722,9 @@ export class ComunicacionesGateway
         usuarioId,
         dto.contenido,
       );
-      this.server.to(`canal_${dto.canalId}`).emit('messageEdited', { ...dto, remitenteId: usuarioId });
+      this.server
+        .to(`canal_${dto.canalId}`)
+        .emit('messageEdited', { ...dto, remitenteId: usuarioId });
       socket.emit('editMessageResponse', {
         success: true,
         data: dto,
@@ -698,11 +746,10 @@ export class ComunicacionesGateway
     try {
       const dto = await this.validatePayload(payload, EditDeleteDto);
       const usuarioId = socket.data.user.sub; // Usar usuario autenticado
-      await this.comunicacionesService.deleteMessage(
-        dto.mensajeId,
-        usuarioId,
-      );
-      this.server.to(`canal_${dto.canalId}`).emit('messageDeleted', { ...dto, remitenteId: usuarioId });
+      await this.comunicacionesService.deleteMessage(dto.mensajeId, usuarioId);
+      this.server
+        .to(`canal_${dto.canalId}`)
+        .emit('messageDeleted', { ...dto, remitenteId: usuarioId });
       socket.emit('deleteMessageResponse', {
         success: true,
         data: dto,
@@ -723,17 +770,21 @@ export class ComunicacionesGateway
   ) {
     try {
       const actorId = socket.data.user.sub; // El ID del usuario autenticado que realiza la acción
-      
+
       // Llamamos al servicio para actualizar el registro en la BD
-      await this.comunicacionesService.makeAdmin(payload.canalId, payload.usuarioId, actorId);
-      
+      await this.comunicacionesService.makeAdmin(
+        payload.canalId,
+        payload.usuarioId,
+        actorId,
+      );
+
       // Emitimos al canal que este usuario ahora es administrador
       this.server.to(`canal_${payload.canalId}`).emit('adminMade', {
         canalId: payload.canalId,
         usuarioId: payload.usuarioId,
-        hechoPorId: actorId
+        hechoPorId: actorId,
       });
-      
+
       socket.emit('makeAdminResponse', { success: true, data: payload });
     } catch (error: any) {
       this.logger.error('makeAdmin error:', error.message);
@@ -751,16 +802,20 @@ export class ComunicacionesGateway
   ) {
     try {
       const actorId = socket.data.user.sub; // Usuario autenticado
-      
-      await this.comunicacionesService.removeAdmin(payload.canalId, payload.usuarioId, actorId);
-      
+
+      await this.comunicacionesService.removeAdmin(
+        payload.canalId,
+        payload.usuarioId,
+        actorId,
+      );
+
       // Notificamos al canal sobre el retiro de permisos
       this.server.to(`canal_${payload.canalId}`).emit('adminRemoved', {
         canalId: payload.canalId,
         usuarioId: payload.usuarioId,
-        hechoPorId: actorId
+        hechoPorId: actorId,
       });
-      
+
       socket.emit('removeAdminResponse', { success: true, data: payload });
     } catch (error: any) {
       this.logger.error('removeAdmin error:', error.message);
@@ -779,7 +834,15 @@ export class ComunicacionesGateway
   // WebRTC Signaling Events
   @SubscribeMessage('callOffer')
   async callOffer(
-    @MessageBody() payload: { targetUserId: number; fromUserId: number; fromName: string; callType: 'voice' | 'video'; offer: any; canalId?: number },
+    @MessageBody()
+    payload: {
+      targetUserId: number;
+      fromUserId: number;
+      fromName: string;
+      callType: 'voice' | 'video';
+      offer: any;
+      canalId?: number;
+    },
     @ConnectedSocket() socket: Socket,
   ) {
     const usuarioId = socket.data.user.sub; // Usar usuario autenticado, no payload.fromUserId
@@ -820,13 +883,17 @@ export class ComunicacionesGateway
       // Register timeout in chat
       if (payload.canalId) {
         try {
-          this.comunicacionesService.saveMessage({
-            canalId: payload.canalId,
-            remitenteId: usuarioId,
-            contenido: `Llamada ${payload.callType} no respondida`,
-            tipo: 'call_missed',
-            archivoUrl: null,
-          }).catch(err => this.logger.warn(`Error saving missed call: ${err}`));
+          this.comunicacionesService
+            .saveMessage({
+              canalId: payload.canalId,
+              remitenteId: usuarioId,
+              contenido: `Llamada ${payload.callType} no respondida`,
+              tipo: 'call_missed',
+              archivoUrl: null,
+            })
+            .catch((err) =>
+              this.logger.warn(`Error saving missed call: ${err}`),
+            );
         } catch (err) {
           this.logger.warn(`Error in missed call timeout: ${err}`);
         }
@@ -835,17 +902,29 @@ export class ComunicacionesGateway
 
     this.activeCallTimeouts.set(enhancedPayload.callId, timeoutId);
 
-    this.server.to(`user_${payload.targetUserId}`).emit('callOffer', enhancedPayload);
-    socket.emit('callOfferSent', { success: true, callId: enhancedPayload.callId });
+    this.server
+      .to(`user_${payload.targetUserId}`)
+      .emit('callOffer', enhancedPayload);
+    socket.emit('callOfferSent', {
+      success: true,
+      callId: enhancedPayload.callId,
+    });
   }
 
   @SubscribeMessage('callAnswer')
   async callAnswer(
-    @MessageBody() payload: { targetUserId: number; fromUserId: number; callId: string; answer: any; canalId?: number },
+    @MessageBody()
+    payload: {
+      targetUserId: number;
+      fromUserId: number;
+      callId: string;
+      answer: any;
+      canalId?: number;
+    },
     @ConnectedSocket() socket: Socket,
   ) {
     const usuarioId = socket.data.user.sub; // Usar usuario autenticado
-    
+
     // Clear timeout since call was answered
     const timeoutId = this.activeCallTimeouts.get(payload.callId);
     if (timeoutId) {
@@ -873,13 +952,21 @@ export class ComunicacionesGateway
       fromUserId: usuarioId, // Sobrescribir con usuario autenticado
       timestamp: new Date().toISOString(),
     };
-    this.server.to(`user_${payload.targetUserId}`).emit('callAnswer', enhancedPayload);
+    this.server
+      .to(`user_${payload.targetUserId}`)
+      .emit('callAnswer', enhancedPayload);
     socket.emit('callAnswerSent', { success: true });
   }
 
   @SubscribeMessage('iceCandidate')
   async iceCandidate(
-    @MessageBody() payload: { targetUserId: number; fromUserId: number; callId: string; candidate: any },
+    @MessageBody()
+    payload: {
+      targetUserId: number;
+      fromUserId: number;
+      callId: string;
+      candidate: any;
+    },
     @ConnectedSocket() socket: Socket,
   ) {
     const usuarioId = socket.data.user.sub; // Usar usuario autenticado
@@ -888,16 +975,24 @@ export class ComunicacionesGateway
       fromUserId: usuarioId, // Sobrescribir con usuario autenticado
       timestamp: new Date().toISOString(),
     };
-    this.server.to(`user_${payload.targetUserId}`).emit('iceCandidate', enhancedPayload);
+    this.server
+      .to(`user_${payload.targetUserId}`)
+      .emit('iceCandidate', enhancedPayload);
   }
 
   @SubscribeMessage('endCall')
   async endCall(
-    @MessageBody() payload: { targetUserId: number; fromUserId: number; callId: string; canalId?: number },
+    @MessageBody()
+    payload: {
+      targetUserId: number;
+      fromUserId: number;
+      callId: string;
+      canalId?: number;
+    },
     @ConnectedSocket() socket: Socket,
   ) {
     const usuarioId = socket.data.user.sub; // Usar usuario autenticado
-    
+
     // Clear timeout if still active
     const timeoutId = this.activeCallTimeouts.get(payload.callId);
     if (timeoutId) {
@@ -925,7 +1020,9 @@ export class ComunicacionesGateway
       fromUserId: usuarioId, // Sobrescribir con usuario autenticado
       timestamp: new Date().toISOString(),
     };
-    this.server.to(`user_${payload.targetUserId}`).emit('endCall', enhancedPayload);
+    this.server
+      .to(`user_${payload.targetUserId}`)
+      .emit('endCall', enhancedPayload);
     socket.emit('callEnded', { success: true, callId: payload.callId });
   }
 }

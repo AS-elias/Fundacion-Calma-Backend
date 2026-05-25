@@ -5,13 +5,13 @@ import { ContactoEntity } from '../../domain/entities/contacto.entity';
 
 @Injectable()
 export class GetContactosAccesiblesUseCase {
-    constructor(
-        @Inject(COMUNIDAD_REPOSITORY)
-        private readonly comunidadRepository: IComunidadRepository,
-    ) { }
+  constructor(
+    @Inject(COMUNIDAD_REPOSITORY)
+    private readonly comunidadRepository: IComunidadRepository,
+  ) {}
 
-    async execute(usuarioId: number): Promise<ContactoEntity[]> {
-        // Contactos con solicitud aceptada + contactos de la misma área
-        return this.comunidadRepository.obtenerContactosAccesibles(usuarioId);
-    }
+  async execute(usuarioId: number): Promise<ContactoEntity[]> {
+    // Contactos con solicitud aceptada + contactos de la misma área
+    return this.comunidadRepository.obtenerContactosAccesibles(usuarioId);
+  }
 }

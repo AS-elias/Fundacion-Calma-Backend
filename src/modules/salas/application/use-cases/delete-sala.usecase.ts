@@ -1,5 +1,8 @@
 import { Injectable, Inject, NotFoundException } from '@nestjs/common';
-import { type ISalaRepository, SALA_REPOSITORY } from '../../domain/repositories/sala.repository';
+import {
+  type ISalaRepository,
+  SALA_REPOSITORY,
+} from '../../domain/repositories/sala.repository';
 
 @Injectable()
 export class DeleteSalaUseCase {

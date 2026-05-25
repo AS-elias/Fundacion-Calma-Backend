@@ -40,7 +40,10 @@ export interface IComunidadRepository {
   /**
    * Obtiene una solicitud existente entre dos usuarios.
    */
-  obtenerSolicitudExistente(usuarioId: number, contactoId: number): Promise<any>;
+  obtenerSolicitudExistente(
+    usuarioId: number,
+    contactoId: number,
+  ): Promise<any>;
 
   /**
    * Obtiene una solicitud por ID.
@@ -50,15 +53,24 @@ export interface IComunidadRepository {
   /**
    * Actualiza el estado de una solicitud.
    */
-  actualizarSolicitudContacto(solicitudId: number, estado: string): Promise<any>;
+  actualizarSolicitudContacto(
+    solicitudId: number,
+    estado: string,
+  ): Promise<any>;
 
   /**
    * Obtiene solicitudes recibidas por el usuario.
    */
-  obtenerSolicitudesRecibidas(usuarioId: number, estado?: string): Promise<any[]>;
+  obtenerSolicitudesRecibidas(
+    usuarioId: number,
+    estado?: string,
+  ): Promise<any[]>;
 
   /**
    * Obtiene solicitudes enviadas por el usuario.
    */
-  obtenerSolicitudesEnviadas(usuarioId: number, estado?: string): Promise<any[]>;
+  obtenerSolicitudesEnviadas(
+    usuarioId: number,
+    estado?: string,
+  ): Promise<any[]>;
 }

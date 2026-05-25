@@ -3,6 +3,6 @@ export class Bloque {
     public id: number,
     public titulo: string,
     public subtitulo?: string,
-    public icono?: string
+    public icono?: string,
   ) {}
 }

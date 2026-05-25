@@ -52,4 +52,4 @@ import { ComunicacionesModule } from '../comunicaciones/comunicaciones.module';
   ],
   exports: [],
 })
-export class ComunidadModule { }
+export class ComunidadModule {}

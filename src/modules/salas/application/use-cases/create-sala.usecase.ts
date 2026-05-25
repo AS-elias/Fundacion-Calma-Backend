@@ -1,5 +1,8 @@
 import { Injectable, Inject } from '@nestjs/common';
-import { type ISalaRepository, SALA_REPOSITORY } from '../../domain/repositories/sala.repository';
+import {
+  type ISalaRepository,
+  SALA_REPOSITORY,
+} from '../../domain/repositories/sala.repository';
 import { CreateSalaDto } from '../../create-sala.dto';
 
 @Injectable()

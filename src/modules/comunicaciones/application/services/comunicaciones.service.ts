@@ -14,7 +14,7 @@ export class ComunicacionesService {
     private readonly jwtService: JwtService,
     @Inject(COMUNICACIONES_REPOSITORY)
     private readonly repo: ComunicacionesRepository,
-  ) { }
+  ) {}
 
   verifyToken(token: string) {
     if (!token) throw new UnauthorizedException('Token no enviado');

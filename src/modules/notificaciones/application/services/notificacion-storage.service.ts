@@ -14,8 +14,7 @@ export class NotificacionStorageService {
   async saveFile(file: UploadedNotificacionFile) {
     const extension = extname(file.originalname);
 
-    const filename =
-      `${Date.now()}-${Math.round(Math.random() * 1e9)}${extension}`;
+    const filename = `${Date.now()}-${Math.round(Math.random() * 1e9)}${extension}`;
 
     const urlArchivo = await this.cloudStorageService.uploadFile(
       file.buffer,

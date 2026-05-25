@@ -68,7 +68,13 @@ export class UpdateActividadUseCase {
 
     const cambios: string[] = [];
 
-    this.agregarCambio(cambios, 'titulo', anterior.titulo, actual.titulo, dto.titulo);
+    this.agregarCambio(
+      cambios,
+      'titulo',
+      anterior.titulo,
+      actual.titulo,
+      dto.titulo,
+    );
     this.agregarCambio(
       cambios,
       'descripcion',
@@ -76,7 +82,13 @@ export class UpdateActividadUseCase {
       actual.descripcion,
       dto.descripcion,
     );
-    this.agregarCambio(cambios, 'estado', anterior.estado, actual.estado, dto.estado);
+    this.agregarCambio(
+      cambios,
+      'estado',
+      anterior.estado,
+      actual.estado,
+      dto.estado,
+    );
     this.agregarCambio(
       cambios,
       'fecha limite',
@@ -107,7 +119,9 @@ export class UpdateActividadUseCase {
     const despues = this.normalizarValor(actual);
 
     if (antes !== despues) {
-      cambios.push(`${campo} de "${antes || 'Sin dato'}" a "${despues || 'Sin dato'}"`);
+      cambios.push(
+        `${campo} de "${antes || 'Sin dato'}" a "${despues || 'Sin dato'}"`,
+      );
     }
   }
 

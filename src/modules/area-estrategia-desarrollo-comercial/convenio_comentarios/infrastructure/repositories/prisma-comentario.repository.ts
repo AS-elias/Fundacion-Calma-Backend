@@ -100,10 +100,12 @@ export class PrismaComentarioRepository extends ComentarioRepository {
     });
   }
 
-  private nombreUsuario(usuario?: {
-    nombre_completo: string;
-    apellido_completo: string;
-  } | null): string | null {
+  private nombreUsuario(
+    usuario?: {
+      nombre_completo: string;
+      apellido_completo: string;
+    } | null,
+  ): string | null {
     if (!usuario) {
       return null;
     }

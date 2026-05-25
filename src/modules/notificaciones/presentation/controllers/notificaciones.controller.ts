@@ -30,7 +30,6 @@ type UploadedNotificacionFile = {
 
 @Controller('notificaciones')
 export class NotificacionesController {
-
   constructor(
     private readonly repo: NotificacionPrismaRepository,
     private readonly storage: NotificacionStorageService,
@@ -75,9 +74,13 @@ export class NotificacionesController {
   @UseGuards(JwtAuthGuard)
   listar(
     @UsuarioActual() usuario: { id: number; rol: string },
-    @Query('usuarioId') usuarioId?: string
+    @Query('usuarioId') usuarioId?: string,
   ) {
-    return this.repo.listar(usuario.id, usuario.rol, this.parseOptionalUserId(usuarioId));
+    return this.repo.listar(
+      usuario.id,
+      usuario.rol,
+      this.parseOptionalUserId(usuarioId),
+    );
   }
 
   @Patch(':id/leido')
@@ -109,7 +112,9 @@ export class NotificacionesController {
     const usuario = this.parseOptionalUserId(usuarioId ?? body.usuarioId);
 
     if (!usuario) {
-      throw new BadRequestException('usuarioId es obligatorio para marcar favoritos.');
+      throw new BadRequestException(
+        'usuarioId es obligatorio para marcar favoritos.',
+      );
     }
 
     try {
@@ -131,7 +136,9 @@ export class NotificacionesController {
     const usuario = this.parseOptionalUserId(usuarioId ?? body.usuarioId);
 
     if (!usuario) {
-      throw new BadRequestException('usuarioId es obligatorio para archivar notificaciones.');
+      throw new BadRequestException(
+        'usuarioId es obligatorio para archivar notificaciones.',
+      );
     }
 
     try {
@@ -152,7 +159,9 @@ export class NotificacionesController {
     const usuario = this.parseOptionalUserId(usuarioId);
 
     if (!usuario) {
-      throw new BadRequestException('usuarioId es obligatorio para eliminar la notificacion solo para el usuario actual.');
+      throw new BadRequestException(
+        'usuarioId es obligatorio para eliminar la notificacion solo para el usuario actual.',
+      );
     }
 
     try {
@@ -172,7 +181,9 @@ export class NotificacionesController {
     return parsedId;
   }
 
-  private parseOptionalUserId(id: string | number | undefined): number | undefined {
+  private parseOptionalUserId(
+    id: string | number | undefined,
+  ): number | undefined {
     if (id === undefined || id === null || id === '') {
       return undefined;
     }
@@ -194,7 +205,9 @@ export class NotificacionesController {
     ];
 
     if (!user || !rolesPermitidos.includes(user.rol)) {
-      throw new ForbiddenException('Solo el administrador o director pueden crear notificaciones.');
+      throw new ForbiddenException(
+        'Solo el administrador o director pueden crear notificaciones.',
+      );
     }
   }
 }

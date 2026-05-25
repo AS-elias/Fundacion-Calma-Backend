@@ -192,7 +192,7 @@ export class RepositorioController {
   async mover(
     @Param('id') id: string,
     @Body() body: { padreId: number | null; esCarpeta?: boolean },
-    @Req() req: any
+    @Req() req: any,
   ) {
     if (this.esPracticante(req.user?.rol)) {
       throw new ForbiddenException(
@@ -223,10 +223,7 @@ export class RepositorioController {
   }
 
   private esPracticante(rol: string | undefined): boolean {
-    const normalized = (rol ?? '')
-      .toString()
-      .trim()
-      .toLowerCase();
+    const normalized = (rol ?? '').toString().trim().toLowerCase();
 
     return normalized === 'practicante' || normalized === 'coordinador';
   }

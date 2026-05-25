@@ -4,13 +4,9 @@ import { PrismaService } from '../../../../infrastructure/prisma/prisma.service'
 
 @Injectable()
 export class NotificacionPrismaRepository implements NotificacionRepository {
-
-  constructor(
-    private prisma: PrismaService
-  ) {}
+  constructor(private prisma: PrismaService) {}
 
   async crear(data: any) {
-
     return this.prisma.notificaciones.create({
       data: {
         titulo: data.titulo,
@@ -34,7 +30,9 @@ export class NotificacionPrismaRepository implements NotificacionRepository {
 
     if (initialAreaIds.length === 0) return [];
 
-    const allAreas = await this.prisma.areas.findMany({ select: { id: true, padre_id: true } });
+    const allAreas = await this.prisma.areas.findMany({
+      select: { id: true, padre_id: true },
+    });
     const childrenMap = new Map<number, number[]>();
     allAreas.forEach((area) => {
       if (area.padre_id) {
@@ -64,7 +62,7 @@ export class NotificacionPrismaRepository implements NotificacionRepository {
       where: { usuario_id: targetUserId },
     });
 
-    let globalFilters: any[] = [];
+    const globalFilters: any[] = [];
     if (rol === 'Administrador' || rol === 'Admin') {
       globalFilters.push({ usuario_id: null });
     } else {
@@ -74,24 +72,40 @@ export class NotificacionPrismaRepository implements NotificacionRepository {
       if (allowedAreaIds.length > 0) {
         const areasUsuario = await this.prisma.areas.findMany({
           where: { id: { in: allowedAreaIds } },
-          select: { nombre: true }
+          select: { nombre: true },
         });
-        const nombresAreas = areasUsuario.map(a => a.nombre.toLowerCase());
-        const hasDesarrollo = nombresAreas.some(n => n.includes('desarrollo') || n.includes('comercial'));
-        const hasEstrategia = nombresAreas.some(n => n.includes('estrategia'));
-        const hasAnalisis = nombresAreas.some(n => n.includes('análisis') || n.includes('analisis'));
+        const nombresAreas = areasUsuario.map((a) => a.nombre.toLowerCase());
+        const hasDesarrollo = nombresAreas.some(
+          (n) => n.includes('desarrollo') || n.includes('comercial'),
+        );
+        const hasEstrategia = nombresAreas.some((n) =>
+          n.includes('estrategia'),
+        );
+        const hasAnalisis = nombresAreas.some(
+          (n) => n.includes('análisis') || n.includes('analisis'),
+        );
 
-        let areaConditions: any[] = [];
+        const areaConditions: any[] = [];
         if (hasDesarrollo) {
-          areaConditions.push({ mensaje: { contains: 'Desarrollo', mode: 'insensitive' } });
-          areaConditions.push({ mensaje: { contains: 'Convenio', mode: 'insensitive' } });
+          areaConditions.push({
+            mensaje: { contains: 'Desarrollo', mode: 'insensitive' },
+          });
+          areaConditions.push({
+            mensaje: { contains: 'Convenio', mode: 'insensitive' },
+          });
         }
         if (hasEstrategia) {
-          areaConditions.push({ mensaje: { contains: 'Estrategia', mode: 'insensitive' } });
+          areaConditions.push({
+            mensaje: { contains: 'Estrategia', mode: 'insensitive' },
+          });
         }
         if (hasAnalisis) {
-          areaConditions.push({ mensaje: { contains: 'Analisis', mode: 'insensitive' } });
-          areaConditions.push({ mensaje: { contains: 'Análisis', mode: 'insensitive' } });
+          areaConditions.push({
+            mensaje: { contains: 'Analisis', mode: 'insensitive' },
+          });
+          areaConditions.push({
+            mensaje: { contains: 'Análisis', mode: 'insensitive' },
+          });
         }
 
         if (areaConditions.length > 0) {
@@ -108,10 +122,12 @@ export class NotificacionPrismaRepository implements NotificacionRepository {
       where: {
         OR: [
           { usuario_id: targetUserId },
-          ...globalFilters.map(filter => ({
+          ...globalFilters.map((filter) => ({
             ...filter,
-            ...(inicio?.fecha_ingreso ? { creado_at: { gte: inicio.fecha_ingreso } } : {})
-          }))
+            ...(inicio?.fecha_ingreso
+              ? { creado_at: { gte: inicio.fecha_ingreso } }
+              : {}),
+          })),
         ],
         notificacion_eliminadas: {
           none: { usuario_id: targetUserId },
@@ -128,7 +144,12 @@ export class NotificacionPrismaRepository implements NotificacionRepository {
 
     return rows.map((row) => {
       const lectura = row.notificacion_lecturas[0];
-      return this.mapRow(row, lectura?.leido, lectura?.favorito, lectura?.archivado);
+      return this.mapRow(
+        row,
+        lectura?.leido,
+        lectura?.favorito,
+        lectura?.archivado,
+      );
     });
   }
 
@@ -236,7 +257,12 @@ export class NotificacionPrismaRepository implements NotificacionRepository {
     }
 
     const lectura = row.notificacion_lecturas[0];
-    return this.mapRow(row, lectura?.leido, lectura?.favorito, lectura?.archivado);
+    return this.mapRow(
+      row,
+      lectura?.leido,
+      lectura?.favorito,
+      lectura?.archivado,
+    );
   }
 
   private mapRow(
@@ -256,5 +282,4 @@ export class NotificacionPrismaRepository implements NotificacionRepository {
           : 'sistema',
     };
   }
-
 }

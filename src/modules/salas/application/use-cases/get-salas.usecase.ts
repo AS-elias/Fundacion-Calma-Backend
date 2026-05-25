@@ -1,5 +1,8 @@
 import { Injectable, Inject } from '@nestjs/common';
-import { type ISalaRepository, SALA_REPOSITORY } from '../../domain/repositories/sala.repository';
+import {
+  type ISalaRepository,
+  SALA_REPOSITORY,
+} from '../../domain/repositories/sala.repository';
 
 @Injectable()
 export class GetSalasUseCase {
@@ -20,7 +23,7 @@ export class GetSalasUseCase {
           salas: [],
         });
       }
-      
+
       grupos.get(sala.area).salas.push({
         id: sala.id,
         nombre: sala.nombre,

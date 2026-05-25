@@ -46,7 +46,13 @@ export class UpdateEstrategiaActividadUseCase {
 
     const cambios: string[] = [];
 
-    this.agregarCambio(cambios, 'titulo', anterior.titulo, actual.titulo, dto.titulo);
+    this.agregarCambio(
+      cambios,
+      'titulo',
+      anterior.titulo,
+      actual.titulo,
+      dto.titulo,
+    );
     this.agregarCambio(
       cambios,
       'descripcion',
@@ -54,7 +60,13 @@ export class UpdateEstrategiaActividadUseCase {
       actual.descripcion,
       dto.descripcion,
     );
-    this.agregarCambio(cambios, 'estado', anterior.estado, actual.estado, dto.estado);
+    this.agregarCambio(
+      cambios,
+      'estado',
+      anterior.estado,
+      actual.estado,
+      dto.estado,
+    );
     this.agregarCambio(
       cambios,
       'responsable',
@@ -62,7 +74,13 @@ export class UpdateEstrategiaActividadUseCase {
       actual.creado_por,
       dto.creado_por ?? dto.creadoPor,
     );
-    this.agregarCambio(cambios, 'prioridad', anterior.prioridad, actual.prioridad, dto.prioridad);
+    this.agregarCambio(
+      cambios,
+      'prioridad',
+      anterior.prioridad,
+      actual.prioridad,
+      dto.prioridad,
+    );
     this.agregarCambio(
       cambios,
       'fecha limite',
@@ -89,7 +107,9 @@ export class UpdateEstrategiaActividadUseCase {
     const despues = this.formatearTexto(actual);
 
     if (antes !== despues) {
-      cambios.push(`${campo} de "${antes || 'Sin dato'}" a "${despues || 'Sin dato'}"`);
+      cambios.push(
+        `${campo} de "${antes || 'Sin dato'}" a "${despues || 'Sin dato'}"`,
+      );
     }
   }
 

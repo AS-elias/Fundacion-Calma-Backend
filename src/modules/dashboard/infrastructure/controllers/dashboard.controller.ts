@@ -29,7 +29,9 @@ export class DashboardController {
 
   @Get('user')
   @UseGuards(JwtAuthGuard)
-  async getUserDashboard(@UsuarioActual() usuario: { id: number }): Promise<DashboardUserDto> {
+  async getUserDashboard(
+    @UsuarioActual() usuario: { id: number },
+  ): Promise<DashboardUserDto> {
     return this.dashboardService.getUserStats(usuario.id);
   }
 
@@ -40,12 +42,16 @@ export class DashboardController {
     @Body() body: any,
   ) {
     if (usuario.rol !== RolesFundacion.DIRECTOR) {
-      throw new ForbiddenException('Solo el director puede crear su evaluación.');
+      throw new ForbiddenException(
+        'Solo el director puede crear su evaluación.',
+      );
     }
 
     const usuarioId = Number(body.usuarioId);
     const rating = Number(body.rating);
-    const comentario = body.comentario ? String(body.comentario).trim() : undefined;
+    const comentario = body.comentario
+      ? String(body.comentario).trim()
+      : undefined;
 
     if (!Number.isInteger(usuarioId) || usuarioId <= 0) {
       throw new BadRequestException('usuarioId debe ser un entero positivo.');
@@ -55,14 +61,23 @@ export class DashboardController {
       throw new BadRequestException('rating debe ser un entero entre 1 y 5.');
     }
 
-    return this.dashboardService.createDirectorEvaluation(usuario.id, usuarioId, rating, comentario);
+    return this.dashboardService.createDirectorEvaluation(
+      usuario.id,
+      usuarioId,
+      rating,
+      comentario,
+    );
   }
 
   @Get('director-evaluations')
   @UseGuards(JwtAuthGuard)
-  async getDirectorEvaluations(@UsuarioActual() usuario: { id: number; rol: string }) {
+  async getDirectorEvaluations(
+    @UsuarioActual() usuario: { id: number; rol: string },
+  ) {
     if (usuario.rol !== RolesFundacion.DIRECTOR) {
-      throw new ForbiddenException('Solo el director puede ver sus evaluaciones.');
+      throw new ForbiddenException(
+        'Solo el director puede ver sus evaluaciones.',
+      );
     }
 
     return this.dashboardService.getDirectorEvaluations(usuario.id);
@@ -70,9 +85,13 @@ export class DashboardController {
 
   @Get('director/pending-users')
   @UseGuards(JwtAuthGuard)
-  async getDirectorPendingUsers(@UsuarioActual() usuario: { id: number; rol: string }) {
+  async getDirectorPendingUsers(
+    @UsuarioActual() usuario: { id: number; rol: string },
+  ) {
     if (usuario.rol !== RolesFundacion.DIRECTOR) {
-      throw new ForbiddenException('Solo el director puede ver sus usuarios pendientes de evaluación.');
+      throw new ForbiddenException(
+        'Solo el director puede ver sus usuarios pendientes de evaluación.',
+      );
     }
 
     return this.dashboardService.getDirectorPendingUsers(usuario.id);

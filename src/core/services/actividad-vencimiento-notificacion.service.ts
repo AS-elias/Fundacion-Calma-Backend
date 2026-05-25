@@ -16,7 +16,9 @@ type ActividadVencimiento = {
 
 @Injectable()
 export class ActividadVencimientoNotificacionService implements OnModuleInit {
-  private readonly logger = new Logger(ActividadVencimientoNotificacionService.name);
+  private readonly logger = new Logger(
+    ActividadVencimientoNotificacionService.name,
+  );
   private readonly diasAviso = 3;
 
   constructor(
@@ -39,7 +41,9 @@ export class ActividadVencimientoNotificacionService implements OnModuleInit {
 
     for (const actividad of actividades) {
       const fecha = this.formatearFechaClave(actividad.fecha_limite);
-      const inserted = await this.prisma.$queryRaw<{ inserted: number }[]>(Prisma.sql`
+      const inserted = await this.prisma.$queryRaw<
+        { inserted: number }[]
+      >(Prisma.sql`
         INSERT INTO core.notificacion_alertas_actividad (
           tipo_actividad,
           actividad_id,
@@ -77,7 +81,9 @@ export class ActividadVencimientoNotificacionService implements OnModuleInit {
     }
 
     if (creadas) {
-      this.logger.log(`Notificaciones de actividades por vencer creadas: ${creadas}`);
+      this.logger.log(
+        `Notificaciones de actividades por vencer creadas: ${creadas}`,
+      );
     }
   }
 
@@ -145,7 +151,10 @@ export class ActividadVencimientoNotificacionService implements OnModuleInit {
 
     return [
       ...desarrollo
-        .filter((actividad): actividad is typeof actividad & { fecha_limite: Date } => !!actividad.fecha_limite)
+        .filter(
+          (actividad): actividad is typeof actividad & { fecha_limite: Date } =>
+            !!actividad.fecha_limite,
+        )
         .map((actividad) => ({
           ...actividad,
           tipo: 'desarrollo' as const,
@@ -153,7 +162,10 @@ export class ActividadVencimientoNotificacionService implements OnModuleInit {
           ruta: '/dashboard/director-dashboard/desarrollo-comercial',
         })),
       ...estrategia
-        .filter((actividad): actividad is typeof actividad & { fecha_limite: Date } => !!actividad.fecha_limite)
+        .filter(
+          (actividad): actividad is typeof actividad & { fecha_limite: Date } =>
+            !!actividad.fecha_limite,
+        )
         .map((actividad) => ({
           ...actividad,
           tipo: 'estrategia' as const,
@@ -161,7 +173,10 @@ export class ActividadVencimientoNotificacionService implements OnModuleInit {
           ruta: '/dashboard/director-dashboard/estrategia-comercial',
         })),
       ...analisis
-        .filter((actividad): actividad is typeof actividad & { fecha_limite: Date } => !!actividad.fecha_limite)
+        .filter(
+          (actividad): actividad is typeof actividad & { fecha_limite: Date } =>
+            !!actividad.fecha_limite,
+        )
         .map((actividad) => ({
           ...actividad,
           tipo: 'analisis' as const,

@@ -4,12 +4,15 @@ import { COMUNIDAD_REPOSITORY } from '../../domain/repositories/comunidad.reposi
 
 @Injectable()
 export class ListarSolicitudesRecibidasUseCase {
-    constructor(
-        @Inject(COMUNIDAD_REPOSITORY)
-        private readonly comunidadRepository: IComunidadRepository,
-    ) { }
+  constructor(
+    @Inject(COMUNIDAD_REPOSITORY)
+    private readonly comunidadRepository: IComunidadRepository,
+  ) {}
 
-    async execute(usuarioId: number, estado?: string): Promise<any[]> {
-        return this.comunidadRepository.obtenerSolicitudesRecibidas(usuarioId, estado);
-    }
+  async execute(usuarioId: number, estado?: string): Promise<any[]> {
+    return this.comunidadRepository.obtenerSolicitudesRecibidas(
+      usuarioId,
+      estado,
+    );
+  }
 }

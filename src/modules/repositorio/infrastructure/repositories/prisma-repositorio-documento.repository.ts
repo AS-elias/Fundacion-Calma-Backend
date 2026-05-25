@@ -6,9 +6,7 @@ import { RepositorioDocumentoRepository } from '../../domain/repositories/reposi
 import { CreateCarpetaDto } from '../../application/dto/create-carpeta.dto';
 
 @Injectable()
-export class PrismaRepositorioDocumentoRepository
-  implements RepositorioDocumentoRepository
-{
+export class PrismaRepositorioDocumentoRepository implements RepositorioDocumentoRepository {
   constructor(private readonly prisma: PrismaService) {}
 
   async listarBloques() {
@@ -23,20 +21,20 @@ export class PrismaRepositorioDocumentoRepository
     });
 
     return bloques.map((bloque) => {
-      const carpetas = bloque.repositorio_carpetas.map(c => ({
+      const carpetas = bloque.repositorio_carpetas.map((c) => ({
         id: c.id,
         nombre: c.nombre,
-        url: "",
+        url: '',
         esCarpeta: true,
-        padreId: c.padre_id
+        padreId: c.padre_id,
       }));
 
-      const documentos = bloque.repositorio_enlaces.map(doc => ({
+      const documentos = bloque.repositorio_enlaces.map((doc) => ({
         id: doc.id,
         nombre: doc.nombre_documento,
         url: doc.url_drive,
         esCarpeta: false,
-        padreId: doc.carpeta_id
+        padreId: doc.carpeta_id,
       }));
 
       return {
@@ -103,20 +101,20 @@ export class PrismaRepositorioDocumentoRepository
       orderBy: { fecha_agregado: 'desc' },
     });
 
-    const carpetasFormat = carpetas.map(c => ({
+    const carpetasFormat = carpetas.map((c) => ({
       id: c.id,
       nombre: c.nombre,
-      url: "",
+      url: '',
       esCarpeta: true,
-      padreId: c.padre_id
+      padreId: c.padre_id,
     }));
 
-    const documentosFormat = docs.map(doc => ({
+    const documentosFormat = docs.map((doc) => ({
       id: doc.id,
       nombre: doc.nombre_documento,
       url: doc.url_drive,
       esCarpeta: false,
-      padreId: doc.carpeta_id
+      padreId: doc.carpeta_id,
     }));
 
     return [...carpetasFormat, ...documentosFormat];
@@ -133,20 +131,20 @@ export class PrismaRepositorioDocumentoRepository
       orderBy: { fecha_agregado: 'desc' },
     });
 
-    const carpetasFormat = carpetas.map(c => ({
+    const carpetasFormat = carpetas.map((c) => ({
       id: c.id,
       nombre: c.nombre,
-      url: "",
+      url: '',
       esCarpeta: true,
-      padreId: c.padre_id
+      padreId: c.padre_id,
     }));
 
-    const documentosFormat = docs.map(doc => ({
+    const documentosFormat = docs.map((doc) => ({
       id: doc.id,
       nombre: doc.nombre_documento,
       url: doc.url_drive,
       esCarpeta: false,
-      padreId: doc.carpeta_id
+      padreId: doc.carpeta_id,
     }));
 
     return [...carpetasFormat, ...documentosFormat];
@@ -166,16 +164,20 @@ export class PrismaRepositorioDocumentoRepository
     });
   }
 
-  async mover(id: number, padreId: number | null, esCarpeta: boolean): Promise<any> {
+  async mover(
+    id: number,
+    padreId: number | null,
+    esCarpeta: boolean,
+  ): Promise<any> {
     if (esCarpeta) {
       return this.prisma.repositorio_carpetas.update({
         where: { id },
-        data: { padre_id: padreId }
+        data: { padre_id: padreId },
       });
     } else {
       return this.prisma.repositorio_enlaces.update({
         where: { id },
-        data: { carpeta_id: padreId }
+        data: { carpeta_id: padreId },
       });
     }
   }

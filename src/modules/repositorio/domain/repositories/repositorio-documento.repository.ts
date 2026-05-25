@@ -7,5 +7,9 @@ export abstract class RepositorioDocumentoRepository {
   abstract crearCarpeta(data: any): Promise<any>;
   abstract deleteCarpeta(id: number): Promise<void>;
   abstract delete(id: number): Promise<void>;
-  abstract mover(id: number, padreId: number | null, esCarpeta: boolean): Promise<any>;
+  abstract mover(
+    id: number,
+    padreId: number | null,
+    esCarpeta: boolean,
+  ): Promise<any>;
 }

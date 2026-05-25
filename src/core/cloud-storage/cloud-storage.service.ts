@@ -12,7 +12,11 @@ export class CloudStorageService {
     // CLOUDINARY_URL=cloudinary://API_KEY:API_SECRET@CLOUD_NAME
   }
 
-  async uploadFile(fileBuffer: Buffer, folder: string, filename: string): Promise<string> {
+  async uploadFile(
+    fileBuffer: Buffer,
+    folder: string,
+    filename: string,
+  ): Promise<string> {
     return new Promise((resolve, reject) => {
       const uploadStream = cloudinary.uploader.upload_stream(
         {
