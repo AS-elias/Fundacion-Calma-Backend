@@ -3,6 +3,7 @@ import { PrismaService } from '../../../../infrastructure/prisma/prisma.service'
 import { Prisma } from '@prisma/client';
 import { UsuarioEntity } from '../../domain/entities/usuario.entity';
 import { IUsuarioRepository } from '../../domain/repositories/usuario.repository';
+import { formatDateOnly, parseDateOnly } from '../../../../core/utils/date-only.util';
 
 @Injectable()
 export class UsuarioRepositoryImpl implements IUsuarioRepository {
@@ -11,6 +12,9 @@ export class UsuarioRepositoryImpl implements IUsuarioRepository {
   private mapUsuario(usuario: any): UsuarioEntity {
     return new UsuarioEntity({
       ...usuario,
+      fecha_nacimiento: usuario.fecha_nacimiento
+        ? formatDateOnly(usuario.fecha_nacimiento)
+        : null,
       rol: usuario.roles ?? null,
     });
   }
@@ -56,7 +60,7 @@ export class UsuarioRepositoryImpl implements IUsuarioRepository {
     }
 
     if ((createData as any).fecha_nacimiento) {
-      (createData as any).fecha_nacimiento = new Date(
+      (createData as any).fecha_nacimiento = parseDateOnly(
         (createData as any).fecha_nacimiento,
       );
     } else if (
@@ -101,7 +105,7 @@ export class UsuarioRepositoryImpl implements IUsuarioRepository {
       Object.prototype.hasOwnProperty.call(updateData, 'fecha_nacimiento') &&
       (updateData as any).fecha_nacimiento
     ) {
-      (updateData as any).fecha_nacimiento = new Date(
+      (updateData as any).fecha_nacimiento = parseDateOnly(
         (updateData as any).fecha_nacimiento,
       );
     } else if (

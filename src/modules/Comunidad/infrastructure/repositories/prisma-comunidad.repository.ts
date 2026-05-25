@@ -1,4 +1,5 @@
 import { Injectable } from '@nestjs/common';
+import { formatDateOnly } from '../../../../core/utils/date-only.util';
 import { PrismaService } from '../../../../infrastructure/prisma/prisma.service';
 import { IComunidadRepository } from '../../domain/repositories/comunidad.repository';
 import { ContactoEntity } from '../../domain/entities/contacto.entity';
@@ -84,7 +85,9 @@ export class PrismaComunidadRepository implements IComunidadRepository {
         this.presenceService.isUserOnline(user.id),
         user.biografia,
         user.linkedin_url,
-        user.fecha_nacimiento,
+        user.fecha_nacimiento
+          ? formatDateOnly(user.fecha_nacimiento)
+          : null,
       );
     });
   }
@@ -152,7 +155,9 @@ export class PrismaComunidadRepository implements IComunidadRepository {
         this.presenceService.isUserOnline(user.id),
         user.biografia,
         user.linkedin_url,
-        user.fecha_nacimiento,
+        user.fecha_nacimiento
+          ? formatDateOnly(user.fecha_nacimiento)
+          : null,
       );
     });
   }
@@ -389,7 +394,9 @@ export class PrismaComunidadRepository implements IComunidadRepository {
         this.presenceService.isUserOnline(user.id),
         user.biografia,
         user.linkedin_url,
-        user.fecha_nacimiento,
+        user.fecha_nacimiento
+          ? formatDateOnly(user.fecha_nacimiento)
+          : null,
       );
     });
   }

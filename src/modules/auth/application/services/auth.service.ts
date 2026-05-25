@@ -166,9 +166,7 @@ export class AuthService {
       telefono: usuario.telefono,
       puesto: usuario.puesto,
       foto_url: usuario.foto_url,
-      fecha_nacimiento: usuario.fecha_nacimiento
-        ? new Date(usuario.fecha_nacimiento)
-        : undefined,
+      fecha_nacimiento: usuario.fecha_nacimiento || undefined,
       linkedin_url: usuario.linkedin_url,
       biografia: usuario.biografia,
     };

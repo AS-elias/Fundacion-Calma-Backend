@@ -16,7 +16,7 @@ export class ContactoEntity {
     public readonly online?: boolean,
     public readonly biografia?: string | null,
     public readonly linkedinUrl?: string | null,
-    public readonly fechaNacimiento?: Date | null,
+    public readonly fechaNacimiento?: Date | string | null,
   ) {}
 
   // Aquí podríamos tener métodos de negocio puros en el futuro.

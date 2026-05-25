@@ -11,7 +11,7 @@ export class UsuarioEntity {
   foto_url?: string | null;
   rol?: { id: number; nombre: string } | null;
   debe_cambiar_password?: boolean | null;
-  fecha_nacimiento?: Date | null;
+  fecha_nacimiento?: Date | string | null;
   linkedin_url?: string | null;
   biografia?: string | null;
 
