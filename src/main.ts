@@ -49,7 +49,7 @@ async function bootstrap() {
   app.useGlobalPipes(
     new ValidationPipe({
       whitelist: true, // Elimina propiedades del objeto que no tienen decoradores en el DTO
-      forbidNonWhitelisted: true, // Arroja un error en lugar de simplemente eliminar las propiedades no deseadas
+      forbidNonWhitelisted: false, // Arroja un error en lugar de simplemente eliminar las propiedades no deseadas
       transform: true, // Transforma automáticamente el payload al tipo de instancia del DTO
     }),
   );

@@ -57,7 +57,7 @@ async function main() {
   // 3. ÁREAS
   // ===============================
   const areaPadre = await prisma.areas.create({
-    data: { nombre: 'Estrategia y Desarrollo' },
+    data: { nombre: 'Estrategia y Desarrollo Comercial' },
   });
 
   const [estrategia, analisis, desarrollo] = await Promise.all([
