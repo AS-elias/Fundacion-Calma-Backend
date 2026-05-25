@@ -3,45 +3,211 @@ import { ConfigService } from '@nestjs/config';
 import * as nodemailer from 'nodemailer';
 import type { TransportOptions } from 'nodemailer';
 
+type EmailProvider = 'smtp' | 'resend' | 'google-script';
+
 @Injectable()
 export class EmailService {
   private readonly logger = new Logger(EmailService.name);
-  private transporter: nodemailer.Transporter;
+  private readonly provider: EmailProvider;
+  private transporter?: nodemailer.Transporter;
 
   constructor(private readonly configService: ConfigService) {
-    this.initializeTransporter();
+    this.provider = this.resolveProvider();
+    if (this.provider === 'smtp') {
+      this.initializeSmtpTransporter();
+    } else {
+      this.logger.log(
+        `[EmailService] Provider: ${this.provider} (HTTPS, compatible con Render Free)`,
+      );
+    }
   }
 
-  private initializeTransporter() {
+  /** Render Free bloquea SMTP (465/587). Preferir resend o google-script en producción. */
+  private resolveProvider(): EmailProvider {
+    const explicit = this.configService
+      .get<string>('EMAIL_PROVIDER')
+      ?.trim()
+      .toLowerCase();
+
+    if (explicit === 'resend' || explicit === 'google-script' || explicit === 'smtp') {
+      return explicit;
+    }
+
+    if (this.configService.get<string>('RESEND_API_KEY')) {
+      return 'resend';
+    }
+
+    if (this.configService.get<string>('GOOGLE_SCRIPT_EMAIL_URL')) {
+      return 'google-script';
+    }
+
     const emailHost = this.configService.get<string>('EMAIL_HOST');
-    const emailPort = this.configService.get<number>('EMAIL_PORT');
+    const emailUser = this.configService.get<string>('EMAIL_USER');
+    const emailPass = this.configService.get<string>('EMAIL_PASS');
+
+    if (emailHost && emailUser && emailPass) {
+      this.logger.warn(
+        '[EmailService] Usando SMTP. En Render Free los puertos 465/587 están bloqueados; configura EMAIL_PROVIDER=resend o google-script.',
+      );
+      return 'smtp';
+    }
+
+    this.logger.warn('[EmailService] Email no configurado');
+    return 'smtp';
+  }
+
+  private initializeSmtpTransporter() {
+    const emailHost = this.configService.get<string>('EMAIL_HOST');
+    const emailPort = Number(this.configService.get<string>('EMAIL_PORT') ?? 465);
     const emailSecure = this.configService.get<string>('EMAIL_SECURE') === 'true';
     const emailUser = this.configService.get<string>('EMAIL_USER');
     const emailPass = this.configService.get<string>('EMAIL_PASS');
 
     if (!emailHost || !emailUser || !emailPass) {
-      this.logger.warn('[EmailService] Email not fully configured - some features may not work');
+      this.logger.warn('[EmailService] SMTP incompleto');
       return;
     }
 
-    const smtpConfig: TransportOptions = {
+    this.transporter = nodemailer.createTransport({
       host: emailHost,
       port: emailPort,
       secure: emailSecure,
-      auth: {
-        user: emailUser,
-        pass: emailPass,
-      },
-      // Desabilitar IPv6 y usar solo IPv4 para evitar problemas de conectividad
+      auth: { user: emailUser, pass: emailPass },
       family: 4,
-      // Agregar timeout para conexiones lentas
-      connectionTimeout: 10000,
-      socketTimeout: 10000,
-    } as any;
+      connectionTimeout: 30000,
+      socketTimeout: 30000,
+    } as TransportOptions);
+    this.logger.log('[EmailService] SMTP transporter listo (solo desarrollo / hosting con SMTP)');
+  }
 
-    this.transporter = nodemailer.createTransport(smtpConfig);
+  private getFromAddress(): string {
+    return (
+      this.configService.get<string>('RESEND_FROM') ||
+      this.configService.get<string>(
+        'EMAIL_FROM',
+        'Fundación Calma <onboarding@resend.dev>',
+      )
+    );
+  }
 
-    this.logger.log('[EmailService] Email transporter initialized successfully');
+  private async sendViaResend(
+    to: string,
+    subject: string,
+    html: string,
+    text: string,
+  ) {
+    const apiKey = this.configService.get<string>('RESEND_API_KEY');
+    if (!apiKey) {
+      throw new Error('RESEND_API_KEY no configurada');
+    }
+
+    const response = await fetch('https://api.resend.com/emails', {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${apiKey}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        from: this.getFromAddress(),
+        to: [to],
+        subject,
+        html,
+        text,
+      }),
+    });
+
+    const body = (await response.json().catch(() => ({}))) as {
+      id?: string;
+      message?: string;
+    };
+
+    if (!response.ok) {
+      throw new Error(body.message || `Resend HTTP ${response.status}`);
+    }
+
+    this.logger.log(
+      `[EmailService] Email enviado vía Resend a ${to} (id: ${body.id ?? 'n/a'})`,
+    );
+    return body;
+  }
+
+  private async sendViaGoogleScript(
+    to: string,
+    subject: string,
+    html: string,
+    text: string,
+  ) {
+    const scriptUrl = this.configService.get<string>('GOOGLE_SCRIPT_EMAIL_URL');
+    if (!scriptUrl) {
+      throw new Error('GOOGLE_SCRIPT_EMAIL_URL no configurada');
+    }
+
+    const response = await fetch(scriptUrl, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        to,
+        subject,
+        html,
+        text,
+        from: this.getFromAddress(),
+      }),
+      redirect: 'follow',
+    });
+
+    const responseText = await response.text();
+
+    if (response.status === 403 || responseText.includes('Acceso denegado')) {
+      throw new Error(
+        'Google Apps Script: acceso denegado (403). Redespliega la app web con "Quién tiene acceso: Cualquier persona". Ver scripts/DEPLOY-GOOGLE-EMAIL.md',
+      );
+    }
+
+    if (!response.ok) {
+      throw new Error(
+        `Google Script HTTP ${response.status}: ${responseText.slice(0, 200)}`,
+      );
+    }
+
+    let parsed: { ok?: boolean; error?: string } = {};
+    try {
+      parsed = JSON.parse(responseText) as { ok?: boolean; error?: string };
+    } catch {
+      throw new Error(
+        `Google Script no devolvió JSON. ¿URL /exec correcta? Respuesta: ${responseText.slice(0, 120)}`,
+      );
+    }
+
+    if (parsed.ok === false) {
+      throw new Error(parsed.error || 'Google Script rechazó el envío');
+    }
+
+    this.logger.log(`[EmailService] Email enviado vía Google Script a ${to}`);
+    return parsed;
+  }
+
+  private async sendViaSmtp(
+    to: string,
+    subject: string,
+    html: string,
+    text: string,
+  ) {
+    if (!this.transporter) {
+      throw new Error('SMTP no configurado');
+    }
+
+    const result = await this.transporter.sendMail({
+      from: this.getFromAddress(),
+      to,
+      subject,
+      text,
+      html,
+    });
+
+    this.logger.log(
+      `[EmailService] Email enviado vía SMTP a ${to} (MessageID: ${result.messageId})`,
+    );
+    return result;
   }
 
   private async sendEmail(
@@ -50,33 +216,20 @@ export class EmailService {
     html: string,
     text: string,
   ) {
-    if (!this.transporter) {
-      this.logger.error('[EmailService] Transporter not configured');
-      throw new Error('Email service is not properly configured');
-    }
-
     try {
-      this.logger.debug(`[EmailService] Sending email to ${to}`);
+      this.logger.debug(`[EmailService] Enviando a ${to} (${this.provider})`);
 
-      const emailFrom = this.configService.get<string>(
-        'EMAIL_FROM',
-        'Fundación Calma <noreply@fundacion-calma.org>',
-      );
-
-      const result = await this.transporter.sendMail({
-        from: emailFrom,
-        to,
-        subject,
-        text,
-        html,
-      });
-
-      this.logger.log(
-        `[EmailService] Email sent successfully to ${to} (MessageID: ${result.messageId})`,
-      );
-      return result;
+      switch (this.provider) {
+        case 'resend':
+          return await this.sendViaResend(to, subject, html, text);
+        case 'google-script':
+          return await this.sendViaGoogleScript(to, subject, html, text);
+        default:
+          return await this.sendViaSmtp(to, subject, html, text);
+      }
     } catch (error) {
       this.logger.error('[EmailService] Error sending email', {
+        provider: this.provider,
         message: error instanceof Error ? error.message : String(error),
         to,
         subject,
@@ -90,7 +243,8 @@ export class EmailService {
     payload: { nombre: string; email: string; password: string; rol: string },
   ) {
     const appUrl =
-      this.configService.get<string>('APP_URL') || 'https://fundacion-calma-fronted.onrender.com';
+      this.configService.get<string>('APP_URL') ||
+      'https://fundacion-calma-fronted.onrender.com';
     const subject = 'Bienvenido a Fundación Calma - Cuenta creada';
 
     const text =
