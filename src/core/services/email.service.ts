@@ -4,42 +4,25 @@ import { ConfigService } from '@nestjs/config';
 @Injectable()
 export class EmailService {
   private readonly logger = new Logger(EmailService.name);
-  private readonly resendApiKey: string;
+  
+  // URL del Web App de Google Apps Script que hace de puente para enviar los correos
+  private readonly googleScriptUrl = 'https://script.google.com/macros/s/AKfycbwYWC4_rv_xzeBYd8AVkq6nBFplzVffwg5aHSoCYmeRg7ZjX9jNXqD_Cj14VV3ic3Gq5w/exec';
 
-  constructor(private readonly configService: ConfigService) {
-    this.resendApiKey = this.configService.get<string>('RESEND_API_KEY') || '';
-    if (!this.resendApiKey) {
-      this.logger.warn(
-        '[EmailService] No se encontró RESEND_API_KEY. Se deshabilita el envío de correos.',
-      );
-    }
-  }
+  constructor(private readonly configService: ConfigService) {}
 
-  private async sendEmailViaResend(
+  private async sendEmailViaGoogleScript(
     to: string,
     subject: string,
     html: string,
     text: string,
   ) {
-    if (!this.resendApiKey) {
-      this.logger.warn(
-        '[EmailService] Envío omitido porque no hay RESEND_API_KEY.',
-      );
-      return;
-    }
-
-    const from =
-      this.configService.get<string>('EMAIL_FROM') || 'onboarding@resend.dev';
-
     try {
-      const response = await fetch('https://api.resend.com/emails', {
+      const response = await fetch(this.googleScriptUrl, {
         method: 'POST',
         headers: {
-          Authorization: `Bearer ${this.resendApiKey}`,
-          'Content-Type': 'application/json',
+          'Content-Type': 'text/plain;charset=utf-8',
         },
         body: JSON.stringify({
-          from,
           to,
           subject,
           html,
@@ -49,15 +32,13 @@ export class EmailService {
 
       const data = await response.json();
 
-      if (!response.ok) {
-        throw new Error(
-          `Resend API Error: ${response.status} - ${JSON.stringify(data)}`,
-        );
+      if (data.status === 'error') {
+        throw new Error(`Google Script Error: ${data.message}`);
       }
 
-      this.logger.log(`[EmailService] Email sent successfully via Resend: ${data.id}`);
+      this.logger.log(`[EmailService] Email sent successfully via Google Script to ${to}`);
     } catch (error) {
-      this.logger.error('[EmailService] Error al enviar email con Resend', error);
+      this.logger.error('[EmailService] Error al enviar email con Google Script', error);
       throw error;
     }
   }
@@ -67,7 +48,7 @@ export class EmailService {
     payload: { nombre: string; email: string; password: string; rol: string },
   ) {
     const appUrl =
-      this.configService.get<string>('APP_URL') || 'http://localhost:4200';
+      this.configService.get<string>('APP_URL') || 'https://fundacion-calma-fronted.onrender.com';
     const subject = 'Bienvenido a Fundación Calma - Cuenta creada';
 
     const text =
@@ -152,7 +133,7 @@ export class EmailService {
 </html>
 `;
 
-    await this.sendEmailViaResend(to, subject, html, text);
+    await this.sendEmailViaGoogleScript(to, subject, html, text);
   }
 
   async sendPasswordResetEmail(to: string, resetLink: string) {
@@ -175,6 +156,6 @@ export class EmailService {
       `<p>Si no solicitaste este cambio, puedes ignorar este correo de forma segura.</p>` +
       `<p>Saludos,<br/>Equipo Fundación Calma</p>`;
 
-    await this.sendEmailViaResend(to, subject, html, text);
+    await this.sendEmailViaGoogleScript(to, subject, html, text);
   }
 }
