@@ -1,6 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import * as nodemailer from 'nodemailer';
+import type { TransportOptions } from 'nodemailer';
 
 @Injectable()
 export class EmailService {
@@ -23,7 +24,7 @@ export class EmailService {
       return;
     }
 
-    this.transporter = nodemailer.createTransport({
+    const smtpConfig: TransportOptions = {
       host: emailHost,
       port: emailPort,
       secure: emailSecure,
@@ -31,7 +32,14 @@ export class EmailService {
         user: emailUser,
         pass: emailPass,
       },
-    });
+      // Desabilitar IPv6 y usar solo IPv4 para evitar problemas de conectividad
+      family: 4,
+      // Agregar timeout para conexiones lentas
+      connectionTimeout: 10000,
+      socketTimeout: 10000,
+    } as any;
+
+    this.transporter = nodemailer.createTransport(smtpConfig);
 
     this.logger.log('[EmailService] Email transporter initialized successfully');
   }
