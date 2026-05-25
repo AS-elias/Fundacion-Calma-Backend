@@ -36,7 +36,7 @@ async function bootstrap() {
   });
 
   app.enableCors({
-    origin: ['http://localhost:4200'],
+    origin: ['http://localhost:4200', 'https://fundacion-calma-fronted.onrender.com'],
     methods: ['GET', 'HEAD', 'PUT', 'PATCH', 'POST', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization'],
     credentials: true,
