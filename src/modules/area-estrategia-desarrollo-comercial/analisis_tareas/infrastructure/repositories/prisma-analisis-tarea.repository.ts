@@ -94,7 +94,9 @@ export class PrismaAnalisisTareaRepository extends AnalisisTareaRepository {
   private toEntity(row: TareaWithEnlaces): AnalisisTarea {
     return new AnalisisTarea({
       ...row,
-      estado: row.estado ? row.estado.toUpperCase().replace(/[- ]/g, '_') : null,
+      estado: row.estado
+        ? row.estado.toUpperCase().replace(/[- ]/g, '_')
+        : null,
       analisis_tarea_enlaces: row.analisis_tarea_enlaces.map(
         (enlace) => new AnalisisTareaEnlace(enlace),
       ),

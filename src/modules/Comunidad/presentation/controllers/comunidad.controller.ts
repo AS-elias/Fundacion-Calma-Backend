@@ -47,7 +47,7 @@ export class ComunidadController {
     private readonly listarSolicitudesEnviadasUseCase: ListarSolicitudesEnviadasUseCase,
     private readonly areasService: AreasService,
     private readonly comunicacionesService: ComunicacionesService,
-  ) { }
+  ) {}
 
   @Get('contactos')
   @RequierePermiso(Acciones.VER_CONTACTOS)
@@ -90,7 +90,10 @@ export class ComunidadController {
     @Request() req: any,
   ) {
     const usuarioId = req.user.id;
-    return this.enviarSolicitudContactoUseCase.execute(usuarioId, dto.contactoId);
+    return this.enviarSolicitudContactoUseCase.execute(
+      usuarioId,
+      dto.contactoId,
+    );
   }
 
   /**

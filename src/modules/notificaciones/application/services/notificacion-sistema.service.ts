@@ -124,8 +124,10 @@ export class NotificacionSistemaService {
       return null;
     }
 
-    return `${usuario.nombre_completo ?? ''} ${usuario.apellido_completo ?? ''}`.trim()
-      || usuario.email
-      || null;
+    return (
+      `${usuario.nombre_completo ?? ''} ${usuario.apellido_completo ?? ''}`.trim() ||
+      usuario.email ||
+      null
+    );
   }
 }

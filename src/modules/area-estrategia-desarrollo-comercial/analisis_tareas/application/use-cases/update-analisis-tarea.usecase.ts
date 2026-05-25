@@ -28,7 +28,9 @@ export class UpdateAnalisisTareaUseCase {
       {
         apartado: 'Analisis de Datos',
         accion: 'Edito tarea',
-        usuarioId: this.numero(dto.creador_id ?? dto.creadorId ?? updated.creador_id),
+        usuarioId: this.numero(
+          dto.creador_id ?? dto.creadorId ?? updated.creador_id,
+        ),
       },
     );
 
@@ -48,8 +50,20 @@ export class UpdateAnalisisTareaUseCase {
 
     const cambios: string[] = [];
 
-    this.agregarCambio(cambios, 'titulo', anterior.titulo, actual.titulo, dto.titulo);
-    this.agregarCambio(cambios, 'subtitulo', anterior.subtitulo, actual.subtitulo, dto.subtitulo);
+    this.agregarCambio(
+      cambios,
+      'titulo',
+      anterior.titulo,
+      actual.titulo,
+      dto.titulo,
+    );
+    this.agregarCambio(
+      cambios,
+      'subtitulo',
+      anterior.subtitulo,
+      actual.subtitulo,
+      dto.subtitulo,
+    );
     this.agregarCambio(
       cambios,
       'descripcion',
@@ -57,7 +71,13 @@ export class UpdateAnalisisTareaUseCase {
       actual.descripcion,
       dto.descripcion,
     );
-    this.agregarCambio(cambios, 'estado', anterior.estado, actual.estado, dto.estado);
+    this.agregarCambio(
+      cambios,
+      'estado',
+      anterior.estado,
+      actual.estado,
+      dto.estado,
+    );
     this.agregarCambio(
       cambios,
       'fecha limite',
@@ -84,7 +104,9 @@ export class UpdateAnalisisTareaUseCase {
     const despues = this.formatearTexto(actual);
 
     if (antes !== despues) {
-      cambios.push(`${campo} de "${antes || 'Sin dato'}" a "${despues || 'Sin dato'}"`);
+      cambios.push(
+        `${campo} de "${antes || 'Sin dato'}" a "${despues || 'Sin dato'}"`,
+      );
     }
   }
 

@@ -52,7 +52,10 @@ export class EstrategiaActividadesController {
   }
 
   @Delete(':id')
-  delete(@Param('id') id: string, @Query('usuarioNombre') usuarioNombre?: string) {
+  delete(
+    @Param('id') id: string,
+    @Query('usuarioNombre') usuarioNombre?: string,
+  ) {
     return this.deleteActividad.execute(positiveId(id), usuarioNombre);
   }
 }

@@ -34,10 +34,12 @@ import { HealthModule } from './core/health/health.module';
     ConfigModule.forRoot({
       isGlobal: true,
     }),
-    ThrottlerModule.forRoot([{
-      ttl: 60000, // 60 segundos (en ms para v6)
-      limit: 100, // máximo 100 peticiones
-    }]),
+    ThrottlerModule.forRoot([
+      {
+        ttl: 60000, // 60 segundos (en ms para v6)
+        limit: 100, // máximo 100 peticiones
+      },
+    ]),
     ScheduleModule.forRoot(),
     AuthModule,
     DashboardModule,

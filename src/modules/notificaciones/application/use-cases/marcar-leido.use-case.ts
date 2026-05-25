@@ -1,7 +1,6 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { NotificacionRepository } from '../../domain/repositories/notificacion.repository';
 
-
 @Injectable()
 export class MarcarLeidoUseCase {
   constructor(

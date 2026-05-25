@@ -69,15 +69,57 @@ export class UpdateConvenioUseCase {
 
     const cambios: string[] = [];
 
-    this.agregarCambio(cambios, 'nombre', anterior.entidadNombre, actual.entidadNombre, dto.entidadNombre);
-    this.agregarCambio(cambios, 'logo', anterior.logoUrl, actual.logoUrl, dto.logoUrl);
+    this.agregarCambio(
+      cambios,
+      'nombre',
+      anterior.entidadNombre,
+      actual.entidadNombre,
+      dto.entidadNombre,
+    );
+    this.agregarCambio(
+      cambios,
+      'logo',
+      anterior.logoUrl,
+      actual.logoUrl,
+      dto.logoUrl,
+    );
     this.agregarCambio(cambios, 'RUC', anterior.ruc, actual.ruc, dto.ruc);
-    this.agregarCambio(cambios, 'rubro', anterior.rubro, actual.rubro, dto.rubro);
-    this.agregarCambio(cambios, 'contacto', anterior.contactoNombre, actual.contactoNombre, dto.contactoNombre);
-    this.agregarCambio(cambios, 'telefono', anterior.telefonoContacto, actual.telefonoContacto, dto.telefonoContacto);
-    this.agregarCambio(cambios, 'estado', anterior.estado, actual.estado, dto.estado);
+    this.agregarCambio(
+      cambios,
+      'rubro',
+      anterior.rubro,
+      actual.rubro,
+      dto.rubro,
+    );
+    this.agregarCambio(
+      cambios,
+      'contacto',
+      anterior.contactoNombre,
+      actual.contactoNombre,
+      dto.contactoNombre,
+    );
+    this.agregarCambio(
+      cambios,
+      'telefono',
+      anterior.telefonoContacto,
+      actual.telefonoContacto,
+      dto.telefonoContacto,
+    );
+    this.agregarCambio(
+      cambios,
+      'estado',
+      anterior.estado,
+      actual.estado,
+      dto.estado,
+    );
     this.agregarCambio(cambios, 'tipo', anterior.tipo, actual.tipo, dto.tipo);
-    this.agregarCambio(cambios, 'conexion', anterior.conexion, actual.conexion, dto.conexion);
+    this.agregarCambio(
+      cambios,
+      'conexion',
+      anterior.conexion,
+      actual.conexion,
+      dto.conexion,
+    );
     this.agregarCambio(
       cambios,
       'fecha de expiracion',
@@ -104,7 +146,9 @@ export class UpdateConvenioUseCase {
     const despues = this.formatearTexto(actual);
 
     if (antes !== despues) {
-      cambios.push(`${campo} de "${antes || 'Sin dato'}" a "${despues || 'Sin dato'}"`);
+      cambios.push(
+        `${campo} de "${antes || 'Sin dato'}" a "${despues || 'Sin dato'}"`,
+      );
     }
   }
 

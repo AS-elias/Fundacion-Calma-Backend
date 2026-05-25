@@ -59,7 +59,9 @@ export class UsuarioRepositoryImpl implements IUsuarioRepository {
       (createData as any).fecha_nacimiento = new Date(
         (createData as any).fecha_nacimiento,
       );
-    } else if (Object.prototype.hasOwnProperty.call(createData, 'fecha_nacimiento')) {
+    } else if (
+      Object.prototype.hasOwnProperty.call(createData, 'fecha_nacimiento')
+    ) {
       (createData as any).fecha_nacimiento = null;
     }
 
@@ -88,7 +90,9 @@ export class UsuarioRepositoryImpl implements IUsuarioRepository {
       (updateData as any).fecha_fin_contrato = new Date(
         (updateData as any).fecha_fin_contrato,
       );
-    } else if (Object.prototype.hasOwnProperty.call(updateData, 'fecha_fin_contrato')) {
+    } else if (
+      Object.prototype.hasOwnProperty.call(updateData, 'fecha_fin_contrato')
+    ) {
       // Si el campo viene vacío o no viene, aseguramos que sea null para Prisma
       (updateData as any).fecha_fin_contrato = null;
     }
@@ -100,7 +104,9 @@ export class UsuarioRepositoryImpl implements IUsuarioRepository {
       (updateData as any).fecha_nacimiento = new Date(
         (updateData as any).fecha_nacimiento,
       );
-    } else if (Object.prototype.hasOwnProperty.call(updateData, 'fecha_nacimiento')) {
+    } else if (
+      Object.prototype.hasOwnProperty.call(updateData, 'fecha_nacimiento')
+    ) {
       (updateData as any).fecha_nacimiento = null;
     }
 

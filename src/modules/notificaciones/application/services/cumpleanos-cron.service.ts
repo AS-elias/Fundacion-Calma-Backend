@@ -21,7 +21,7 @@ export class CumpleanosCronService {
   })
   async revisarCumpleanos() {
     this.logger.log('Iniciando proceso de revisión de cumpleaños...');
-    
+
     try {
       const hoy = new Date();
       const mesActual = hoy.getMonth() + 1; // getMonth() es 0-11
@@ -47,7 +47,9 @@ export class CumpleanosCronService {
       const cumpleaneros = usuarios.filter((u: any) => {
         if (!u.fecha_nacimiento) return false;
         const fecha = new Date(u.fecha_nacimiento);
-        return fecha.getMonth() + 1 === mesActual && fecha.getDate() === diaActual;
+        return (
+          fecha.getMonth() + 1 === mesActual && fecha.getDate() === diaActual
+        );
       });
 
       if (cumpleaneros.length === 0) {
@@ -56,8 +58,10 @@ export class CumpleanosCronService {
       }
 
       for (const user of cumpleaneros) {
-        this.logger.log(`¡Feliz cumpleaños ${user.nombre_completo}! Emitiendo notificación...`);
-        
+        this.logger.log(
+          `¡Feliz cumpleaños ${user.nombre_completo}! Emitiendo notificación...`,
+        );
+
         await this.notificacionSistema.registrar(
           '¡Hoy hay un Cumpleaños!',
           `¡Hoy es el cumpleaños de ${user.nombre_completo}! Felicidades.`,
@@ -70,8 +74,10 @@ export class CumpleanosCronService {
 
       // Emitir socket para que el frontend refresque las notificaciones
       this.systemGateway.emitSistemaActualizado('notificaciones', 'crear');
-      
-      this.logger.log(`Proceso de cumpleaños finalizado. Se felicitaron a ${cumpleaneros.length} usuarios.`);
+
+      this.logger.log(
+        `Proceso de cumpleaños finalizado. Se felicitaron a ${cumpleaneros.length} usuarios.`,
+      );
     } catch (error) {
       this.logger.error('Error al procesar los cumpleaños diarios', error);
     }

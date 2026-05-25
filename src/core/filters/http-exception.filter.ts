@@ -26,7 +26,7 @@ export class HttpExceptionFilter implements ExceptionFilter {
     if (typeof exceptionResponse === 'object' && exceptionResponse !== null) {
       const responseObj = exceptionResponse as any;
       message = responseObj.message || message;
-      
+
       // Si es un array de mensajes (class-validator), unirlos
       if (Array.isArray(message)) {
         message = message.join(', ');
@@ -36,7 +36,9 @@ export class HttpExceptionFilter implements ExceptionFilter {
     }
 
     // Log del error
-    this.logger.warn(`${request.method} ${request.url} - ${status} - ${message}`);
+    this.logger.warn(
+      `${request.method} ${request.url} - ${status} - ${message}`,
+    );
 
     // Respuesta estandarizada
     response.status(status).json({

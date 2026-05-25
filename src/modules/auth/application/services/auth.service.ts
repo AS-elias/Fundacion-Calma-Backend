@@ -72,8 +72,8 @@ export class AuthService {
 
     // 5. Generar access_token y refresh_token
     const access_token = this.jwtService.sign(payload);
-    const refresh_token = this.jwtService.sign(payload, { 
-      expiresIn: '7d' 
+    const refresh_token = this.jwtService.sign(payload, {
+      expiresIn: '7d',
     });
 
     // 6. Retornar tokens y data del usuario
@@ -82,11 +82,11 @@ export class AuthService {
       refresh_token,
       usuario: {
         id: usuario.id,
-      nombre: usuario.nombre_completo,
-      apellido: usuario.apellido_completo,
-      email: usuario.email,
-      foto_url: usuario.foto_url,
-      rol: usuario.rol?.nombre,
+        nombre: usuario.nombre_completo,
+        apellido: usuario.apellido_completo,
+        email: usuario.email,
+        foto_url: usuario.foto_url,
+        rol: usuario.rol?.nombre,
       },
     };
   }
@@ -114,8 +114,8 @@ export class AuthService {
       };
 
       const new_access_token = this.jwtService.sign(newPayload);
-      const new_refresh_token = this.jwtService.sign(newPayload, { 
-        expiresIn: '7d' 
+      const new_refresh_token = this.jwtService.sign(newPayload, {
+        expiresIn: '7d',
       });
 
       return {
@@ -166,7 +166,9 @@ export class AuthService {
       telefono: usuario.telefono,
       puesto: usuario.puesto,
       foto_url: usuario.foto_url,
-      fecha_nacimiento: usuario.fecha_nacimiento ? new Date(usuario.fecha_nacimiento) : undefined,
+      fecha_nacimiento: usuario.fecha_nacimiento
+        ? new Date(usuario.fecha_nacimiento)
+        : undefined,
       linkedin_url: usuario.linkedin_url,
       biografia: usuario.biografia,
     };
@@ -182,13 +184,18 @@ export class AuthService {
       throw new UnauthorizedException('Credenciales incorrectas');
     }
 
-    const passwordValida = await bcrypt.compare(tempPassword, usuario.password_hash);
+    const passwordValida = await bcrypt.compare(
+      tempPassword,
+      usuario.password_hash,
+    );
     if (!passwordValida) {
       throw new UnauthorizedException('Credenciales incorrectas');
     }
 
     if (!usuario.debe_cambiar_password) {
-      throw new BadRequestException('El usuario no requiere cambio de contraseña obligatorio');
+      throw new BadRequestException(
+        'El usuario no requiere cambio de contraseña obligatorio',
+      );
     }
 
     const passwordHash = await bcrypt.hash(newPassword, 10);
@@ -334,7 +341,9 @@ export class AuthService {
     });
   }
 
-  private async registrarInicioNotificaciones(usuarioId: number): Promise<void> {
+  private async registrarInicioNotificaciones(
+    usuarioId: number,
+  ): Promise<void> {
     await this.prisma.notificacion_inicio_usuario.upsert({
       where: { usuario_id: usuarioId },
       create: { usuario_id: usuarioId },
@@ -358,7 +367,10 @@ export class AuthService {
     for (let i = password.length; i < longitud; i++) {
       password += todos[Math.floor(Math.random() * todos.length)];
     }
-    return password.split('').sort(() => 0.5 - Math.random()).join('');
+    return password
+      .split('')
+      .sort(() => 0.5 - Math.random())
+      .join('');
   }
 
   async forgotPassword(forgotPasswordDto: ForgotPasswordDto) {
@@ -372,12 +384,13 @@ export class AuthService {
 
       const appUrl = process.env.APP_URL || 'http://localhost:4200';
       const resetLink = `${appUrl}/reset-password?token=${token}`;
-      
+
       await this.emailService.sendPasswordResetEmail(usuario.email, resetLink);
     }
 
     return {
-      mensaje: 'Si el correo existe en nuestro sistema, te hemos enviado un enlace para restablecer tu contraseña.',
+      mensaje:
+        'Si el correo existe en nuestro sistema, te hemos enviado un enlace para restablecer tu contraseña.',
     };
   }
 
@@ -405,7 +418,9 @@ export class AuthService {
     try {
       this.jwtService.verify(token, { secret });
     } catch (e) {
-      throw new BadRequestException('El token ha expirado o ya ha sido utilizado.');
+      throw new BadRequestException(
+        'El token ha expirado o ya ha sido utilizado.',
+      );
     }
 
     const passwordHash = await bcrypt.hash(newPassword, 10);
@@ -415,7 +430,8 @@ export class AuthService {
     } as any);
 
     return {
-      mensaje: 'Contraseña actualizada correctamente. Ya puedes iniciar sesión con tu nueva contraseña.',
+      mensaje:
+        'Contraseña actualizada correctamente. Ya puedes iniciar sesión con tu nueva contraseña.',
     };
   }
 }

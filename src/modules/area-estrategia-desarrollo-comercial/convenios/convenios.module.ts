@@ -33,4 +33,4 @@ import { NotificacionesModule } from '../../notificaciones/notificaciones.module
     },
   ],
 })
-export class ConveniosModule { }
+export class ConveniosModule {}

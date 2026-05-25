@@ -27,7 +27,7 @@ export class ComunicacionesController {
   constructor(
     private readonly comunicacionesService: ComunicacionesService,
     private readonly cloudStorageService: CloudStorageService,
-  ) { }
+  ) {}
 
   @Post('channels')
   async createChannel(@Body() dto: CreateChannelDto) {
@@ -132,14 +132,18 @@ export class ComunicacionesController {
         'stun:stun1.l.google.com:19302',
         'stun:stun2.l.google.com:19302',
       ],
-      turn: (process.env.TURN_SERVERS || '').split(',').filter(s => s.trim()).map(server => {
-        const parts = server.trim().split('|');
-        return {
-          urls: parts[0],
-          username: parts[1] || undefined,
-          credential: parts[2] || undefined,
-        };
-      }).filter(t => t.urls),
+      turn: (process.env.TURN_SERVERS || '')
+        .split(',')
+        .filter((s) => s.trim())
+        .map((server) => {
+          const parts = server.trim().split('|');
+          return {
+            urls: parts[0],
+            username: parts[1] || undefined,
+            credential: parts[2] || undefined,
+          };
+        })
+        .filter((t) => t.urls),
     };
   }
 }

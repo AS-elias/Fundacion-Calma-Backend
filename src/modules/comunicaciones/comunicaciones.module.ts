@@ -30,4 +30,4 @@ import { NotificacionesModule } from '../notificaciones/notificaciones.module';
   ],
   exports: [ComunicacionesGateway, ComunicacionesService],
 })
-export class ComunicacionesModule { }
+export class ComunicacionesModule {}

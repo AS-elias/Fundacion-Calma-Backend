@@ -179,13 +179,16 @@ export class EmailService {
 
     try {
       const info = await this.transporter.sendMail({
-        from: this.configService.get<string>('EMAIL_FROM') || 'no-reply@calma.org',
+        from:
+          this.configService.get<string>('EMAIL_FROM') || 'no-reply@calma.org',
         to,
         subject,
         text,
         html,
       });
-      this.logger.log(`[EmailService] Password reset email sent: ${info.messageId}`);
+      this.logger.log(
+        `[EmailService] Password reset email sent: ${info.messageId}`,
+      );
     } catch (error) {
       this.logger.error(
         '[EmailService] Error al enviar email de recuperación de contraseña',

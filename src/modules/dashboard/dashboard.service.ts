@@ -36,11 +36,33 @@ export class DashboardService {
     const estadoUpper = estado.toUpperCase().trim().replace(/[-_]/g, ' ');
     if (estadoUpper === 'PENDIENTE') return 'pendientes';
     if (['EN REVISION', 'REVISION'].includes(estadoUpper)) return 'progreso';
-    if (['PROCESO', 'EN PROCESO', 'PLANIFICACION', 'EN PLANIFICACION', 'EN PROGRESO'].includes(estadoUpper)) return 'progreso';
+    if (
+      [
+        'PROCESO',
+        'EN PROCESO',
+        'PLANIFICACION',
+        'EN PLANIFICACION',
+        'EN PROGRESO',
+      ].includes(estadoUpper)
+    )
+      return 'progreso';
     if (['EJECUCION', 'EN EJECUCION'].includes(estadoUpper)) return 'ejecucion';
-    if (['COMPLETADA', 'COMPLETED', 'COMPLETADO', 'FINALIZADO', 'EN COMPLETADA', 'EN FINALIZADO'].includes(estadoUpper)) return 'completadas';
-    if (['PARALIZADO', 'PAUSADA', 'CANCELADA', 'SUSPENDIDA'].includes(estadoUpper)) return 'paralizado';
-    
+    if (
+      [
+        'COMPLETADA',
+        'COMPLETED',
+        'COMPLETADO',
+        'FINALIZADO',
+        'EN COMPLETADA',
+        'EN FINALIZADO',
+      ].includes(estadoUpper)
+    )
+      return 'completadas';
+    if (
+      ['PARALIZADO', 'PAUSADA', 'CANCELADA', 'SUSPENDIDA'].includes(estadoUpper)
+    )
+      return 'paralizado';
+
     return 'paralizado';
   }
 
@@ -49,15 +71,46 @@ export class DashboardService {
     if (!estado) return 'cancelados';
     const estadoUpper = estado.toUpperCase().trim();
     if (['PENDIENTE', 'PROSPECTO'].includes(estadoUpper)) return 'pendiente';
-    if (['EN PROCESO', 'EN_PROCESO', 'EN NEGOCIACION', 'EN_NEGOCIACION', 'NEGOCIACION', 'PROCESO DE CONVENIO', 'PROCESO_DE_CONVENIO', 'REUNIÓN AGENDADA', 'REUNION AGENDADA', 'REUNION_AGENDADA', 'PROCESO CONVENIO', 'EN PROCESO DE CONVENIO'].includes(estadoUpper)) return 'proceso';
-    if (['CONVENIO FIRMADO', 'CONVENIO_FIRMADO', 'FIRMADO', 'ACTIVO', 'VIGENTE'].includes(estadoUpper)) return 'firmados';
-    if (['DESCARTADO', 'CANCELADO', 'VENCIDO', 'RECHAZADO'].includes(estadoUpper)) return 'cancelados';
-    
+    if (
+      [
+        'EN PROCESO',
+        'EN_PROCESO',
+        'EN NEGOCIACION',
+        'EN_NEGOCIACION',
+        'NEGOCIACION',
+        'PROCESO DE CONVENIO',
+        'PROCESO_DE_CONVENIO',
+        'REUNIÓN AGENDADA',
+        'REUNION AGENDADA',
+        'REUNION_AGENDADA',
+        'PROCESO CONVENIO',
+        'EN PROCESO DE CONVENIO',
+      ].includes(estadoUpper)
+    )
+      return 'proceso';
+    if (
+      [
+        'CONVENIO FIRMADO',
+        'CONVENIO_FIRMADO',
+        'FIRMADO',
+        'ACTIVO',
+        'VIGENTE',
+      ].includes(estadoUpper)
+    )
+      return 'firmados';
+    if (
+      ['DESCARTADO', 'CANCELADO', 'VENCIDO', 'RECHAZADO'].includes(estadoUpper)
+    )
+      return 'cancelados';
+
     return 'cancelados';
   }
 
   private async getCombinedTareaStats() {
-    type EstadoCount = { estado: string | null | undefined; _count: { id: number } };
+    type EstadoCount = {
+      estado: string | null | undefined;
+      _count: { id: number };
+    };
 
     const [desarrolloRaw, estrategiaRaw, analisisRaw] = await Promise.all([
       this.prisma.desarrollo_actividades.groupBy({
@@ -74,7 +127,11 @@ export class DashboardService {
       }),
     ]);
 
-    const combined: EstadoCount[] = [...desarrolloRaw, ...estrategiaRaw, ...analisisRaw];
+    const combined: EstadoCount[] = [
+      ...desarrolloRaw,
+      ...estrategiaRaw,
+      ...analisisRaw,
+    ];
 
     const estadisticasTareas = {
       pendientes: 0,
@@ -92,7 +149,10 @@ export class DashboardService {
     return estadisticasTareas;
   }
 
-  private async getEstrategiaActividadesStats(allowedAreaIds: number[], usuarioId?: number) {
+  private async getEstrategiaActividadesStats(
+    allowedAreaIds: number[],
+    usuarioId?: number,
+  ) {
     // El modelo actual `estrategia_actividades` no define un campo `area_id`.
     // Por eso, cuando el director consulta el dashboard, estos registros se cuentan
     // globalmente, igual que en el endpoint Admin.
@@ -105,7 +165,10 @@ export class DashboardService {
     return result as any;
   }
 
-  private async countEstrategiaActividades(allowedAreaIds: number[], usuarioId: number) {
+  private async countEstrategiaActividades(
+    allowedAreaIds: number[],
+    usuarioId: number,
+  ) {
     // El modelo actual `estrategia_actividades` no define un campo `area_id`.
     // Filtramos solo por creado_por.
     return this.prisma.estrategia_actividades.count({
@@ -115,7 +178,12 @@ export class DashboardService {
     });
   }
 
-  async createDirectorEvaluation(directorId: number, usuarioId: number, rating: number, comentario?: string) {
+  async createDirectorEvaluation(
+    directorId: number,
+    usuarioId: number,
+    rating: number,
+    comentario?: string,
+  ) {
     if (!Number.isInteger(rating) || rating < 1 || rating > 5) {
       throw new Error('rating debe ser un entero entre 1 y 5');
     }
@@ -125,7 +193,9 @@ export class DashboardService {
 
     const allowedAreaIds = await this.getAllowedAreaIds(directorId);
     if (allowedAreaIds.length === 0) {
-      throw new Error('El director no tiene áreas asignadas para evaluar usuarios.');
+      throw new Error(
+        'El director no tiene áreas asignadas para evaluar usuarios.',
+      );
     }
 
     const targetUser = await this.prisma.usuarios.findFirst({
@@ -171,20 +241,23 @@ export class DashboardService {
     }
 
     if (alreadyEvaluated.length > 0) {
-      throw new Error('Este usuario ya fue evaluado por el director esta semana.');
+      throw new Error(
+        'Este usuario ya fue evaluado por el director esta semana.',
+      );
     }
 
     try {
-      const [created] = (await this.prisma.$queryRaw<
-        Array<{
-          id: number;
-          director_id: number | null;
-          usuario_id: number | null;
-          rating: number;
-          comentario: string | null;
-          created_at: Date;
-        }>
-      >`
+      const [created] =
+        (await this.prisma.$queryRaw<
+          Array<{
+            id: number;
+            director_id: number | null;
+            usuario_id: number | null;
+            rating: number;
+            comentario: string | null;
+            created_at: Date;
+          }>
+        >`
         INSERT INTO core.director_evaluaciones (director_id, usuario_id, rating, comentario)
         VALUES (${directorId}, ${usuarioId}, ${rating}, ${comentario?.trim() || null})
         RETURNING id, director_id, usuario_id, rating, comentario, created_at
@@ -197,15 +270,16 @@ export class DashboardService {
         throw err;
       }
       // Fallback: tabla antigua sin usuario_id. Insertar sin usuario_id y devolver resultado básico.
-      const [createdAlt] = (await this.prisma.$queryRaw<
-        Array<{
-          id: number;
-          director_id: number | null;
-          rating: number;
-          comentario: string | null;
-          created_at: Date;
-        }>
-      >`
+      const [createdAlt] =
+        (await this.prisma.$queryRaw<
+          Array<{
+            id: number;
+            director_id: number | null;
+            rating: number;
+            comentario: string | null;
+            created_at: Date;
+          }>
+        >`
         INSERT INTO core.director_evaluaciones (director_id, rating, comentario)
         VALUES (${directorId}, ${rating}, ${comentario?.trim() || null})
         RETURNING id, director_id, rating, comentario, created_at
@@ -319,7 +393,10 @@ export class DashboardService {
 
     const usuarios = await this.prisma.usuarios.findMany({
       where: {
-        id: { not: directorId, ...(evaluatedUserIds.length ? { notIn: evaluatedUserIds } : {}) },
+        id: {
+          not: directorId,
+          ...(evaluatedUserIds.length ? { notIn: evaluatedUserIds } : {}),
+        },
         estado: 'ACTIVO',
         roles: {
           nombre: {
@@ -397,7 +474,12 @@ export class DashboardService {
   async getAdminStats(): Promise<DashboardAdminDto> {
     const today = this.getTodayStart();
 
-    const [totalProyectosDB, actividadCountDesarrollo, actividadCountEstrategia, actividadCountAnalisis] = await Promise.all([
+    const [
+      totalProyectosDB,
+      actividadCountDesarrollo,
+      actividadCountEstrategia,
+      actividadCountAnalisis,
+    ] = await Promise.all([
       this.prisma.proyectos.count(),
       this.prisma.desarrollo_actividades.count(),
       this.prisma.estrategia_actividades.count(),
@@ -507,10 +589,18 @@ export class DashboardService {
     });
 
     const actividadReciente = [
-      ...recentConvenios.map((c) => mapActividad(c, 'entidad_nombre', 'CONVENIO')),
-      ...recentTareas.map((t) => mapActividad(t, 'titulo', 'ACTIVIDAD_DESARROLLO')),
-      ...recentAnalisis.map((a) => mapActividad(a, 'titulo', 'ACTIVIDAD_ANALISIS')),
-      ...recentEstrategia.map((e) => mapActividad(e, 'titulo', 'ACTIVIDAD_ESTRATEGIA')),
+      ...recentConvenios.map((c) =>
+        mapActividad(c, 'entidad_nombre', 'CONVENIO'),
+      ),
+      ...recentTareas.map((t) =>
+        mapActividad(t, 'titulo', 'ACTIVIDAD_DESARROLLO'),
+      ),
+      ...recentAnalisis.map((a) =>
+        mapActividad(a, 'titulo', 'ACTIVIDAD_ANALISIS'),
+      ),
+      ...recentEstrategia.map((e) =>
+        mapActividad(e, 'titulo', 'ACTIVIDAD_ESTRATEGIA'),
+      ),
     ]
       .sort((a, b) => b.fecha.getTime() - a.fecha.getTime())
       .slice(0, 10);
@@ -540,22 +630,23 @@ export class DashboardService {
     // Usar nombres de áreas para determinar si mostrar o no ciertas métricas (ej: convenios)
     const areasUsuario = await this.prisma.areas.findMany({
       where: { id: { in: filterAreaIds } },
-      select: { nombre: true }
+      select: { nombre: true },
     });
-    const nombresAreas = areasUsuario.map(a => a.nombre.toLowerCase());
-    const hasDesarrolloComercial = nombresAreas.some(n => n.includes('desarrollo') || n.includes('comercial'));
-    const hasEstrategia = nombresAreas.some(n => n.includes('estrategia'));
-    const hasAnalisis = nombresAreas.some(n => n.includes('análisis') || n.includes('analisis'));
+    const nombresAreas = areasUsuario.map((a) => a.nombre.toLowerCase());
+    const hasDesarrolloComercial = nombresAreas.some(
+      (n) => n.includes('desarrollo') || n.includes('comercial'),
+    );
+    const hasEstrategia = nombresAreas.some((n) => n.includes('estrategia'));
+    const hasAnalisis = nombresAreas.some(
+      (n) => n.includes('análisis') || n.includes('analisis'),
+    );
 
     const misProyectos = await this.prisma.proyectos.count({
       where: {
-        OR: [
-          { area_id: { in: filterAreaIds } },
-          { responsable_id: usuarioId },
-        ],
+        OR: [{ area_id: { in: filterAreaIds } }, { responsable_id: usuarioId }],
       },
     });
-    
+
     let misConvenios: number | null = null;
     if (hasDesarrolloComercial) {
       misConvenios = await this.prisma.convenios.count({
@@ -578,31 +669,30 @@ export class DashboardService {
         },
       });
     }
-    
-    const estadisticasTareasRawDesarrollo = await this.prisma.desarrollo_actividades.groupBy({
-      by: ['estado'],
-      where: {
-        OR: [
-          { area_id: { in: filterAreaIds } },
-          { creador_id: usuarioId },
-        ],
-      },
-      _count: { id: true },
-    });
 
-    const estadisticasTareasRawAnalisis = await this.prisma.analisis_tareas.groupBy({
-      by: ['estado'],
-      where: {
-        OR: [
-          { area_id: { in: filterAreaIds } },
-          { creador_id: usuarioId },
-        ],
-      },
-      _count: { id: true },
-    });
+    const estadisticasTareasRawDesarrollo =
+      await this.prisma.desarrollo_actividades.groupBy({
+        by: ['estado'],
+        where: {
+          OR: [{ area_id: { in: filterAreaIds } }, { creador_id: usuarioId }],
+        },
+        _count: { id: true },
+      });
+
+    const estadisticasTareasRawAnalisis =
+      await this.prisma.analisis_tareas.groupBy({
+        by: ['estado'],
+        where: {
+          OR: [{ area_id: { in: filterAreaIds } }, { creador_id: usuarioId }],
+        },
+        _count: { id: true },
+      });
 
     const estadisticasTareasRawEstrategiaActividades = hasEstrategia
-      ? await this.getEstrategiaActividadesStats(allowedAreaIds, isStandardUser ? usuarioId : undefined)
+      ? await this.getEstrategiaActividadesStats(
+          allowedAreaIds,
+          isStandardUser ? usuarioId : undefined,
+        )
       : [];
 
     const estadisticasTareas = {
@@ -613,21 +703,36 @@ export class DashboardService {
       paralizado: 0,
     };
 
-    [...estadisticasTareasRawDesarrollo, ...estadisticasTareasRawAnalisis, ...estadisticasTareasRawEstrategiaActividades].forEach((item) => {
+    [
+      ...estadisticasTareasRawDesarrollo,
+      ...estadisticasTareasRawAnalisis,
+      ...estadisticasTareasRawEstrategiaActividades,
+    ].forEach((item) => {
       const categoria = this.mapEstadoTarea(item.estado);
       estadisticasTareas[categoria] += item._count?.id || 0;
     });
 
-    const totalTareasArea = Object.values(estadisticasTareas).reduce((a, b) => a + b, 0);
-    const desempenoEquipo = totalTareasArea > 0 ? Math.round((estadisticasTareas.completadas / totalTareasArea) * 100) : 0;
-    
+    const totalTareasArea = Object.values(estadisticasTareas).reduce(
+      (a, b) => a + b,
+      0,
+    );
+    const desempenoEquipo =
+      totalTareasArea > 0
+        ? Math.round((estadisticasTareas.completadas / totalTareasArea) * 100)
+        : 0;
+
     let desempenoPersonal: number | null = null;
     try {
-      const userEvaluations = await this.prisma.$queryRaw<Array<{ rating: number }>>`
+      const userEvaluations = await this.prisma.$queryRaw<
+        Array<{ rating: number }>
+      >`
         SELECT rating FROM core.director_evaluaciones WHERE usuario_id = ${usuarioId}
       `;
       if (userEvaluations && userEvaluations.length > 0) {
-        const sum = userEvaluations.reduce((acc, curr) => acc + Number(curr.rating), 0);
+        const sum = userEvaluations.reduce(
+          (acc, curr) => acc + Number(curr.rating),
+          0,
+        );
         const avg = sum / userEvaluations.length;
         desempenoPersonal = Math.round((avg / 5) * 100);
       }
@@ -649,7 +754,8 @@ export class DashboardService {
       LIMIT 1
     `;
 
-    const isDirector = roleResult[0]?.rol?.toString().toLowerCase() === 'director';
+    const isDirector =
+      roleResult[0]?.rol?.toString().toLowerCase() === 'director';
     let directorEvaluations: Array<{
       id: number;
       director_id: number | null;
@@ -670,24 +776,25 @@ export class DashboardService {
       pendientesEvaluacion = await this.getDirectorPendingUsers(usuarioId);
       if (directorEvaluations.length > 0) {
         promedioEvaluacionDirector = Math.round(
-          directorEvaluations.reduce((sum, item) => sum + Number(item.rating), 0) /
-            directorEvaluations.length,
+          directorEvaluations.reduce(
+            (sum, item) => sum + Number(item.rating),
+            0,
+          ) / directorEvaluations.length,
         );
       }
     }
 
     let estadisticasComunicaciones: any = null;
     if (hasDesarrolloComercial) {
-      const estadisticasComunicacionesRaw = await this.prisma.convenios.groupBy({
-        by: ['estado'],
-        where: {
-          OR: [
-            { area_id: { in: filterAreaIds } },
-            { creador_id: usuarioId },
-          ],
+      const estadisticasComunicacionesRaw = await this.prisma.convenios.groupBy(
+        {
+          by: ['estado'],
+          where: {
+            OR: [{ area_id: { in: filterAreaIds } }, { creador_id: usuarioId }],
+          },
+          _count: { id: true },
         },
-        _count: { id: true },
-      });
+      );
 
       estadisticasComunicaciones = {
         pendiente: 0,
@@ -711,7 +818,9 @@ export class DashboardService {
     // Construir condición base según el rol
     const baseWhereArea = isStandardUser
       ? { creador_id: usuarioId }
-      : { OR: [{ area_id: { in: allowedAreaIds } }, { creador_id: usuarioId }] };
+      : {
+          OR: [{ area_id: { in: allowedAreaIds } }, { creador_id: usuarioId }],
+        };
 
     if (hasDesarrolloComercial) {
       recentConvenios = await this.prisma.convenios.findMany({
@@ -722,7 +831,9 @@ export class DashboardService {
           id: true,
           entidad_nombre: true,
           estado: true,
-          usuarios: { select: { nombre_completo: true, apellido_completo: true } },
+          usuarios: {
+            select: { nombre_completo: true, apellido_completo: true },
+          },
           fecha_creacion: true,
         },
       });
@@ -735,7 +846,9 @@ export class DashboardService {
           id: true,
           titulo: true,
           estado: true,
-          usuarios: { select: { nombre_completo: true, apellido_completo: true } },
+          usuarios: {
+            select: { nombre_completo: true, apellido_completo: true },
+          },
           fecha_creacion: true,
         },
       });
@@ -750,14 +863,18 @@ export class DashboardService {
           id: true,
           titulo: true,
           estado: true,
-          usuarios: { select: { nombre_completo: true, apellido_completo: true } },
+          usuarios: {
+            select: { nombre_completo: true, apellido_completo: true },
+          },
           fecha_creacion: true,
         },
       });
     }
 
     if (hasEstrategia) {
-      const baseEstrategiaWhere = isStandardUser ? { creado_por: String(usuarioId) } : {};
+      const baseEstrategiaWhere = isStandardUser
+        ? { creado_por: String(usuarioId) }
+        : {};
       recentEstrategia = await this.prisma.estrategia_actividades.findMany({
         where: baseEstrategiaWhere,
         orderBy: { fecha_creacion: 'desc' },
@@ -773,7 +890,9 @@ export class DashboardService {
     }
 
     const mapActividad = (item: any, campoEntidad: string, tipo: string) => ({
-      usuario: item.usuarios ? `${item.usuarios.nombre_completo} ${item.usuarios.apellido_completo}` : (item.creado_por || 'Sistema'),
+      usuario: item.usuarios
+        ? `${item.usuarios.nombre_completo} ${item.usuarios.apellido_completo}`
+        : item.creado_por || 'Sistema',
       detalle: `actualizó el estado a ${item.estado}`,
       entidad: item[campoEntidad],
       tipo,
@@ -781,10 +900,18 @@ export class DashboardService {
     });
 
     const actividadReciente = [
-      ...recentConvenios.map((c) => mapActividad(c, 'entidad_nombre', 'CONVENIO')),
-      ...recentTareas.map((t) => mapActividad(t, 'titulo', 'ACTIVIDAD_DESARROLLO')),
-      ...recentAnalisis.map((a) => mapActividad(a, 'titulo', 'ACTIVIDAD_ANALISIS')),
-      ...recentEstrategia.map((e) => mapActividad(e, 'titulo', 'ACTIVIDAD_ESTRATEGIA')),
+      ...recentConvenios.map((c) =>
+        mapActividad(c, 'entidad_nombre', 'CONVENIO'),
+      ),
+      ...recentTareas.map((t) =>
+        mapActividad(t, 'titulo', 'ACTIVIDAD_DESARROLLO'),
+      ),
+      ...recentAnalisis.map((a) =>
+        mapActividad(a, 'titulo', 'ACTIVIDAD_ANALISIS'),
+      ),
+      ...recentEstrategia.map((e) =>
+        mapActividad(e, 'titulo', 'ACTIVIDAD_ESTRATEGIA'),
+      ),
     ]
       .sort((a, b) => b.fecha.getTime() - a.fecha.getTime())
       .slice(0, 10);
@@ -799,11 +926,12 @@ export class DashboardService {
       desempenoPersonal,
       actividadReciente,
       estadisticasTareas: { ...estadisticasTareas },
-      estadisticasComunicaciones: estadisticasComunicaciones ? { ...estadisticasComunicaciones } : null,
+      estadisticasComunicaciones: estadisticasComunicaciones
+        ? { ...estadisticasComunicaciones }
+        : null,
       directorEvaluations: directorEvaluations,
       promedioEvaluacionDirector,
       pendientesEvaluacion,
     };
   }
 }
-

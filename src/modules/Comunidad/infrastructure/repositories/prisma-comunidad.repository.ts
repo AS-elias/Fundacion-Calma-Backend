@@ -6,7 +6,10 @@ import { PresenceService } from '../../../../core/services/presence.service';
 
 @Injectable()
 export class PrismaComunidadRepository implements IComunidadRepository {
-  constructor(private readonly prisma: PrismaService, private readonly presenceService: PresenceService) { }
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly presenceService: PresenceService,
+  ) {}
 
   async obtenerContactos(usuarioId: number): Promise<ContactoEntity[]> {
     // Obtener contactos del usuario (usuarios que ha agregado)
@@ -28,8 +31,15 @@ export class PrismaComunidadRepository implements IComunidadRepository {
       whereCondition.AND = [
         {
           OR: [
-            { nombre_completo: { contains: query.trim(), mode: 'insensitive' } },
-            { apellido_completo: { contains: query.trim(), mode: 'insensitive' } },
+            {
+              nombre_completo: { contains: query.trim(), mode: 'insensitive' },
+            },
+            {
+              apellido_completo: {
+                contains: query.trim(),
+                mode: 'insensitive',
+              },
+            },
             { email: { contains: query.trim(), mode: 'insensitive' } },
           ],
         },
@@ -147,7 +157,9 @@ export class PrismaComunidadRepository implements IComunidadRepository {
     });
   }
 
-  async obtenerContactosAccesibles(usuarioId: number): Promise<ContactoEntity[]> {
+  async obtenerContactosAccesibles(
+    usuarioId: number,
+  ): Promise<ContactoEntity[]> {
     // Contactos sin solicitud (mismo área) + contactos con solicitud aceptada
     const usuariosDb = await this.prisma.usuarios.findMany({
       where: {
@@ -159,14 +171,12 @@ export class PrismaComunidadRepository implements IComunidadRepository {
             permisos_area: {
               some: {
                 area_id: {
-                  in: (
-                    await this.prisma.permisos_area
-                      .findMany({
-                        where: { usuario_id: usuarioId },
-                        select: { area_id: true },
-                      })
-                      .then((permisos) => permisos.map((p) => p.area_id!))
-                  ),
+                  in: await this.prisma.permisos_area
+                    .findMany({
+                      where: { usuario_id: usuarioId },
+                      select: { area_id: true },
+                    })
+                    .then((permisos) => permisos.map((p) => p.area_id!)),
                 },
               },
             },
@@ -202,7 +212,10 @@ export class PrismaComunidadRepository implements IComunidadRepository {
     return usuario?.estado === 'ACTIVO' || false;
   }
 
-  async crearSolicitudContacto(usuarioId: number, contactoId: number): Promise<any> {
+  async crearSolicitudContacto(
+    usuarioId: number,
+    contactoId: number,
+  ): Promise<any> {
     return this.prisma.solicitudes_contacto.create({
       data: {
         usuario_id: usuarioId,
@@ -232,7 +245,10 @@ export class PrismaComunidadRepository implements IComunidadRepository {
     });
   }
 
-  async obtenerSolicitudExistente(usuarioId: number, contactoId: number): Promise<any> {
+  async obtenerSolicitudExistente(
+    usuarioId: number,
+    contactoId: number,
+  ): Promise<any> {
     return this.prisma.solicitudes_contacto.findFirst({
       where: {
         usuario_id: usuarioId,
@@ -267,7 +283,10 @@ export class PrismaComunidadRepository implements IComunidadRepository {
     });
   }
 
-  async actualizarSolicitudContacto(solicitudId: number, estado: string): Promise<any> {
+  async actualizarSolicitudContacto(
+    solicitudId: number,
+    estado: string,
+  ): Promise<any> {
     return this.prisma.solicitudes_contacto.update({
       where: { id: solicitudId },
       data: { estado, fecha_actualizado: new Date() },
@@ -294,7 +313,10 @@ export class PrismaComunidadRepository implements IComunidadRepository {
     });
   }
 
-  async obtenerSolicitudesRecibidas(usuarioId: number, estado?: string): Promise<any[]> {
+  async obtenerSolicitudesRecibidas(
+    usuarioId: number,
+    estado?: string,
+  ): Promise<any[]> {
     return this.prisma.solicitudes_contacto.findMany({
       where: {
         contacto_id: usuarioId,
@@ -316,7 +338,10 @@ export class PrismaComunidadRepository implements IComunidadRepository {
     });
   }
 
-  async obtenerSolicitudesEnviadas(usuarioId: number, estado?: string): Promise<any[]> {
+  async obtenerSolicitudesEnviadas(
+    usuarioId: number,
+    estado?: string,
+  ): Promise<any[]> {
     return this.prisma.solicitudes_contacto.findMany({
       where: {
         usuario_id: usuarioId,
@@ -346,7 +371,8 @@ export class PrismaComunidadRepository implements IComunidadRepository {
         user.permisos_area.length > 0 && user.permisos_area[0].areas
           ? user.permisos_area[0].areas.nombre
           : 'General';
-      const rolNombre = user.puesto || (user.roles ? user.roles.nombre : 'Miembro');
+      const rolNombre =
+        user.puesto || (user.roles ? user.roles.nombre : 'Miembro');
 
       return new ContactoEntity(
         user.id,

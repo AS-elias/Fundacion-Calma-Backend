@@ -20,7 +20,13 @@ export class PrismaSalaRepository implements ISalaRepository {
     });
   }
 
-  async crearSala(data: { nombre: string; area: string; link: string; descripcion?: string; creador_id?: number }): Promise<SalaEntity> {
+  async crearSala(data: {
+    nombre: string;
+    area: string;
+    link: string;
+    descripcion?: string;
+    creador_id?: number;
+  }): Promise<SalaEntity> {
     return this.prisma.salas_trabajo.create({
       data: {
         nombre: data.nombre,
@@ -44,7 +50,15 @@ export class PrismaSalaRepository implements ISalaRepository {
     return count > 0;
   }
 
-  async actualizarSala(id: number, data: Partial<{ nombre: string; area: string; link: string; descripcion: string }>): Promise<SalaEntity> {
+  async actualizarSala(
+    id: number,
+    data: Partial<{
+      nombre: string;
+      area: string;
+      link: string;
+      descripcion: string;
+    }>,
+  ): Promise<SalaEntity> {
     return this.prisma.salas_trabajo.update({
       where: { id },
       data,

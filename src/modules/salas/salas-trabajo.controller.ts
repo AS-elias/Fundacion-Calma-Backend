@@ -44,7 +44,10 @@ export class SalasTrabajoController {
   @Post()
   async createSala(@Body() data: any, @Request() req) {
     // Combinamos los datos del body con el ID del usuario logueado en 1 solo argumento
-    const result = await this.createSalaUseCase.execute({ ...data, creador_id: req.user.id });
+    const result = await this.createSalaUseCase.execute({
+      ...data,
+      creador_id: req.user.id,
+    });
     this.systemGateway.emitSistemaActualizado('salas', 'crear');
     return result;
   }
