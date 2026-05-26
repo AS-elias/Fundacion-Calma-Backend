@@ -63,8 +63,8 @@ export class ComunicacionesService {
     return this.repo.getUserChannels(usuarioId);
   }
 
-  async markAsRead(mensajeId: number, usuarioId: number) {
-    return this.repo.markAsRead(mensajeId, usuarioId);
+  async markAsRead(canalId: number, mensajeId: number, usuarioId: number) {
+    return this.repo.markAsRead(canalId, mensajeId, usuarioId);
   }
 
   async editMessage(mensajeId: number, remitenteId: number, contenido: string) {

@@ -122,9 +122,27 @@ export class ComunicacionesGateway
         this.presenceService.getConnectedUsers() || [],
       );
 
+      const participantesDb = canal.participantes_canal ?? [];
+      const esGrupo = canal.es_grupo === true;
+      const creadorId = Number(dto.creadorId);
+      let nombreCanal = canal.nombre;
+      let avatarCanal = canal.avatar_url;
+
+      if (!esGrupo && creadorId > 0) {
+        const otro = participantesDb.find(
+          (pc) => Number(pc.usuario_id) !== creadorId,
+        );
+        if (otro?.usuarios?.nombre_completo) {
+          nombreCanal = otro.usuarios.nombre_completo;
+        }
+        if (otro?.usuarios?.foto_url) {
+          avatarCanal = otro.usuarios.foto_url;
+        }
+      }
+
       this.server.emit('channelCreated', {
         canalId: canal.id,
-        nombre: canal.nombre,
+        nombre: nombreCanal,
         esGrupo: canal.es_grupo,
       });
 
@@ -132,18 +150,19 @@ export class ComunicacionesGateway
         success: true,
         data: {
           canalId: canal.id,
-          nombre: canal.nombre,
+          nombre: nombreCanal,
           descripcion: canal.descripcion,
-          avatarUrl: canal.avatar_url,
+          avatarUrl: avatarCanal,
           esGrupo: canal.es_grupo,
           participantes:
-            canal.participantes_canal?.map((pc) => ({
+            participantesDb.map((pc) => ({
+              id: pc.usuario_id,
               usuarioId: pc.usuario_id,
               nombre: pc.usuarios?.nombre_completo,
               avatar: pc.usuarios?.foto_url,
               esAdmin: pc.es_admin ?? false,
               isOnline: connectedUsers.includes(pc.usuario_id),
-            })) ?? [],
+            })),
         },
       };
     } catch (error: any) {
@@ -364,6 +383,7 @@ export class ComunicacionesGateway
                   apartado: 'Comunicaciones',
                   accion: 'Nuevo mensaje recibido',
                   usuarioId: p.usuario_id,
+                  actorId: usuarioId,
                 })
                 .catch((e) =>
                   this.logger.warn(
@@ -430,22 +450,47 @@ export class ComunicacionesGateway
         this.presenceService.getConnectedUsers() || [],
       );
 
-      const result = canales.map((p: any) => ({
+      const usuarioActual = Number(
+        payload.usuarioId || socket.data.user?.sub || 0,
+      );
+
+      const result = canales.map((p: any) => {
+        const participantesDb = p.canales?.participantes_canal ?? [];
+        const esGrupo = p.canales?.es_grupo === true;
+
+        let nombre = p.canales?.nombre ?? null;
+        let avatarUrl = p.canales?.avatar_url ?? null;
+
+        if (!esGrupo && usuarioActual > 0) {
+          const otroParticipante = participantesDb.find(
+            (pc: { usuario_id: number }) =>
+              Number(pc.usuario_id) !== usuarioActual,
+          );
+          if (otroParticipante?.usuarios?.nombre_completo) {
+            nombre = otroParticipante.usuarios.nombre_completo;
+          }
+          if (otroParticipante?.usuarios?.foto_url) {
+            avatarUrl = otroParticipante.usuarios.foto_url;
+          }
+        }
+
+        return {
         canalId: p.canal_id,
-        nombre: p.canales?.nombre,
+        nombre,
         descripcion: p.canales?.descripcion,
-        avatarUrl: p.canales?.avatar_url,
+        avatarUrl,
         esGrupo: p.canales?.es_grupo,
         unreadCount: p.canales?.unreadCount ?? 0,
-        totalParticipantes: p.canales?.participantes_canal?.length ?? 0,
+        totalParticipantes: participantesDb.length,
         participantes:
-          p.canales?.participantes_canal.map((pc) => ({
+          participantesDb.map((pc) => ({
+            id: pc.usuario_id,
             usuarioId: pc.usuario_id,
             nombre: pc.usuarios?.nombre_completo,
             avatar: pc.usuarios?.foto_url,
             esAdmin: pc.es_admin ?? false,
             isOnline: connectedUsers.includes(pc.usuario_id),
-          })) ?? [],
+          })),
         ultimoMensaje: p.canales?.mensajes?.[0]
           ? {
               id: p.canales.mensajes[0].id,
@@ -456,7 +501,8 @@ export class ComunicacionesGateway
               fecha: p.canales.mensajes[0].creado_at,
             }
           : null,
-      }));
+      };
+      });
 
       socket.emit('userChannels', result);
       socket.emit('getUserChannelsResponse', {
@@ -494,20 +540,39 @@ export class ComunicacionesGateway
         this.presenceService.getConnectedUsers() || [],
       );
 
+      const usuarioActual = Number(socket.data.user?.sub || 0);
+      const participantesDb = canal.participantes_canal ?? [];
+      const esGrupo = canal.es_grupo === true;
+      let nombre = canal.nombre;
+      let avatarUrl = canal.avatar_url;
+
+      if (!esGrupo && usuarioActual > 0) {
+        const otro = participantesDb.find(
+          (p) => Number(p.usuario_id) !== usuarioActual,
+        );
+        if (otro?.usuarios?.nombre_completo) {
+          nombre = otro.usuarios.nombre_completo;
+        }
+        if (otro?.usuarios?.foto_url) {
+          avatarUrl = otro.usuarios.foto_url;
+        }
+      }
+
       const response = {
         canalId: canal.id,
-        nombre: canal.nombre,
+        nombre,
         descripcion: canal.descripcion,
-        avatarUrl: canal.avatar_url,
+        avatarUrl,
         esGrupo: canal.es_grupo,
         participantes:
-          canal.participantes_canal?.map((p) => ({
+          participantesDb.map((p) => ({
+            id: p.usuario_id,
             usuarioId: p.usuario_id,
             nombre: p.usuarios?.nombre_completo,
             avatar: p.usuarios?.foto_url,
             esAdmin: p.es_admin ?? false,
             isOnline: connectedUsers.includes(p.usuario_id),
-          })) ?? [],
+          })),
         totalParticipantes: canal.participantes_canal?.length ?? 0,
         ultimoMensaje: canal.mensajes?.[0] ?? null,
       };
@@ -589,7 +654,11 @@ export class ComunicacionesGateway
     try {
       const dto = await this.validatePayload(payload, ReadReceiptDto);
       const usuarioId = socket.data.user.sub; // Usar usuario autenticado
-      await this.comunicacionesService.markAsRead(dto.mensajeId, usuarioId);
+      await this.comunicacionesService.markAsRead(
+        dto.canalId,
+        dto.mensajeId,
+        usuarioId,
+      );
       this.server
         .to(`canal_${dto.canalId}`)
         .emit('messageRead', { ...dto, usuarioId });

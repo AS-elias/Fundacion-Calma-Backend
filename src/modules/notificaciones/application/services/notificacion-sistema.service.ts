@@ -7,6 +7,7 @@ type NotificacionSistemaOptions = {
   apartado?: string;
   accion?: string;
   usuarioId?: number | null;
+  actorId?: number | null;
   usuarioNombre?: string | null;
   automatico?: boolean;
   ruta?: string | null;
@@ -27,6 +28,7 @@ export class NotificacionSistemaService {
     const detalle = await this.construirDetalle(mensaje, options);
 
     await this.repo.crear({
+      usuarioId: options.usuarioId ?? null,
       titulo,
       mensaje: detalle,
       tipo: 'sistema',
@@ -107,12 +109,13 @@ export class NotificacionSistemaService {
       return options.usuarioNombre.trim();
     }
 
-    if (!options.usuarioId) {
+    const userId = options.actorId ?? options.usuarioId;
+    if (!userId) {
       return null;
     }
 
     const usuario = await this.prisma.usuarios.findUnique({
-      where: { id: options.usuarioId },
+      where: { id: userId },
       select: {
         nombre_completo: true,
         apellido_completo: true,

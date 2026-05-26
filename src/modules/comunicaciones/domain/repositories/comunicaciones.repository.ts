@@ -54,7 +54,11 @@ export interface ComunicacionesRepository {
     limit?: number,
   ): Promise<any[]>;
   getUserChannels(usuarioId: number): Promise<any[]>;
-  markAsRead(mensajeId: number, usuarioId: number): Promise<any>;
+  markAsRead(
+    canalId: number,
+    mensajeId: number,
+    usuarioId: number,
+  ): Promise<any>;
   editMessage(
     mensajeId: number,
     remitenteId: number,

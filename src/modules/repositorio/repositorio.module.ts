@@ -6,8 +6,10 @@ import { RepositorioStorageService } from './application/services/repositorio-st
 import { PrismaRepositorioDocumentoRepository } from './infrastructure/repositories/prisma-repositorio-documento.repository';
 import { RepositorioController } from './presentation/controllers/repositorio.controller';
 
+import { NotificacionesModule } from '../notificaciones/notificaciones.module';
+
 @Module({
-  imports: [ConfigModule],
+  imports: [ConfigModule, NotificacionesModule],
   controllers: [RepositorioController],
   providers: [
     PrismaService,

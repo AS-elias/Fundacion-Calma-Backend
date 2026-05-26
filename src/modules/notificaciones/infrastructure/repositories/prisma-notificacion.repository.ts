@@ -9,6 +9,7 @@ export class NotificacionPrismaRepository implements NotificacionRepository {
   async crear(data: any) {
     return this.prisma.notificaciones.create({
       data: {
+        usuario_id: data.usuarioId ?? null,
         titulo: data.titulo,
         mensaje: data.mensaje,
         tipo: data.tipo,
@@ -67,6 +68,14 @@ export class NotificacionPrismaRepository implements NotificacionRepository {
       globalFilters.push({ usuario_id: null });
     } else {
       globalFilters.push({ usuario_id: null, tipo: 'comunicados' });
+      globalFilters.push({
+        usuario_id: null,
+        tipo: 'sistema',
+        OR: [
+          { mensaje: { contains: 'comunidad', mode: 'insensitive' } },
+          { mensaje: { contains: 'repositorio', mode: 'insensitive' } },
+        ],
+      });
 
       const allowedAreaIds = await this.getAllowedAreaIds(actualUserId);
       if (allowedAreaIds.length > 0) {

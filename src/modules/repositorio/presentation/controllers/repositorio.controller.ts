@@ -21,6 +21,7 @@ import { RepositorioDocumento } from '../../domain/entities/repositorio-document
 import { PrismaRepositorioDocumentoRepository } from '../../infrastructure/repositories/prisma-repositorio-documento.repository';
 import { CreateCarpetaDto } from '../../application/dto/create-carpeta.dto';
 import { SystemGateway } from '../../../websockets/gateways/system.gateway';
+import { NotificacionSistemaService } from '../../notificaciones/application/services/notificacion-sistema.service';
 
 type UploadedRepositorioFile = {
   originalname: string;
@@ -33,6 +34,7 @@ export class RepositorioController {
     private readonly repo: PrismaRepositorioDocumentoRepository,
     private readonly storage: RepositorioStorageService,
     private readonly systemGateway: SystemGateway,
+    private readonly notificacionSistema: NotificacionSistemaService,
   ) {}
 
   @Get()
@@ -58,9 +60,23 @@ export class RepositorioController {
   }
 
   @Post('carpeta')
-  async createCarpeta(@Body() body: CreateCarpetaDto) {
+  @UseGuards(JwtAuthGuard)
+  async createCarpeta(@Body() body: CreateCarpetaDto, @Req() req: any) {
     const result = await this.repo.crearCarpeta(body);
     this.systemGateway.emitSistemaActualizado('repositorio', 'crear');
+    
+    this.notificacionSistema
+      .registrar(
+        'Nueva Carpeta Creada',
+        `Se ha creado la carpeta "${body.nombre}" en el repositorio.`,
+        {
+          apartado: 'repositorio',
+          accion: 'crear',
+          actorId: req.user?.sub ?? req.user?.id,
+        },
+      )
+      .catch((e) => console.error('Error al notificar nueva carpeta:', e));
+
     return result;
   }
 
@@ -93,10 +109,12 @@ export class RepositorioController {
   }
 
   @Post()
+  @UseGuards(JwtAuthGuard)
   @UseInterceptors(FileInterceptor('file'))
   async create(
     @UploadedFile() file: UploadedRepositorioFile | undefined,
     @Body() body: any,
+    @Req() req: any,
   ) {
     const bloqueId = Number(body.bloqueId);
     const carpetaId = body.padreId ? Number(body.padreId) : null;
@@ -130,11 +148,25 @@ export class RepositorioController {
 
     const result = await this.repo.create(documento);
     this.systemGateway.emitSistemaActualizado('repositorio', 'crear');
+
+    this.notificacionSistema
+      .registrar(
+        'Nuevo Archivo Subido',
+        `Se ha subido el archivo "${storedFile.nombreDocumento}" al repositorio.`,
+        {
+          apartado: 'repositorio',
+          accion: 'subir',
+          actorId: req.user?.sub ?? req.user?.id,
+        },
+      )
+      .catch((e) => console.error('Error al notificar nuevo archivo:', e));
+
     return result;
   }
 
   @Post('enlace')
-  async createEnlace(@Body() body: any) {
+  @UseGuards(JwtAuthGuard)
+  async createEnlace(@Body() body: any, @Req() req: any) {
     const bloqueId = Number(body.bloqueId);
     const carpetaId = body.padreId ? Number(body.padreId) : null;
     const nombre = String(body.nombre ?? '').trim() || 'Fundacion Calma';
@@ -165,6 +197,19 @@ export class RepositorioController {
 
     const result = await this.repo.create(documento);
     this.systemGateway.emitSistemaActualizado('repositorio', 'crear');
+
+    this.notificacionSistema
+      .registrar(
+        'Nuevo Enlace Añadido',
+        `Se ha añadido el enlace "${nombre}" al repositorio.`,
+        {
+          apartado: 'repositorio',
+          accion: 'crear',
+          actorId: req.user?.sub ?? req.user?.id,
+        },
+      )
+      .catch((e) => console.error('Error al notificar nuevo enlace:', e));
+
     return result;
   }
 

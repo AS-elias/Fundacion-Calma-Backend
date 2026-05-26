@@ -6,6 +6,7 @@ export class ReadReceiptDto {
   canalId!: number;
 
   @IsInt()
+  @Min(0)
   mensajeId!: number;
 
   @IsOptional()

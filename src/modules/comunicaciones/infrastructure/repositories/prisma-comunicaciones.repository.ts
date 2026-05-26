@@ -27,7 +27,9 @@ export class PrismaComunicacionesRepository implements ComunicacionesRepository 
             },
           },
         },
-        include: { participantes_canal: true },
+        include: {
+          participantes_canal: { include: { usuarios: true } },
+        },
       });
 
       const sortedParticipants = participantes.slice().sort((a, b) => a - b);
@@ -49,7 +51,7 @@ export class PrismaComunicacionesRepository implements ComunicacionesRepository 
     return this.prisma.$transaction(async (tx) => {
       const canal = await tx.canales.create({
         data: {
-          nombre: data.nombre,
+          nombre: esChatDirecto ? null : data.nombre,
           area_id: data.areaId ?? null,
           es_grupo: esChatDirecto ? false : (data.esGrupo ?? true),
           descripcion: data.descripcion,
@@ -68,7 +70,12 @@ export class PrismaComunicacionesRepository implements ComunicacionesRepository 
         });
       }
 
-      return canal;
+      return tx.canales.findUniqueOrThrow({
+        where: { id: canal.id },
+        include: {
+          participantes_canal: { include: { usuarios: true } },
+        },
+      });
     });
   }
 
@@ -264,9 +271,22 @@ export class PrismaComunicacionesRepository implements ComunicacionesRepository 
     });
   }
 
-  async markAsRead(mensajeId: number, usuarioId: number) {
+  async markAsRead(canalId: number, mensajeId: number, usuarioId: number) {
+    const baseWhere = {
+      canal_id: canalId,
+      emisor_id: { not: usuarioId },
+      eliminado: false,
+    };
+
+    if (mensajeId > 0) {
+      return this.prisma.mensajes.updateMany({
+        where: { ...baseWhere, id: mensajeId },
+        data: { leido: true },
+      });
+    }
+
     return this.prisma.mensajes.updateMany({
-      where: { id: mensajeId, emisor_id: usuarioId },
+      where: { ...baseWhere, leido: false },
       data: { leido: true },
     });
   }
