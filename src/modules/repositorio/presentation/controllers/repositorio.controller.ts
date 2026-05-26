@@ -21,7 +21,7 @@ import { RepositorioDocumento } from '../../domain/entities/repositorio-document
 import { PrismaRepositorioDocumentoRepository } from '../../infrastructure/repositories/prisma-repositorio-documento.repository';
 import { CreateCarpetaDto } from '../../application/dto/create-carpeta.dto';
 import { SystemGateway } from '../../../websockets/gateways/system.gateway';
-import { NotificacionSistemaService } from '../../notificaciones/application/services/notificacion-sistema.service';
+import { NotificacionSistemaService } from '../../../notificaciones/application/services/notificacion-sistema.service';
 
 type UploadedRepositorioFile = {
   originalname: string;
