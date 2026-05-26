@@ -324,6 +324,24 @@ export class ComunicacionesGateway
     }
   }
 
+  @SubscribeMessage('typing')
+  async handleTyping(
+    @MessageBody() payload: { canalId: number; isTyping: boolean },
+    @ConnectedSocket() socket: Socket,
+  ) {
+    try {
+      const usuarioId = socket.data.user?.sub;
+      if (!usuarioId) return;
+      this.server.to(`canal_${payload.canalId}`).emit('typing', {
+        canalId: payload.canalId,
+        usuarioId,
+        isTyping: payload.isTyping,
+      });
+    } catch (err) {
+      // Ignorar errores menores de señalización
+    }
+  }
+
   @SubscribeMessage('sendMessage')
   async handleMessage(
     @MessageBody() payload: MessageDto,
