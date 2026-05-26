@@ -372,12 +372,17 @@ export class ComunicacionesGateway
           dto.canalId,
         );
         if (canalInfo && canalInfo.participantes_canal) {
-          const senderName = socket.data.user?.nombre || 'Un usuario';
+          const senderParticipant = canalInfo.participantes_canal.find(p => p.usuario_id === usuarioId);
+          const senderName = senderParticipant?.usuarios?.nombre_completo || senderParticipant?.usuarios?.nombre || socket.data.user?.nombre || 'Un usuario';
           const titulo = 'Nuevo mensaje';
-          const descripcion = `Tienes un nuevo mensaje en ${canalInfo.nombre || 'el chat'}`;
+          const esGrupo = canalInfo.es_grupo;
 
           canalInfo.participantes_canal.forEach((p) => {
             if (p.usuario_id !== usuarioId) {
+              const descripcion = esGrupo 
+                ? `Tienes un nuevo mensaje en ${canalInfo.nombre || 'el grupo'}`
+                : `Tienes un nuevo mensaje de ${senderName}`;
+
               this.notificacionSistema
                 .registrar(titulo, descripcion, {
                   apartado: 'Comunicaciones',

@@ -31,4 +31,15 @@ export class RegisterDto {
   @IsOptional()
   @IsString({ message: 'El rol debe ser texto' })
   rol?: string;
+
+  @IsOptional()
+  @IsString()
+  fecha_ingreso?: string;
+
+  @IsOptional()
+  duracion_meses?: number | null;
+
+  @IsOptional()
+  @IsString()
+  fecha_fin_contrato?: string;
 }

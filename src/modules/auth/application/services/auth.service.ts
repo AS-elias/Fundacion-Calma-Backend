@@ -291,9 +291,10 @@ export class AuthService {
       estado: 'ACTIVO',
       rol_id: rol.id,
       debe_cambiar_password,
+      fecha_fin_contrato: registerDto.fecha_fin_contrato ? new Date(registerDto.fecha_fin_contrato) : undefined,
     } as any);
 
-    await this.registrarInicioNotificaciones(nuevoUsuario.id);
+    await this.registrarInicioNotificaciones(nuevoUsuario.id, registerDto.fecha_ingreso);
     await this.crearBienvenidaNuevoUsuario(nuevoUsuario);
 
     try {
@@ -341,10 +342,16 @@ export class AuthService {
 
   private async registrarInicioNotificaciones(
     usuarioId: number,
+    fechaIngreso?: string,
   ): Promise<void> {
+    const data = { 
+      usuario_id: usuarioId,
+      ...(fechaIngreso && { fecha_ingreso: new Date(fechaIngreso) })
+    };
+    
     await this.prisma.notificacion_inicio_usuario.upsert({
       where: { usuario_id: usuarioId },
-      create: { usuario_id: usuarioId },
+      create: data as any,
       update: {},
     });
   }
