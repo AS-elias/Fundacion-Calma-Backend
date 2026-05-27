@@ -289,3 +289,6 @@ npm install @nestjs/websockets @nestjs/platform-socket.io socket.io
 1.  **Nunca subir el `.env`**: El archivo está en el `.gitignore` por seguridad.
 2.  **Migraciones**: Si cambias una tabla, ejecuta `migrate dev` y sube la carpeta `prisma/migrations` resultante para que tus compañeros se actualicen.
 3.  **Versiones**: Mantener siempre Node v20 y Prisma v6 para evitar conflictos de compatibilidad.
+
+---
+*Nota: Configuración de despliegue dual (Render + GitHub) habilitada correctamente.*
