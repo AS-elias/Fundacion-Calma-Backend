@@ -55,41 +55,12 @@ export class PrismaComunidadRepository implements IComunidadRepository {
           include: {
             areas: true,
           },
-          take: 1,
         },
       },
     });
 
-    return usuariosDb.map((user) => {
-      const iniciales =
-        `${user.nombre_completo?.charAt(0) || ''}${user.apellido_completo?.charAt(0) || ''}`.toUpperCase();
-      const areaNombre =
-        user.permisos_area.length > 0 && user.permisos_area[0].areas
-          ? user.permisos_area[0].areas.nombre
-          : 'General';
-      const rolNombre =
-        user.puesto || (user.roles ? user.roles.nombre : 'Miembro');
+    return this._mapearContactos(usuariosDb);
 
-      return new ContactoEntity(
-        user.id,
-        user.nombre_completo,
-        user.apellido_completo,
-        user.email,
-        user.telefono,
-        user.puesto,
-        user.foto_url,
-        user.estado,
-        rolNombre,
-        areaNombre,
-        iniciales,
-        this.presenceService.isUserOnline(user.id),
-        user.biografia,
-        user.linkedin_url,
-        user.fecha_nacimiento
-          ? formatDateOnly(user.fecha_nacimiento)
-          : null,
-      );
-    });
   }
 
   async agregarContacto(contactoId: number, usuarioId: number): Promise<void> {
@@ -120,46 +91,12 @@ export class PrismaComunidadRepository implements IComunidadRepository {
           include: {
             areas: true,
           },
-          take: 1, // Tomamos solo la primera área para la tarjeta principal
         },
       },
     });
 
     // 2. Mapeamos la respuesta de la Base de Datos a nuestra Entidad de Negocio
-    return usuariosDb.map((user) => {
-      // Calculamos las iniciales (Ej: Juan Perez -> JP)
-      const iniciales =
-        `${user.nombre_completo?.charAt(0) || ''}${user.apellido_completo?.charAt(0) || ''}`.toUpperCase();
-
-      // Obtenemos el nombre del área
-      const areaNombre =
-        user.permisos_area.length > 0 && user.permisos_area[0].areas
-          ? user.permisos_area[0].areas.nombre
-          : 'General';
-
-      const rolNombre =
-        user.puesto || (user.roles ? user.roles.nombre : 'Miembro');
-
-      return new ContactoEntity(
-        user.id,
-        user.nombre_completo,
-        user.apellido_completo,
-        user.email,
-        user.telefono,
-        user.puesto,
-        user.foto_url,
-        user.estado,
-        rolNombre,
-        areaNombre,
-        iniciales,
-        this.presenceService.isUserOnline(user.id),
-        user.biografia,
-        user.linkedin_url,
-        user.fecha_nacimiento
-          ? formatDateOnly(user.fecha_nacimiento)
-          : null,
-      );
-    });
+    return this._mapearContactos(usuariosDb);
   }
 
   async obtenerContactosAccesibles(
@@ -201,7 +138,6 @@ export class PrismaComunidadRepository implements IComunidadRepository {
         roles: true,
         permisos_area: {
           include: { areas: true },
-          take: 1,
         },
       },
     });
@@ -372,10 +308,31 @@ export class PrismaComunidadRepository implements IComunidadRepository {
     return usuariosDb.map((user) => {
       const iniciales =
         `${user.nombre_completo?.charAt(0) || ''}${user.apellido_completo?.charAt(0) || ''}`.toUpperCase();
-      const areaNombre =
-        user.permisos_area.length > 0 && user.permisos_area[0].areas
-          ? user.permisos_area[0].areas.nombre
-          : 'General';
+
+      // Lógica inteligente para seleccionar el área a mostrar
+      const esAdminODirector =
+        user.roles?.nombre === 'Admin' ||
+        user.roles?.nombre === 'Administrador' ||
+        user.roles?.nombre === 'Director';
+
+      let areaElegida: any = null;
+
+      if (user.permisos_area && user.permisos_area.length > 0) {
+        if (esAdminODirector) {
+          // Para roles altos, preferimos mostrar un Área Padre (padre_id === null)
+          areaElegida = user.permisos_area.find((p: any) => p.areas && p.areas.padre_id === null)?.areas;
+        } else {
+          // Para practicantes o roles operativos, preferimos mostrar su Sub-área (padre_id !== null)
+          areaElegida = user.permisos_area.find((p: any) => p.areas && p.areas.padre_id !== null)?.areas;
+        }
+
+        // Si no se encontró según la preferencia, mostramos la primera área que tengan
+        if (!areaElegida) {
+          areaElegida = user.permisos_area[0].areas;
+        }
+      }
+
+      const areaNombre = areaElegida ? areaElegida.nombre : 'General';
       const rolNombre =
         user.puesto || (user.roles ? user.roles.nombre : 'Miembro');
 

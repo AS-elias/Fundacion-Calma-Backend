@@ -84,6 +84,8 @@ export class UsuarioRepositoryImpl implements IUsuarioRepository {
       ...usuario,
     } as any;
     delete (updateData as any).id;
+    delete (updateData as any).fecha_ingreso;
+    delete (updateData as any).duracion_meses;
 
     // 🔥 SOLUCIÓN DEL ERROR 500 🔥
     // Si viene una fecha como texto, la transformamos a objeto Date (ISO-8601)
