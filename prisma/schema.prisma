@@ -316,7 +316,7 @@ model estrategia_tareas {
 
 model areas {
   id                     Int                      @id @default(autoincrement())
-  nombre                 String                   @db.VarChar(30)
+  nombre                 String                   @db.VarChar(100)
   padre_id               Int?
   es_externa             Boolean?                 @default(false)
   config_conexion        Json?
@@ -563,10 +563,13 @@ model repositorio_enlaces {
   carpeta_id           Int?
   nombre_documento     String                @db.VarChar(255)
   url_drive            String
+  estado               String                @default("aprobado") @db.VarChar(20)
+  subido_por           Int?
   fecha_agregado       DateTime?             @default(now()) @db.Timestamp(6)
   
   repositorio_bloques  repositorio_bloques?  @relation(fields: [bloque_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
   repositorio_carpetas repositorio_carpetas? @relation(fields: [carpeta_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  usuarios             usuarios?             @relation(fields: [subido_por], references: [id], onUpdate: NoAction)
 
   @@index([bloque_id], map: "idx_enlaces_bloque")
   @@index([carpeta_id], map: "idx_enlaces_carpeta")
@@ -620,6 +623,7 @@ model usuarios {
   publicaciones                                               publicaciones[]
   reacciones_mensaje                                          reacciones_mensaje[]
   repositorio_bloques                                         repositorio_bloques[]
+  repositorio_enlaces                                         repositorio_enlaces[]
   solicitudes_recibidas                                       solicitudes_contacto[]       @relation("solicitudes_contacto_contacto_idTousuarios")
   solicitudes_enviadas                                        solicitudes_contacto[]       @relation("solicitudes_contacto_usuario_idTousuarios")
   roles                                                       roles?                       @relation(fields: [rol_id], references: [id], onUpdate: NoAction)

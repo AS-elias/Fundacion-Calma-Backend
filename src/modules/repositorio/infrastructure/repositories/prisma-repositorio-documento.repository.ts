@@ -35,6 +35,8 @@ export class PrismaRepositorioDocumentoRepository implements RepositorioDocument
         url: doc.url_drive,
         esCarpeta: false,
         padreId: doc.carpeta_id,
+        estado: doc.estado,
+        subidoPor: doc.subido_por,
       }));
 
       return {
@@ -67,6 +69,8 @@ export class PrismaRepositorioDocumentoRepository implements RepositorioDocument
         carpeta_id: data.carpetaId,
         nombre_documento: data.nombreDocumento,
         url_drive: data.urlDocumento,
+        estado: data.estado ?? 'aprobado',
+        subido_por: data.subidoPor,
       },
     });
 
@@ -77,6 +81,8 @@ export class PrismaRepositorioDocumentoRepository implements RepositorioDocument
       doc.url_drive,
       doc.fecha_agregado ?? new Date(),
       doc.carpeta_id,
+      doc.estado,
+      doc.subido_por,
     );
   }
 
@@ -115,6 +121,8 @@ export class PrismaRepositorioDocumentoRepository implements RepositorioDocument
       url: doc.url_drive,
       esCarpeta: false,
       padreId: doc.carpeta_id,
+      estado: doc.estado,
+      subidoPor: doc.subido_por,
     }));
 
     return [...carpetasFormat, ...documentosFormat];
@@ -145,6 +153,8 @@ export class PrismaRepositorioDocumentoRepository implements RepositorioDocument
       url: doc.url_drive,
       esCarpeta: false,
       padreId: doc.carpeta_id,
+      estado: doc.estado,
+      subidoPor: doc.subido_por,
     }));
 
     return [...carpetasFormat, ...documentosFormat];
@@ -180,5 +190,12 @@ export class PrismaRepositorioDocumentoRepository implements RepositorioDocument
         data: { carpeta_id: padreId },
       });
     }
+  }
+
+  async actualizarEstado(id: number, estado: string): Promise<void> {
+    await this.prisma.repositorio_enlaces.update({
+      where: { id },
+      data: { estado },
+    });
   }
 }

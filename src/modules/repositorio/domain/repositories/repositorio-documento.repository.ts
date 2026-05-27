@@ -12,4 +12,5 @@ export abstract class RepositorioDocumentoRepository {
     padreId: number | null,
     esCarpeta: boolean,
   ): Promise<any>;
+  abstract actualizarEstado(id: number, estado: string): Promise<void>;
 }

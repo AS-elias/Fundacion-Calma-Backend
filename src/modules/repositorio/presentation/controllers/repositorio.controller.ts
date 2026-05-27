@@ -144,6 +144,10 @@ export class RepositorioController {
 
     const storedFile = await this.storage.saveFile(file);
 
+    const esUsuarioPracticante = this.esPracticante(req.user?.rol);
+    const estado = esUsuarioPracticante ? 'pendiente' : 'aprobado';
+    const subidoPor = req.user?.sub ?? req.user?.id;
+
     const documento = new RepositorioDocumento(
       0,
       bloqueId,
@@ -151,15 +155,21 @@ export class RepositorioController {
       storedFile.urlDocumento,
       new Date(),
       carpetaId,
+      estado,
+      subidoPor,
     );
 
     const result = await this.repo.create(documento);
     this.systemGateway.emitSistemaActualizado('repositorio', 'crear');
 
+    const mensajeNotificacion = esUsuarioPracticante 
+      ? `Ha subido el archivo "${storedFile.nombreDocumento}" y está pendiente de aprobación. Haz clic aquí para revisarlo.`
+      : `Se ha subido el archivo "${storedFile.nombreDocumento}" al repositorio público.`;
+
     this.notificacionSistema
       .registrar(
-        'Nuevo Archivo Subido',
-        `Se ha subido el archivo "${storedFile.nombreDocumento}" al repositorio.`,
+        esUsuarioPracticante ? 'Documento Pendiente de Aprobación' : 'Nuevo Archivo Subido',
+        mensajeNotificacion,
         {
           apartado: 'repositorio',
           accion: 'subir',
@@ -193,6 +203,10 @@ export class RepositorioController {
       throw new NotFoundException('El bloque del repositorio no existe.');
     }
 
+    const esUsuarioPracticante = this.esPracticante(req.user?.rol);
+    const estado = esUsuarioPracticante ? 'pendiente' : 'aprobado';
+    const subidoPor = req.user?.sub ?? req.user?.id;
+
     const documento = new RepositorioDocumento(
       0,
       bloqueId,
@@ -200,15 +214,21 @@ export class RepositorioController {
       url,
       new Date(),
       carpetaId,
+      estado,
+      subidoPor,
     );
 
     const result = await this.repo.create(documento);
     this.systemGateway.emitSistemaActualizado('repositorio', 'crear');
 
+    const mensajeNotificacionEnlace = esUsuarioPracticante 
+      ? `Ha añadido el enlace "${nombre}" y está pendiente de aprobación. Haz clic aquí para revisarlo.`
+      : `Se ha añadido el enlace "${nombre}" al repositorio público.`;
+
     this.notificacionSistema
       .registrar(
-        'Nuevo Enlace Añadido',
-        `Se ha añadido el enlace "${nombre}" al repositorio.`,
+        esUsuarioPracticante ? 'Enlace Pendiente de Aprobación' : 'Nuevo Enlace Añadido',
+        mensajeNotificacionEnlace,
         {
           apartado: 'repositorio',
           accion: 'crear',
@@ -264,6 +284,49 @@ export class RepositorioController {
     const result = await this.repo.mover(itemId, padreId, esCarpeta);
     this.systemGateway.emitSistemaActualizado('repositorio', 'editar');
     return result;
+  }
+
+  @Put(':id/estado')
+  @UseGuards(JwtAuthGuard)
+  async cambiarEstado(
+    @Param('id') id: string,
+    @Body() body: { estado: 'aprobado' | 'rechazado' },
+    @Req() req: any,
+  ) {
+    if (this.esPracticante(req.user?.rol)) {
+      throw new ForbiddenException(
+        'Los practicantes no pueden aprobar o rechazar documentos.',
+      );
+    }
+
+    const documentoId = Number(id);
+
+    if (!Number.isInteger(documentoId) || documentoId <= 0) {
+      throw new BadRequestException('id debe ser un numero valido.');
+    }
+
+    if (body.estado === 'rechazado') {
+      await this.repo.delete(documentoId);
+      this.systemGateway.emitSistemaActualizado('repositorio', 'eliminar');
+      return { message: 'Documento rechazado y eliminado' };
+    }
+
+    await this.repo.actualizarEstado(documentoId, 'aprobado');
+    this.systemGateway.emitSistemaActualizado('repositorio', 'editar');
+    
+    this.notificacionSistema
+      .registrar(
+        'Documento Aprobado',
+        `Un documento pendiente ha sido aprobado en el repositorio.`,
+        {
+          apartado: 'repositorio',
+          accion: 'editar',
+          actorId: req.user?.sub ?? req.user?.id,
+        },
+      )
+      .catch((e) => console.error('Error al notificar aprobacion:', e));
+
+    return { message: 'Documento aprobado' };
   }
 
   private normalizarUrl(url: string): string {
