@@ -127,6 +127,13 @@ export class RepositorioController {
       throw new BadRequestException('Debe enviar un archivo real.');
     }
 
+    // Corregir codificación de Multer (latin1 a utf8) para evitar caracteres como Ã³
+    try {
+      file.originalname = Buffer.from(file.originalname, 'latin1').toString('utf8');
+    } catch (e) {
+      // Ignorar si falla la conversión
+    }
+
     const existeBloque = await this.repo.existsBloque(bloqueId);
 
     if (!existeBloque) {
