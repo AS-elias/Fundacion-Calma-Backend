@@ -31,6 +31,7 @@ export class AreasService {
   async obtenerAreasPermitidasParaUsuario(
     usuarioId: number,
     esDirector: boolean = false,
+    devolverTodas: boolean = false,
   ): Promise<AreaConPermisos[]> {
     // 1. Obtener todas las áreas para poder buscar subáreas recursivamente
     const todasAreasDb = await this.prisma.areas.findMany();
@@ -87,8 +88,18 @@ export class AreasService {
       }
     }
 
+    // Actualizar los permisos en el areasMap original
+    for (const [id, areaPermitida] of permitidasMap.entries()) {
+      const areaOriginal = areasMap.get(id);
+      if (areaOriginal) {
+        areaOriginal.permisos = { ...areaPermitida.permisos };
+      }
+    }
+
+    const mapaARetornar = devolverTodas ? areasMap : permitidasMap;
+
     // 4. Retornamos las raices relativas
-    return this.construirArbolFiltrado(permitidasMap);
+    return this.construirArbolFiltrado(mapaARetornar);
   }
 
   private agregarSubareasRecursivas(
@@ -234,7 +245,7 @@ export class AreasService {
     esDirector: boolean = false,
   ): Promise<AreaConPermisos[]> {
     if (incluirTodas) {
-      // Para admins: obtener todas las áreas con jerarquía
+      // Para admins: obtener todas las áreas con jerarquía y acceso total
       const todasAreas = await this.prisma.areas.findMany({
         include: {
           other_areas: true,
@@ -244,8 +255,9 @@ export class AreasService {
       // Convertir a estructura jerárquica
       return this.construirJerarquiaAreas(todasAreas);
     } else {
-      // Para usuarios normales y directores: solo áreas permitidas
-      return this.obtenerAreasPermitidasParaUsuario(usuarioId, esDirector);
+      // Para usuarios normales y directores: devolver TODAS las áreas para navegación, 
+      // pero con los permisos estrictamente aplicados donde correspondan.
+      return this.obtenerAreasPermitidasParaUsuario(usuarioId, esDirector, true);
     }
   }
 
