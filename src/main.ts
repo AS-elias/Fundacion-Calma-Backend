@@ -45,12 +45,11 @@ async function bootstrap() {
   // 1. Añadir Cabeceras de Seguridad (Helmet)
   app.use(helmet());
 
-  // 3. Validación Estricta
   app.useGlobalPipes(
     new ValidationPipe({
-      whitelist: true, // Elimina propiedades del objeto que no tienen decoradores en el DTO
-      forbidNonWhitelisted: false, // Arroja un error en lugar de simplemente eliminar las propiedades no deseadas
-      transform: true, // Transforma automáticamente el payload al tipo de instancia del DTO
+      whitelist: false, // Desactivamos el whitelist estricto porque hay DTOs sin decoradores
+      forbidNonWhitelisted: false,
+      transform: true,
     }),
   );
 
