@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+﻿import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../../infrastructure/prisma/prisma.service';
 import {
   DashboardAdminDto,
@@ -30,7 +30,7 @@ export class DashboardService {
     return weekStart;
   }
 
-  // Mapeo de estados de tareas a categorías estandarizadas
+  // Mapeo de estados de tareas a categorÃ­as estandarizadas
   private mapEstadoTarea(estado: string | null | undefined): string {
     if (!estado) return 'paralizado';
     const estadoUpper = estado.toUpperCase().trim().replace(/[-_]/g, ' ');
@@ -66,7 +66,7 @@ export class DashboardService {
     return 'paralizado';
   }
 
-  // Mapeo de estados de comunicaciones (convenios) a categorías estandarizadas
+  // Mapeo de estados de comunicaciones (convenios) a categorÃ­as estandarizadas
   private mapEstadoConvenio(estado: string | null | undefined): string {
     if (!estado) return 'cancelados';
     const estadoUpper = estado.toUpperCase().trim();
@@ -80,7 +80,7 @@ export class DashboardService {
         'NEGOCIACION',
         'PROCESO DE CONVENIO',
         'PROCESO_DE_CONVENIO',
-        'REUNIÓN AGENDADA',
+        'REUNIÃ“N AGENDADA',
         'REUNION AGENDADA',
         'REUNION_AGENDADA',
         'PROCESO CONVENIO',
@@ -188,13 +188,13 @@ export class DashboardService {
       throw new Error('rating debe ser un entero entre 1 y 5');
     }
     if (directorId === usuarioId) {
-      throw new Error('El director no puede evaluarse a sí mismo.');
+      throw new Error('El director no puede evaluarse a sÃ­ mismo.');
     }
 
     const allowedAreaIds = await this.getAllowedAreaIds(directorId);
     if (allowedAreaIds.length === 0) {
       throw new Error(
-        'El director no tiene áreas asignadas para evaluar usuarios.',
+        'El director no tiene Ã¡reas asignadas para evaluar usuarios.',
       );
     }
 
@@ -217,7 +217,7 @@ export class DashboardService {
     });
 
     if (!targetUser) {
-      throw new Error('Usuario no válido para evaluación del director.');
+      throw new Error('Usuario no vÃ¡lido para evaluaciÃ³n del director.');
     }
 
     const weekStart = this.getCurrentWeekStart();
@@ -269,7 +269,7 @@ export class DashboardService {
       if (!(err?.code === 'P2010' && err?.meta?.code === '42703')) {
         throw err;
       }
-      // Fallback: tabla antigua sin usuario_id. Insertar sin usuario_id y devolver resultado básico.
+      // Fallback: tabla antigua sin usuario_id. Insertar sin usuario_id y devolver resultado bÃ¡sico.
       const [createdAlt] =
         (await this.prisma.$queryRaw<
           Array<{
@@ -517,7 +517,7 @@ export class DashboardService {
       estadisticasComunicaciones[categoria] += item._count.id;
     });
 
-    // Obtener actividad reciente con información del usuario
+    // Obtener actividad reciente con informaciÃ³n del usuario
     const recentConvenios = await this.prisma.convenios.findMany({
       orderBy: { fecha_creacion: 'desc' },
       take: 5,
@@ -582,7 +582,7 @@ export class DashboardService {
       usuario: item.usuarios
         ? `${item.usuarios.nombre_completo} ${item.usuarios.apellido_completo}`
         : item.creado_por || 'Sistema',
-      detalle: `actualizó el estado a ${item.estado}`,
+      detalle: `actualizÃ³ el estado a ${item.estado}`,
       entidad: item[campoEntidad],
       tipo,
       fecha: item.fecha_creacion ?? new Date(0),
@@ -622,12 +622,12 @@ export class DashboardService {
       where: { id: usuarioId },
       include: { roles: true },
     });
-    const isStandardUser = usuario?.roles?.nombre === 'Usuario Estándar';
+    const isStandardUser = usuario?.roles?.nombre === 'Usuario EstÃ¡ndar';
 
     const allowedAreaIds = await this.getAllowedAreaIds(usuarioId);
     const filterAreaIds = allowedAreaIds.length > 0 ? allowedAreaIds : [-1];
 
-    // Usar nombres de áreas para determinar si mostrar o no ciertas métricas (ej: convenios)
+    // Usar nombres de Ã¡reas para determinar si mostrar o no ciertas mÃ©tricas (ej: convenios)
     const areasUsuario = await this.prisma.areas.findMany({
       where: { id: { in: filterAreaIds } },
       select: { nombre: true },
@@ -638,7 +638,7 @@ export class DashboardService {
     );
     const hasEstrategia = nombresAreas.some((n) => n.includes('estrategia'));
     const hasAnalisis = nombresAreas.some(
-      (n) => n.includes('análisis') || n.includes('analisis'),
+      (n) => n.includes('anÃ¡lisis') || n.includes('analisis'),
     );
 
     const misProyectos = await this.prisma.proyectos.count({
@@ -721,12 +721,13 @@ export class DashboardService {
         ? Math.round((estadisticasTareas.completadas / totalTareasArea) * 100)
         : 0;
 
-    let desempenoPersonal: number | null = null;
+        let desempenoPersonal: number | null = null;
+    let ultimaEvaluacion: { rating: number; comentario: string | null; created_at: Date } | null = null;
     try {
       const userEvaluations = await this.prisma.$queryRaw<
-        Array<{ rating: number }>
+        Array<{ rating: number; comentario: string | null; created_at: Date }>
       >`
-        SELECT rating FROM core.director_evaluaciones WHERE usuario_id = ${usuarioId}
+        SELECT rating, comentario, created_at FROM core.director_evaluaciones WHERE usuario_id = ${usuarioId} ORDER BY created_at DESC
       `;
       if (userEvaluations && userEvaluations.length > 0) {
         const sum = userEvaluations.reduce(
@@ -735,12 +736,13 @@ export class DashboardService {
         );
         const avg = sum / userEvaluations.length;
         desempenoPersonal = Math.round((avg / 5) * 100);
+        ultimaEvaluacion = userEvaluations[0];
       }
     } catch (err: any) {
       if (!(err?.code === 'P2010' && err?.meta?.code === '42703')) {
         throw err;
       }
-      // Si la columna usuario_id no existe, no podemos calcular el desempeño personal
+      // Si la columna usuario_id no existe, no podemos calcular el desempeno personal
       desempenoPersonal = null;
     }
 
@@ -809,13 +811,13 @@ export class DashboardService {
       });
     }
 
-    // Obtener actividad reciente con información del usuario
+    // Obtener actividad reciente con informaciÃ³n del usuario
     let recentConvenios: any[] = [];
     let recentTareas: any[] = [];
     let recentAnalisis: any[] = [];
     let recentEstrategia: any[] = [];
 
-    // Construir condición base según el rol
+    // Construir condiciÃ³n base segÃºn el rol
     const baseWhereArea = isStandardUser
       ? { creador_id: usuarioId }
       : {
@@ -893,7 +895,7 @@ export class DashboardService {
       usuario: item.usuarios
         ? `${item.usuarios.nombre_completo} ${item.usuarios.apellido_completo}`
         : item.creado_por || 'Sistema',
-      detalle: `actualizó el estado a ${item.estado}`,
+      detalle: `actualizÃ³ el estado a ${item.estado}`,
       entidad: item[campoEntidad],
       tipo,
       fecha: item.fecha_creacion ?? new Date(0),
@@ -924,6 +926,7 @@ export class DashboardService {
       conveniosVigentes: misConvenios,
       desempenoEquipo,
       desempenoPersonal,
+      ultimaEvaluacion,
       actividadReciente,
       estadisticasTareas: { ...estadisticasTareas },
       estadisticasComunicaciones: estadisticasComunicaciones
