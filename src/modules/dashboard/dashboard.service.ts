@@ -653,9 +653,7 @@ export class DashboardService {
     }
     if (hasEstrategia) {
       misProyectos += await this.prisma.proyectos.count({ where: { OR: [{ area_id: { in: filterAreaIds } }, { responsable_id: usuarioId }] } });
-      misProyectos += await this.prisma.estrategia_actividades.count({
-        where: isStandardUser ? { creado_por: String(usuarioId) } : undefined,
-      });
+      misProyectos += await this.prisma.estrategia_actividades.count();
       misProyectos += await this.prisma.estrategia_empresas.count();
     }
 
@@ -703,7 +701,7 @@ export class DashboardService {
     const estadisticasTareasRawEstrategiaActividades = hasEstrategia
       ? await this.getEstrategiaActividadesStats(
           allowedAreaIds,
-          isStandardUser ? usuarioId : undefined,
+          undefined,
         )
       : [];
 
