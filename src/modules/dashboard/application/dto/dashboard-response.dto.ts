@@ -54,6 +54,7 @@ export class DashboardUserDto extends DashboardBaseDto {
   misConvenios: number | null;
   desempenoEquipo: number;
   desempenoPersonal?: number | null;
+  ultimaEvaluacion?: { rating: number; comentario: string | null; created_at: Date } | null;
   directorEvaluations: DirectorEvaluationDto[];
   promedioEvaluacionDirector: number;
   pendientesEvaluacion: PendingUserDto[];
