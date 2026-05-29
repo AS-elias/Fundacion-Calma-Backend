@@ -726,11 +726,10 @@ export class DashboardService {
       (a, b) => a + b,
       0,
     );
-    const desempenoEquipo = isStandardUser
-      ? null
-      : totalTareasArea > 0
-      ? Math.round((estadisticasTareas.completadas / totalTareasArea) * 100)
-      : 0;
+    const desempenoEquipo =
+      totalTareasArea > 0
+        ? Math.round((estadisticasTareas.completadas / totalTareasArea) * 100)
+        : 0;
 
         let desempenoPersonal: number | null = null;
     let ultimaEvaluacion: { rating: number; comentario: string | null; created_at: Date } | null = null;
