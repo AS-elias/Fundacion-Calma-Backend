@@ -58,7 +58,7 @@ export class ComunicacionesController {
     if (Number.isNaN(canalId) || canalId < 1) {
       throw new BadRequestException('canalId inválido');
     }
-    const usuarioId = req.user.sub;
+    const usuarioId = req.user?.id || req.user?.sub;
     return this.comunicacionesService.deleteChannel(canalId, usuarioId);
   }
 
@@ -82,7 +82,7 @@ export class ComunicacionesController {
       throw new BadRequestException('canalId inválido');
     }
 
-    const userId = Number(req.user?.sub);
+    const userId = Number(req.user?.id || req.user?.sub);
     if (Number.isNaN(userId) || userId < 1) {
       throw new BadRequestException('Usuario inválido');
     }
