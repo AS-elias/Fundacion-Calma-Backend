@@ -624,12 +624,12 @@ export class DashboardService {
       where: { id: usuarioId },
       include: { roles: true },
     });
-    const isStandardUser = usuario?.roles?.nombre === 'Usuario EstÃ¡ndar';
+    const isStandardUser = usuario?.roles?.nombre === 'Usuario Estándar';
 
     const allowedAreaIds = await this.getAllowedAreaIds(usuarioId);
     const filterAreaIds = allowedAreaIds.length > 0 ? allowedAreaIds : [-1];
 
-    // Usar nombres de Ã¡reas para determinar si mostrar o no ciertas mÃ©tricas (ej: convenios)
+    // Usar nombres de áreas para determinar si mostrar o no ciertas métricas (ej: convenios)
     const areasUsuario = await this.prisma.areas.findMany({
       where: { id: { in: filterAreaIds } },
       select: { nombre: true },
@@ -640,7 +640,7 @@ export class DashboardService {
     );
     const hasEstrategia = nombresAreas.some((n) => n.includes('estrategia'));
     const hasAnalisis = nombresAreas.some(
-      (n) => n.includes('anÃ¡lisis') || n.includes('analisis'),
+      (n) => n.includes('análisis') || n.includes('analisis'),
     );
 
     let misProyectos = 0;
