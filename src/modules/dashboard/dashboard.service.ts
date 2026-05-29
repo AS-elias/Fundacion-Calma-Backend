@@ -486,7 +486,9 @@ export class DashboardService {
       this.prisma.analisis_tareas.count(),
     ]);
 
-    const totalProyectos = totalProyectosDB;
+    const conveniosCount = await this.prisma.convenios.count();
+    const empresasCount = await this.prisma.estrategia_empresas.count();
+    const totalProyectos = totalProyectosDB + actividadCountDesarrollo + actividadCountEstrategia + actividadCountAnalisis + conveniosCount + empresasCount;
 
     const conveniosVigentes = await this.prisma.convenios.count({
       where: {
@@ -641,11 +643,19 @@ export class DashboardService {
       (n) => n.includes('anÃ¡lisis') || n.includes('analisis'),
     );
 
-    const misProyectos = await this.prisma.proyectos.count({
-      where: {
-        OR: [{ area_id: { in: filterAreaIds } }, { responsable_id: usuarioId }],
-      },
-    });
+    let misProyectos = 0;
+    if (hasDesarrolloComercial) {
+      misProyectos += await this.prisma.convenios.count({ where: { OR: [{ area_id: { in: filterAreaIds } }, { creador_id: usuarioId }] } });
+      misProyectos += await this.prisma.desarrollo_actividades.count({ where: { OR: [{ area_id: { in: filterAreaIds } }, { creador_id: usuarioId }] } });
+    }
+    if (hasAnalisis) {
+      misProyectos += await this.prisma.analisis_tareas.count({ where: { OR: [{ area_id: { in: filterAreaIds } }, { creador_id: usuarioId }] } });
+    }
+    if (hasEstrategia) {
+      misProyectos += await this.prisma.proyectos.count({ where: { OR: [{ area_id: { in: filterAreaIds } }, { responsable_id: usuarioId }] } });
+      misProyectos += await this.prisma.estrategia_actividades.count({ where: { OR: [{ area_id: { in: filterAreaIds } }, { creador_id: usuarioId }] } });
+      misProyectos += await this.prisma.estrategia_empresas.count({ where: { OR: [{ area_id: { in: filterAreaIds } }, { creador_id: usuarioId }] } });
+    }
 
     let misConvenios: number | null = null;
     if (hasDesarrolloComercial) {
