@@ -653,8 +653,8 @@ export class DashboardService {
     }
     if (hasEstrategia) {
       misProyectos += await this.prisma.proyectos.count({ where: { OR: [{ area_id: { in: filterAreaIds } }, { responsable_id: usuarioId }] } });
-      misProyectos += await this.prisma.estrategia_actividades.count({ where: { OR: [{ area_id: { in: filterAreaIds } }, { creador_id: usuarioId }] } });
-      misProyectos += await this.prisma.estrategia_empresas.count({ where: { OR: [{ area_id: { in: filterAreaIds } }, { creador_id: usuarioId }] } });
+      misProyectos += await this.prisma.estrategia_actividades.count({ where: { creado_por: String(usuarioId) } });
+      misProyectos += await this.prisma.estrategia_empresas.count();
     }
 
     let misConvenios: number | null = null;
