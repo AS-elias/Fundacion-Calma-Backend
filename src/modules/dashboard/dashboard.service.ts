@@ -584,7 +584,7 @@ export class DashboardService {
       usuario: item.usuarios
         ? `${item.usuarios.nombre_completo} ${item.usuarios.apellido_completo}`
         : item.creado_por || 'Sistema',
-      detalle: `actualizÃ³ el estado a ${item.estado}`,
+      detalle: `actualiz\u00F3\u00F3 el estado a ${item.estado}`,
       entidad: item[campoEntidad],
       tipo,
       fecha: item.fecha_creacion ?? new Date(0),
@@ -905,7 +905,7 @@ export class DashboardService {
       usuario: item.usuarios
         ? `${item.usuarios.nombre_completo} ${item.usuarios.apellido_completo}`
         : item.creado_por || 'Sistema',
-      detalle: `actualizÃ³ el estado a ${item.estado}`,
+      detalle: `actualiz\u00F3\u00F3 el estado a ${item.estado}`,
       entidad: item[campoEntidad],
       tipo,
       fecha: item.fecha_creacion ?? new Date(0),
