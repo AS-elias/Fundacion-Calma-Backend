@@ -95,10 +95,12 @@ export class ComunicacionesController {
       `${timestamp}_${safeName}`,
     );
 
+    const isImage = file.mimetype?.startsWith('image/') ?? false;
     const message = await this.comunicacionesService.saveMessage({
       canalId,
       remitenteId: userId,
-      tipo: 'file',
+      contenido: file.originalname,
+      tipo: isImage ? 'image' : 'file',
       archivoUrl: cloudUrl,
     });
 
