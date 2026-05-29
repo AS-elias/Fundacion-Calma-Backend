@@ -1,4 +1,4 @@
-﻿import { Injectable } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../../infrastructure/prisma/prisma.service';
 import {
   DashboardAdminDto,
@@ -827,12 +827,10 @@ export class DashboardService {
     let recentAnalisis: any[] = [];
     let recentEstrategia: any[] = [];
 
-    // Construir condiciÃ³n base segÃºn el rol
-    const baseWhereArea = isStandardUser
-      ? { creador_id: usuarioId }
-      : {
-          OR: [{ area_id: { in: allowedAreaIds } }, { creador_id: usuarioId }],
-        };
+    // Para la actividad reciente, queremos mostrar lo que ocurre en toda el área (no solo lo propio)
+    const baseWhereArea = {
+      OR: [{ area_id: { in: filterAreaIds } }, { creador_id: usuarioId }],
+    };
 
     if (hasDesarrolloComercial) {
       recentConvenios = await this.prisma.convenios.findMany({
@@ -884,9 +882,7 @@ export class DashboardService {
     }
 
     if (hasEstrategia) {
-      const baseEstrategiaWhere = isStandardUser
-        ? { creado_por: String(usuarioId) }
-        : {};
+      const baseEstrategiaWhere = {};
       recentEstrategia = await this.prisma.estrategia_actividades.findMany({
         where: baseEstrategiaWhere,
         orderBy: { fecha_creacion: 'desc' },
