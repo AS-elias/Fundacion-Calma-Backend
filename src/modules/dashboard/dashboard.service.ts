@@ -645,14 +645,14 @@ export class DashboardService {
 
     let misProyectos = 0;
     if (hasDesarrolloComercial) {
-      misProyectos += await this.prisma.convenios.count({ where: { OR: [{ area_id: { in: filterAreaIds } }, { creador_id: usuarioId }] } });
-      misProyectos += await this.prisma.desarrollo_actividades.count({ where: { OR: [{ area_id: { in: filterAreaIds } }, { creador_id: usuarioId }] } });
+      misProyectos += await this.prisma.convenios.count();
+      misProyectos += await this.prisma.desarrollo_actividades.count();
     }
     if (hasAnalisis) {
-      misProyectos += await this.prisma.analisis_tareas.count({ where: { OR: [{ area_id: { in: filterAreaIds } }, { creador_id: usuarioId }] } });
+      misProyectos += await this.prisma.analisis_tareas.count();
     }
     if (hasEstrategia) {
-      misProyectos += await this.prisma.proyectos.count({ where: { OR: [{ area_id: { in: filterAreaIds } }, { responsable_id: usuarioId }] } });
+      misProyectos += await this.prisma.proyectos.count();
       misProyectos += await this.prisma.estrategia_actividades.count();
       misProyectos += await this.prisma.estrategia_empresas.count();
     }
@@ -661,42 +661,26 @@ export class DashboardService {
     if (hasDesarrolloComercial) {
       misConvenios = await this.prisma.convenios.count({
         where: {
-          AND: [
-            {
-              OR: [
-                { estado: 'CONVENIO FIRMADO' },
-                { estado: 'FIRMADO' },
-                { estado: 'ACTIVO' },
-              ],
-            },
-            {
-              OR: [
-                { area_id: { in: filterAreaIds } },
-                { creador_id: usuarioId },
-              ],
-            },
+          OR: [
+            { estado: 'CONVENIO FIRMADO' },
+            { estado: 'FIRMADO' },
+            { estado: 'ACTIVO' },
           ],
         },
       });
     }
 
-    const estadisticasTareasRawDesarrollo =
+    const estadisticasTareasRawDesarrollo = hasDesarrolloComercial ? 
       await this.prisma.desarrollo_actividades.groupBy({
         by: ['estado'],
-        where: {
-          OR: [{ area_id: { in: filterAreaIds } }, { creador_id: usuarioId }],
-        },
         _count: { id: true },
-      });
+      }) : [];
 
-    const estadisticasTareasRawAnalisis =
+    const estadisticasTareasRawAnalisis = hasAnalisis ?
       await this.prisma.analisis_tareas.groupBy({
         by: ['estado'],
-        where: {
-          OR: [{ area_id: { in: filterAreaIds } }, { creador_id: usuarioId }],
-        },
         _count: { id: true },
-      });
+      }) : [];
 
     const estadisticasTareasRawEstrategiaActividades = hasEstrategia
       ? await this.getEstrategiaActividadesStats(
@@ -801,9 +785,6 @@ export class DashboardService {
       const estadisticasComunicacionesRaw = await this.prisma.convenios.groupBy(
         {
           by: ['estado'],
-          where: {
-            OR: [{ area_id: { in: filterAreaIds } }, { creador_id: usuarioId }],
-          },
           _count: { id: true },
         },
       );
@@ -834,7 +815,6 @@ export class DashboardService {
 
     if (hasDesarrolloComercial) {
       recentConvenios = await this.prisma.convenios.findMany({
-        where: baseWhereArea,
         orderBy: { fecha_creacion: 'desc' },
         take: 5,
         select: {
@@ -849,7 +829,6 @@ export class DashboardService {
       });
 
       recentTareas = await this.prisma.desarrollo_actividades.findMany({
-        where: baseWhereArea,
         orderBy: { fecha_creacion: 'desc' },
         take: 5,
         select: {
@@ -866,7 +845,6 @@ export class DashboardService {
 
     if (hasAnalisis) {
       recentAnalisis = await this.prisma.analisis_tareas.findMany({
-        where: baseWhereArea,
         orderBy: { fecha_creacion: 'desc' },
         take: 5,
         select: {
