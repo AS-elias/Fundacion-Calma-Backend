@@ -500,7 +500,7 @@ export class AuthService {
       secret: usuario.two_factor_secret,
       encoding: 'base32',
       token: code,
-      window: 2 // Tolerar ligero retraso de tiempo
+      window: method === 'EMAIL' ? 10 : 2 // 5 minutos de tolerancia para correo, 1 minuto para app
     });
 
     if (!isVerified) {
@@ -547,7 +547,7 @@ export class AuthService {
       secret: usuario.two_factor_secret,
       encoding: 'base32',
       token: code,
-      window: 2
+      window: usuario.two_factor_method === 'EMAIL' ? 10 : 2
     });
 
     if (!isVerified) {
