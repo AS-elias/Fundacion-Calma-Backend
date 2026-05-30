@@ -601,6 +601,9 @@ model usuarios {
   fecha_fin_contrato                                          DateTime?
   estado                                                      UserEstado                   @default(ACTIVO)
   debe_cambiar_password                                       Boolean                      @default(false)
+  two_factor_secret                                           String?
+  is_two_factor_enabled                                       Boolean                      @default(false)
+  two_factor_method                                           String?                      @db.VarChar(10)
   analisis_tareas                                             analisis_tareas[]
   convenio_archivos                                           convenio_archivos[]
   convenio_comentarios                                        convenio_comentarios[]

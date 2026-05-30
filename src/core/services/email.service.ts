@@ -394,4 +394,25 @@ export class EmailService {
 
     await this.sendEmail(to, subject, html, text);
   }
+
+  async send2FaCode(to: string, code: string) {
+    const subject = 'Código de Autenticación (2FA) - Fundación Calma';
+    const text =
+      `Hola,\n\n` +
+      `Tu código de seguridad de 6 dígitos es: ${code}\n\n` +
+      `Este código expirará en 10 minutos.\n` +
+      `Si no solicitaste este código, ignora este correo.\n\n` +
+      `Saludos,\nEquipo Fundación Calma`;
+
+    const html =
+      `<p>Hola,</p>` +
+      `<p>Se ha solicitado un acceso a tu cuenta.</p>` +
+      `<p>Tu código de seguridad es:</p>` +
+      `<h2 style="background-color:#f1f5f9; padding:10px; border-radius:5px; text-align:center; font-family:monospace; letter-spacing:5px;">${code}</h2>` +
+      `<p>Este código expirará en 10 minutos.</p>` +
+      `<p>Si no solicitaste este código, ignora este correo de forma segura.</p>` +
+      `<p>Saludos,<br/>Equipo Fundación Calma</p>`;
+
+    await this.sendEmail(to, subject, html, text);
+  }
 }

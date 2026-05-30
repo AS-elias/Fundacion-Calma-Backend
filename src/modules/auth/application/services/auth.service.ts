@@ -15,6 +15,8 @@ import { ForgotPasswordDto } from '../dto/forgot-password.dto';
 import { ResetPasswordDto } from '../dto/reset-password.dto';
 import { RolesFundacion } from '../../domain/enums/roles.enum';
 import * as bcrypt from 'bcrypt';
+import * as speakeasy from 'speakeasy';
+import * as QRCode from 'qrcode';
 import { EmailService } from '../../../../core/services/email.service';
 import { PrismaService } from '../../../../infrastructure/prisma/prisma.service';
 
@@ -60,6 +62,26 @@ export class AuthService {
         usuarioId: usuario.id,
         email: usuario.email,
         mensaje: 'Debe cambiar su contraseña temporal antes de continuar.',
+      };
+    }
+
+    // 4.1. Verificar si 2FA está habilitado
+    if (usuario.is_two_factor_enabled && usuario.two_factor_secret) {
+      if (usuario.two_factor_method === 'EMAIL') {
+        const token = speakeasy.totp({
+          secret: usuario.two_factor_secret,
+          encoding: 'base32'
+        });
+        // Enviamos el código al instante sin bloquear el retorno
+        this.emailService.send2FaCode(usuario.email, token).catch(e => {
+          this.logger.error('Error enviando código 2FA por correo', e);
+        });
+      }
+      return {
+        require2fa: true,
+        method: usuario.two_factor_method,
+        usuarioId: usuario.id,
+        mensaje: 'Se requiere código de verificación.'
       };
     }
 
@@ -437,6 +459,121 @@ export class AuthService {
     return {
       mensaje:
         'Contraseña actualizada correctamente. Ya puedes iniciar sesión con tu nueva contraseña.',
+    };
+  }
+
+  // --- MÉTODOS DE 2FA ---
+
+  async generate2fa(usuarioId: number, method: 'APP' | 'EMAIL') {
+    const usuario = await this.usuarioRepository.findById(usuarioId);
+    if (!usuario) throw new UnauthorizedException('Usuario no encontrado');
+
+    const secret = speakeasy.generateSecret({
+      name: `Fundación Calma (${usuario.email})`
+    });
+
+    // Guardar el secreto de forma temporal (aún no está enabled)
+    await this.usuarioRepository.update(usuarioId, {
+      two_factor_secret: secret.base32,
+    });
+
+    if (method === 'EMAIL') {
+      const token = speakeasy.totp({
+        secret: secret.base32,
+        encoding: 'base32'
+      });
+      await this.emailService.send2FaCode(usuario.email, token);
+      return { method: 'EMAIL', message: 'Código enviado al correo para confirmación.' };
+    } else {
+      const qrCodeDataUrl = await QRCode.toDataURL(secret.otpauth_url!);
+      return { method: 'APP', qrCodeUrl: qrCodeDataUrl, secret: secret.base32 };
+    }
+  }
+
+  async enable2fa(usuarioId: number, code: string, method: 'APP' | 'EMAIL') {
+    const usuario = await this.usuarioRepository.findById(usuarioId);
+    if (!usuario || !usuario.two_factor_secret) {
+      throw new BadRequestException('Secreto no encontrado. Genera el código 2FA primero.');
+    }
+
+    const isVerified = speakeasy.totp.verify({
+      secret: usuario.two_factor_secret,
+      encoding: 'base32',
+      token: code,
+      window: 2 // Tolerar ligero retraso de tiempo
+    });
+
+    if (!isVerified) {
+      throw new BadRequestException('Código incorrecto o expirado.');
+    }
+
+    await this.usuarioRepository.update(usuarioId, {
+      is_two_factor_enabled: true,
+      two_factor_method: method
+    });
+
+    return { message: 'Autenticación en dos pasos habilitada con éxito.' };
+  }
+
+  async disable2fa(usuarioId: number) {
+    await this.usuarioRepository.update(usuarioId, {
+      is_two_factor_enabled: false,
+      two_factor_secret: null,
+      two_factor_method: null
+    });
+    return { message: 'Autenticación en dos pasos deshabilitada.' };
+  }
+
+  async resend2faEmail(usuarioId: number) {
+    const usuario = await this.usuarioRepository.findById(usuarioId);
+    if (!usuario || !usuario.is_two_factor_enabled || !usuario.two_factor_secret) {
+       throw new BadRequestException('2FA no habilitado');
+    }
+    const token = speakeasy.totp({
+      secret: usuario.two_factor_secret,
+      encoding: 'base32'
+    });
+    await this.emailService.send2FaCode(usuario.email, token);
+    return { message: 'Código reenviado al correo.' };
+  }
+
+  async authenticate2fa(usuarioId: number, code: string) {
+    const usuario = await this.usuarioRepository.findById(usuarioId);
+    if (!usuario || !usuario.is_two_factor_enabled || !usuario.two_factor_secret) {
+      throw new UnauthorizedException('El usuario no tiene 2FA habilitado');
+    }
+
+    const isVerified = speakeasy.totp.verify({
+      secret: usuario.two_factor_secret,
+      encoding: 'base32',
+      token: code,
+      window: 2
+    });
+
+    if (!isVerified) {
+      throw new UnauthorizedException('Código incorrecto o expirado');
+    }
+
+    // Generar el token JWT final ya que superó la prueba
+    const payload = {
+      sub: usuario.id,
+      email: usuario.email,
+      rol: usuario.rol?.nombre,
+    };
+    const access_token = this.jwtService.sign(payload);
+    const refresh_token = this.jwtService.sign(payload, { expiresIn: '7d' });
+
+    return {
+      access_token,
+      refresh_token,
+      usuario: {
+        id: usuario.id,
+        nombre: usuario.nombre_completo,
+        apellido: usuario.apellido_completo,
+        email: usuario.email,
+        foto_url: usuario.foto_url,
+        rol: usuario.rol?.nombre,
+      },
     };
   }
 }

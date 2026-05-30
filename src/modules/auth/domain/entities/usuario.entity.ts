@@ -11,6 +11,9 @@ export class UsuarioEntity {
   foto_url?: string | null;
   rol?: { id: number; nombre: string } | null;
   debe_cambiar_password?: boolean | null;
+  two_factor_secret?: string | null;
+  is_two_factor_enabled?: boolean | null;
+  two_factor_method?: string | null;
   fecha_nacimiento?: Date | string | null;
   linkedin_url?: string | null;
   biografia?: string | null;

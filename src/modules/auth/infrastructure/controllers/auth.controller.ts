@@ -112,4 +112,34 @@ export class AuthController {
   actualizarUsuario(@Param('id') id: string, @Body() body: any) {
     return this.authService.updateUser(Number(id), body);
   }
+
+  // --- 2FA ENDPOINTS ---
+
+  @UseGuards(JwtAuthGuard)
+  @Post('2fa/generate')
+  generate2fa(@Req() req: any, @Body('method') method: 'APP' | 'EMAIL') {
+    return this.authService.generate2fa(req.user.userId, method);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Post('2fa/enable')
+  enable2fa(@Req() req: any, @Body('code') code: string, @Body('method') method: 'APP' | 'EMAIL') {
+    return this.authService.enable2fa(req.user.userId, code, method);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Post('2fa/disable')
+  disable2fa(@Req() req: any) {
+    return this.authService.disable2fa(req.user.userId);
+  }
+
+  @Post('2fa/authenticate')
+  authenticate2fa(@Body('usuarioId') usuarioId: number, @Body('code') code: string) {
+    return this.authService.authenticate2fa(usuarioId, code);
+  }
+
+  @Post('2fa/resend')
+  resend2faEmail(@Body('usuarioId') usuarioId: number) {
+    return this.authService.resend2faEmail(usuarioId);
+  }
 }
