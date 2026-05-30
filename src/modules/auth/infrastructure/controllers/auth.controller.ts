@@ -118,19 +118,19 @@ export class AuthController {
   @UseGuards(JwtAuthGuard)
   @Post('2fa/generate')
   generate2fa(@Req() req: any, @Body('method') method: 'APP' | 'EMAIL') {
-    return this.authService.generate2fa(req.user.userId, method);
+    return this.authService.generate2fa(req.user.id, method);
   }
 
   @UseGuards(JwtAuthGuard)
   @Post('2fa/enable')
   enable2fa(@Req() req: any, @Body('code') code: string, @Body('method') method: 'APP' | 'EMAIL') {
-    return this.authService.enable2fa(req.user.userId, code, method);
+    return this.authService.enable2fa(req.user.id, code, method);
   }
 
   @UseGuards(JwtAuthGuard)
   @Post('2fa/disable')
   disable2fa(@Req() req: any) {
-    return this.authService.disable2fa(req.user.userId);
+    return this.authService.disable2fa(req.user.id);
   }
 
   @Post('2fa/authenticate')
