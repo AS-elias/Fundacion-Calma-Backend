@@ -91,18 +91,9 @@ export class ComunicacionesController {
       `${timestamp}_${safeName}`,
     );
 
-    const isImage = tipoRecibido === 'image' || (file.mimetype?.startsWith('image/') ?? false) || /\.(jpg|jpeg|png|gif|webp|svg)$/i.test(file.originalname);
-    const message = await this.comunicacionesService.saveMessage({
-      canalId,
-      remitenteId: userId,
-      contenido: file.originalname,
-      tipo: isImage ? 'image' : 'file',
-      archivoUrl: cloudUrl,
-    });
-
     return {
       message: 'Archivo subido',
-      data: message,
+      url: cloudUrl,
     };
   }
 
